@@ -73,6 +73,7 @@
                     <div class="font-semibold text-slate-400">💡 테스트용 기본 계정 안내:</div>
                     <div>• 1단계(최고관리자): master01 / 123</div>
                     <div>• 2단계(전체조회): manager01 / 123</div>
+                    <div>• 3단계(특정사업장): sub01 / 123</div>
                     <div>• 일반 사원: user01 / 123</div>
                 </div>
             </div>
@@ -478,7 +479,8 @@
             downloadAnchor.click();
             downloadAnchor.remove();
 
-            alert(`[구글 드라이브 지정 폴더 동기화 완료]\n\n지정된 드라이브 폴더 ID: ${DRIVE_FOLDER_ID}\n\n연동용 백업/시트 데이터 파일이 생성되었습니다. 드라이브 폴더에 업로드하여 팀원들과 실시간 데이터를 공유하세요.`);
+            window.open(`https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}`, '_blank');
+            alert(`[구글 드라이브 지정 폴더 동기화 안내]\n\n지정된 드라이브 폴더(ID: ${DRIVE_FOLDER_ID}) 웹페이지가 새 창으로 열렸습니다.\n\n다운로드된 동기화 JSON 파일을 해당 구글 드라이브 폴더에 업로드하여 팀원들과 실시간 데이터를 공유하세요.`);
         }
 
         window.onload = function() {
