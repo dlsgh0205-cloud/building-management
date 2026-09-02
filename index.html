@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 다중 건물 관리 통합 관제 시스템</title>
+    <title>AI 다중 사업장 관리 통합 관제 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -42,9 +42,9 @@
         <div class="glass-card rounded-2xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-white/20">
             <div class="text-center space-y-2">
                 <div class="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl mx-auto flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/30">
-                    🏙️
+                    🏢
                 </div>
-                <h1 class="text-xl font-bold text-white">AI 건물 관제 시스템</h1>
+                <h1 class="text-xl font-bold text-white">AI 사업장 관제 시스템</h1>
                 <p class="text-xs text-slate-400">구글 드라이브 연동 및 3단계 권한 플랫폼</p>
             </div>
 
@@ -91,7 +91,7 @@
                     <input type="email" id="signup-email" required placeholder="email@company.com" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">관리 희망 현장명 (건물명)</label>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">관리 희망 사업장명</label>
                     <input type="text" id="signup-field" required placeholder="예: 강남 스마트타워" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs">
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg text-sm mt-2">
@@ -114,21 +114,21 @@
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">
-                    🏙️
+                    🏢
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="font-bold text-lg text-white leading-tight">AI 다중 건물 관제 대시보드</h1>
+                        <h1 class="font-bold text-lg text-white leading-tight">AI 다중 사업장 관제 대시보드</h1>
                         <span id="role-badge" class="bg-purple-500/20 text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-purple-500/30">MASTER-1</span>
                     </div>
-                    <p class="text-xs text-slate-400">지능형 복수 건물 시설 및 구글 드라이브 연동 시스템</p>
+                    <p class="text-xs text-slate-400">지능형 복수 사업장 시설 및 구글 드라이브 연동 시스템</p>
                 </div>
             </div>
 
-            <!-- 건물 선택 및 관리 영역 -->
+            <!-- 사업장 선택 및 관리 영역 -->
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
                 <div class="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10">
-                    <span class="text-xs text-slate-400">조회 건물:</span>
+                    <span class="text-xs text-slate-400">조회 사업장:</span>
                     <select id="building-select" onchange="changeBuilding(this.value)" class="bg-transparent text-xs font-bold text-blue-400 focus:outline-none cursor-pointer">
                         <!-- Dynamic Buildings -->
                     </select>
@@ -137,13 +137,13 @@
                     <span>📁</span> 드라이브 동기화
                 </button>
                 <button id="btn-master-settings" onclick="openMasterModal()" class="bg-purple-950/60 hover:bg-purple-900/60 text-purple-300 px-3 py-2 rounded-xl text-xs font-semibold border border-purple-500/40 transition-all flex items-center gap-1 hidden">
-                    <span>⚙️</span> 회원 및 권한 매칭
+                    <span>⚙️</span> 회원 및 사업장 관리
                 </button>
                 <button onclick="openAccountModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1">
                     <span>👤</span> 내 계정 설정
                 </button>
                 <button id="btn-add-building" onclick="openBuildingModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1 hidden">
-                    <span>➕</span> 건물 추가
+                    <span>➕</span> 사업장 추가/삭제
                 </button>
                 <button onclick="openReportModal()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow-lg shadow-blue-500/20 transition-all">
                     📊 보고서
@@ -180,7 +180,7 @@
         <section id="section-dashboard" class="space-y-6">
             <div class="glass-card p-4 rounded-2xl flex justify-between items-center bg-blue-950/30 border-blue-500/30">
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-blue-300">현재 관제 중인 건물:</span>
+                    <span class="text-xs text-blue-300">현재 관제 중인 사업장:</span>
                     <span id="current-building-title" class="text-sm font-bold text-white bg-blue-600/30 px-3 py-1 rounded-lg border border-blue-500/40">-</span>
                 </div>
                 <span id="user-role-notice" class="text-xs text-purple-300 bg-purple-950/50 px-3 py-1 rounded-lg border border-purple-500/30">-</span>
@@ -226,7 +226,7 @@
                         <h2 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
                             <span>📈</span> 실시간 조치 완료율 그래프
                         </h2>
-                        <p class="text-[11px] text-slate-400">현재 선택된 건물의 문제점 대비 해결 완료 비율입니다.</p>
+                        <p class="text-[11px] text-slate-400">현재 선택된 사업장의 문제점 대비 해결 완료 비율입니다.</p>
                     </div>
                     <div class="space-y-2 py-2">
                         <div class="flex justify-between text-xs font-semibold">
@@ -317,7 +317,7 @@
                         <input type="date" id="input-date" required class="w-full px-3 py-3 rounded-xl glass-input text-sm">
                     </div>
                     <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 text-sm">
-                        해당 건물 문제 접수하기
+                        해당 사업장 문제 접수하기
                     </button>
                 </form>
             </div>
@@ -346,7 +346,7 @@
                 <div class="bg-gradient-to-r from-blue-950/60 to-indigo-950/60 p-4 rounded-xl border border-blue-500/30 flex items-center justify-between">
                     <div>
                         <span class="text-xs font-bold text-blue-300">연간 총괄 집계 (<span id="current-year-label">2026</span>년)</span>
-                        <p class="text-xs text-slate-400 mt-0.5">선택된 건물의 연간 누적 시설 리포트입니다.</p>
+                        <p class="text-xs text-slate-400 mt-0.5">선택된 사업장의 연간 누적 시설 리포트입니다.</p>
                     </div>
                     <div class="text-right">
                         <span id="yearly-total" class="text-xl font-black text-blue-400">0건</span>
@@ -378,7 +378,9 @@
                                 <th class="py-3 px-3">발생일자</th>
                                 <th class="py-3 px-3">위치</th>
                                 <th class="py-3 px-3">분류</th>
-                                <th class="py-3 px-3">내용</th>
+                                <th class="py-3 px-3">문제 내용</th>
+                                <th class="py-3 px-3">완료일자</th>
+                                <th class="py-3 px-3">처리 소요 기한</th>
                                 <th class="py-3 px-3 text-center">상태</th>
                                 <th class="py-3 px-3 text-right">관리</th>
                             </tr>
@@ -391,6 +393,30 @@
         </section>
 
     </main>
+
+    <!-- 해결 완료 시 조치 내용 및 완료일 입력 모달 -->
+    <div id="resolve-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-emerald-500/40">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                <h3 class="font-bold text-base text-white">✔ 조치 완료 처리</h3>
+                <button onclick="closeResolveModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+            </div>
+            <p class="text-xs text-slate-400">완료 시점의 날짜와 구체적인 처리 내용(조치 내역)을 입력하세요.</p>
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">해결 완료일</label>
+                <input type="date" id="resolve-date-input" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">처리 내용 (조치 내역)</label>
+                <textarea id="resolve-note-input" rows="3" placeholder="예: 배관 교체 완료 및 누수 테스트 이상 없음" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs resize-none"></textarea>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="confirmResolveIssue()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl transition-all text-xs shadow-lg">
+                    완료 저장하기
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- 내 계정 설정 모달 -->
     <div id="account-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -423,10 +449,10 @@
     <div id="master-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl border border-purple-500/40">
             <div class="flex justify-between items-center border-b border-white/10 pb-3">
-                <h3 class="font-bold text-base text-white">⚙️ 마스터 전용: 회원 권한 등급 및 건물 매칭</h3>
+                <h3 class="font-bold text-base text-white">⚙️ 마스터 전용: 회원 및 사업장 관리</h3>
                 <button onclick="closeMasterModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
             </div>
-            <p class="text-xs text-slate-400">가입된 회원의 마스터 등급(1~3단계) 또는 일반(STAFF) 권한을 지정하고 건물을 매칭할 수 있습니다.</p>
+            <p class="text-xs text-slate-400">회원 등급, 사업장 매칭을 설정하고, 비밀번호 수정 또는 계정을 삭제할 수 있습니다.</p>
             
             <div id="staff-mapping-container" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
 
@@ -438,18 +464,25 @@
         </div>
     </div>
 
-    <!-- 건물 추가 모달 -->
+    <!-- 사업장 추가 및 삭제 모달 -->
     <div id="building-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-card rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-white/25">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-base text-white">🏢 신규 건물 등록</h3>
+        <div class="glass-card rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-white/25">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                <h3 class="font-bold text-base text-white">🏢 사업장 추가 및 삭제 관리</h3>
                 <button onclick="closeBuildingModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
             </div>
-            <p class="text-xs text-slate-400">관리할 건물명 또는 지점명을 입력하세요.</p>
-            <input type="text" id="new-building-name" placeholder="예: 강남 센터빌딩" class="w-full px-3 py-2.5 rounded-xl glass-input text-sm">
+            <p class="text-xs text-slate-400">신규 사업장을 등록하거나 기존 사업장을 삭제할 수 있습니다.</p>
+            
+            <div class="flex gap-2">
+                <input type="text" id="new-building-name" placeholder="예: 강남 센터빌딩" class="flex-1 px-3 py-2 rounded-xl glass-input text-xs">
+                <button onclick="addBuilding()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow">추가</button>
+            </div>
+
+            <div id="building-manage-list" class="space-y-2 py-2 max-h-48 overflow-y-auto"></div>
+
             <div class="flex gap-2 pt-2">
-                <button onclick="addBuilding()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl transition-all text-xs shadow-lg">
-                    건물 추가하기
+                <button onclick="closeBuildingModal()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2.5 rounded-xl transition-all text-xs shadow-lg">
+                    확인 및 닫기
                 </button>
             </div>
         </div>
@@ -486,7 +519,7 @@
                 <h3 class="font-bold text-lg text-white">📄 위상(상사) 보고용 요약 내용</h3>
                 <button onclick="closeReportModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
             </div>
-            <p class="text-xs text-slate-400">현재 선택된 건물의 보고 내용을 복사하여 활용하세요.</p>
+            <p class="text-xs text-slate-400">현재 선택된 사업장의 보고 내용을 복사하여 활용하세요.</p>
             <textarea id="report-text-area" readonly class="w-full h-48 p-3 bg-slate-950 border border-white/10 rounded-xl text-xs font-mono text-slate-300 resize-none focus:outline-none"></textarea>
             <div class="flex gap-2">
                 <button onclick="copyReportText()" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all text-sm shadow-lg shadow-blue-500/25">
@@ -531,6 +564,8 @@
         const CLIENT_ID = ""; 
         const API_KEY = ""; 
         const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+        let targetResolveId = null;
 
         function syncWithGoogleDrive() {
             if (!gapiInited || !gisInited || !CLIENT_ID) {
@@ -625,11 +660,11 @@
         
         let issuesMap = JSON.parse(localStorage.getItem('multi_building_issues')) || {
             "본사 빌딩": [
-                { id: 1, date: '2026-03-01', location: '지하 1층 주차장', category: '설비/배관', desc: '소화전 배관 미세 누수 발생', status: '완료' },
-                { id: 2, date: '2026-03-02', location: '3층 복도', category: '전기/조명', desc: 'LED 센서등 점멸 불량', status: '처리중' }
+                { id: 1, date: '2026-03-01', location: '지하 1층 주차장', category: '설비/배관', desc: '소화전 배관 미세 누수 발생', status: '완료', resolveDate: '2026-03-03', resolveNote: '배관 교체 완료 및 누수 테스트 이상 없음' },
+                { id: 2, date: '2026-03-02', location: '3층 복도', category: '전기/조명', desc: 'LED 센서등 점멸 불량', status: '처리중', resolveDate: '', resolveNote: '' }
             ],
             "강남 스마트타워": [
-                { id: 3, date: '2026-03-02', location: '로비', category: '승강기/시설', desc: '1호기 승강기 버튼 터치 지연', status: '처리중' }
+                { id: 3, date: '2026-03-02', location: '로비', category: '승강기/시설', desc: '1호기 승강기 버튼 터치 지연', status: '처리중', resolveDate: '', resolveNote: '' }
             ],
             "역삼 데이터센터": []
         };
@@ -752,7 +787,7 @@
             } else {
                 badge.innerText = `STAFF (${currentUser.name})`;
                 badge.className = "bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-blue-500/30";
-                notice.innerText = `일반 권한 (담당 현장: ${currentUser.assigned}) 만 접근 가능`;
+                notice.innerText = `일반 권한 (담당 사업장: ${currentUser.assigned}) 만 접근 가능`;
                 btnAddBuilding.style.display = "none";
                 btnMasterSettings.style.display = "none";
                 if(btnCatModal) btnCatModal.style.display = "none";
@@ -765,7 +800,7 @@
             const accessible = getAccessibleBuildings();
 
             if (accessible.length === 0 || !accessible[0]) {
-                select.innerHTML = `<option value="">담당 건물 없음</option>`;
+                select.innerHTML = `<option value="">담당 사업장 없음</option>`;
                 return;
             }
 
@@ -778,7 +813,7 @@
             if(!bName) return;
             const accessible = getAccessibleBuildings();
             if(!accessible.includes(bName)) {
-                alert('접근 권한이 없는 건물입니다.');
+                alert('접근 권한이 없는 사업장입니다.');
                 renderBuildingSelect();
                 return;
             }
@@ -790,14 +825,13 @@
         }
 
         function updateBuildingUI() {
-            const target = currentBuilding || "선택된 건물 없음";
+            const target = currentBuilding || "선택된 사업장 없음";
             document.getElementById('current-building-title').innerText = target;
             document.getElementById('form-building-name').innerText = target;
             document.getElementById('analytics-building-name').innerText = target;
             document.getElementById('list-building-name').innerText = target;
         }
 
-        // 내 계정 설정 모달
         function openAccountModal() {
             if (!currentUser) return;
             document.getElementById('account-new-id').value = currentUser.id;
@@ -858,8 +892,10 @@
                     buildingOptions += `<option value="${b}" ${info.assigned === b ? 'selected' : ''}>${b}</option>`;
                 });
 
+                let deleteBtn = userId !== currentUser.id ? `<button type="button" onclick="deleteUser('${userId}')" class="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-xs">계정 삭제</button>` : `<span class="text-[10px] text-slate-500">본인계정</span>`;
+
                 container.innerHTML += `
-                    <div class="bg-slate-900 p-3.5 rounded-xl border border-white/10 space-y-2">
+                    <div class="bg-slate-900 p-3.5 rounded-xl border border-white/10 space-y-2" id="user-row-${userId}">
                         <div class="flex justify-between items-center">
                             <div>
                                 <span class="text-xs font-bold text-white">${info.name}</span>
@@ -876,11 +912,18 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center pt-1 border-t border-white/5">
-                            <span class="text-[11px] text-slate-300">매칭 건물 지정 (STAFF 대상):</span>
-                            <select id="building-${userId}" onchange="updateUserBuilding('${userId}', this.value)" class="text-xs bg-slate-950 border border-white/20 rounded-lg px-2 py-1 text-blue-400 font-semibold focus:outline-none">
-                                ${buildingOptions}
-                            </select>
+                        <div class="flex justify-between items-center pt-1 border-t border-white/5 flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] text-slate-300">매칭 사업장:</span>
+                                <select id="building-${userId}" onchange="updateUserBuilding('${userId}', this.value)" class="text-xs bg-slate-950 border border-white/20 rounded-lg px-2 py-1 text-blue-400 font-semibold focus:outline-none">
+                                    ${buildingOptions}
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="pw-${userId}" placeholder="새 비번 변경" class="px-2 py-1 bg-slate-950 border border-white/20 rounded-lg text-xs w-28 text-slate-200">
+                                <button type="button" onclick="adminUpdatePassword('${userId}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs">비번수정</button>
+                                ${deleteBtn}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -906,17 +949,54 @@
             }
         }
 
-        function openBuildingModal() {
-            if(currentUser.role !== 'MASTER-1') {
-                alert('건물 추가는 [MASTER-1 총괄 관리자]만 가능합니다.');
+        function adminUpdatePassword(userId) {
+            const pwInput = document.getElementById(`pw-${userId}`);
+            const newPw = pwInput.value.trim();
+            if(!newPw) {
+                alert('변경할 새 비밀번호를 입력해주세요.');
                 return;
             }
-            document.getElementById('building-modal').classList.add('hidden'); // Fix typo
+            if(systemUsers[userId]) {
+                systemUsers[userId].pw = newPw;
+                localStorage.setItem('system_user_database_v3', JSON.stringify(systemUsers));
+                pwInput.value = '';
+                alert(`[${userId}] 회원의 비밀번호가 성공적으로 변경되었습니다.`);
+            }
+        }
+
+        function deleteUser(userId) {
+            if(confirm(`정말 [${userId}] 계정을 삭제하시겠습니까?`)) {
+                delete systemUsers[userId];
+                localStorage.setItem('system_user_database_v3', JSON.stringify(systemUsers));
+                openMasterModal(); // 모달 창 새로고침
+            }
+        }
+
+        function openBuildingModal() {
+            if(currentUser.role !== 'MASTER-1') {
+                alert('사업장 관리는 [MASTER-1 총괄 관리자]만 가능합니다.');
+                return;
+            }
+            renderBuildingManageList();
             document.getElementById('building-modal').classList.remove('hidden');
         }
 
         function closeBuildingModal() {
             document.getElementById('building-modal').classList.add('hidden');
+            initApp();
+        }
+
+        function renderBuildingManageList() {
+            const listContainer = document.getElementById('building-manage-list');
+            listContainer.innerHTML = '';
+            allBuildings.forEach((b, index) => {
+                listContainer.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-white/10">
+                        <span class="text-xs font-semibold text-slate-200">${index + 1}. ${b}</span>
+                        <button onclick="deleteBuilding(${index})" class="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded text-xs">사업장 삭제</button>
+                    </div>
+                `;
+            });
         }
 
         function addBuilding() {
@@ -925,16 +1005,30 @@
             const bName = nameInput.value.trim();
             if(!bName) return;
             if(allBuildings.includes(bName)) {
-                alert('이미 등록된 건물명입니다.');
+                alert('이미 등록된 사업장명입니다.');
                 return;
             }
             allBuildings.push(bName);
             if(!issuesMap[bName]) issuesMap[bName] = [];
             localStorage.setItem('multi_buildings', JSON.stringify(allBuildings));
-            saveData();
             nameInput.value = '';
-            closeBuildingModal();
-            changeBuilding(bName);
+            renderBuildingManageList();
+            saveData();
+        }
+
+        function deleteBuilding(index) {
+            if(allBuildings.length <= 1) {
+                alert('최소 1개 이상의 사업장이 필요합니다.');
+                return;
+            }
+            const targetB = allBuildings[index];
+            if(confirm(`[${targetB}] 사업장을 정말 삭제하시겠습니까? 해당 사업장의 데이터도 함께 제거됩니다.`)) {
+                allBuildings.splice(index, 1);
+                delete issuesMap[targetB];
+                localStorage.setItem('multi_buildings', JSON.stringify(allBuildings));
+                saveData();
+                renderBuildingManageList();
+            }
         }
 
         function switchTab(tabName) {
@@ -963,7 +1057,6 @@
             });
         }
 
-        // 카테고리 관리 모달
         function openCategoryModal() {
             if(currentUser.role === 'MASTER-3') {
                 alert('수석검토자 등급은 카테고리 편집 권한이 없습니다.');
@@ -1040,7 +1133,7 @@
         function addIssue(e) {
             e.preventDefault();
             if(!currentBuilding) {
-                alert('관제할 건물이 선택되지 않았습니다.');
+                alert('관제할 사업장이 선택되지 않았습니다.');
                 return;
             }
 
@@ -1060,6 +1153,8 @@
                 category,
                 desc,
                 status: '처리중',
+                resolveDate: '',
+                resolveNote: '',
                 writer: currentUser.name
             });
 
@@ -1075,14 +1170,52 @@
         function toggleStatus(id) {
             if(!currentBuilding) return;
             let issues = issuesMap[currentBuilding] || [];
+            const target = issues.find(i => i.id === id);
+            if (!target) return;
+
+            if (target.status === '처리중') {
+                targetResolveId = id;
+                document.getElementById('resolve-date-input').valueAsDate = new Date();
+                document.getElementById('resolve-note-input').value = target.resolveNote || '';
+                document.getElementById('resolve-modal').classList.remove('hidden');
+            } else {
+                target.status = '처리중';
+                target.resolveDate = '';
+                target.resolveNote = '';
+                saveData();
+            }
+        }
+
+        function closeResolveModal() {
+            targetResolveId = null;
+            document.getElementById('resolve-modal').classList.add('hidden');
+        }
+
+        function confirmResolveIssue() {
+            if (!targetResolveId || !currentBuilding) return;
+            const rDate = document.getElementById('resolve-date-input').value;
+            const note = document.getElementById('resolve-note-input').value.trim();
+            
+            if (!rDate) {
+                alert('해결 완료일을 선택해주세요.');
+                return;
+            }
+            if (!note) {
+                alert('구체적인 처리 내용을 입력해주세요.');
+                return;
+            }
+
+            let issues = issuesMap[currentBuilding] || [];
             issues = issues.map(item => {
-                if(item.id === id) {
-                    return { ...item, status: item.status === '완료' ? '처리중' : '완료' };
+                if(item.id === targetResolveId) {
+                    return { ...item, status: '완료', resolveDate: rDate, resolveNote: note };
                 }
                 return item;
             });
             issuesMap[currentBuilding] = issues;
             saveData();
+            closeResolveModal();
+            alert('조치 완료일 및 처리 내용이 저장되었습니다.');
         }
 
         function deleteIssue(id) {
@@ -1097,7 +1230,6 @@
             }
         }
 
-        // 종합 대시보드 렌더링 (연간 집계 수치 및 그래프 추가)
         function renderDashboard() {
             const issues = issuesMap[currentBuilding] || [];
             const total = issues.length;
@@ -1127,7 +1259,6 @@
             document.getElementById('summary-resolved').innerText = resolved;
             document.getElementById('summary-pending').innerText = pending;
 
-            // 연도별 집계 계산 (최근 3개년 기준)
             const yearlyCounts = {};
             const years = [2024, 2025, 2026];
             years.forEach(y => yearlyCounts[y] = 0);
@@ -1141,7 +1272,6 @@
                 }
             });
 
-            // 연간 집계 그래픽 바 렌더링
             const yearlyBarContainer = document.getElementById('yearly-graphic-bars');
             yearlyBarContainer.innerHTML = '';
             
@@ -1246,14 +1376,36 @@
             filtered.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-white/5 transition-colors";
+                
+                let resolveDateDisplay = "-";
+                let durationDisplay = "-";
+
+                if (item.status === '완료') {
+                    resolveDateDisplay = item.resolveDate || "미기재";
+                    if (item.date && item.resolveDate) {
+                        const start = new Date(item.date);
+                        const end = new Date(item.resolveDate);
+                        const diffTime = end - start;
+                        const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                        durationDisplay = `<span class="text-emerald-400 font-bold">${diffDays}일 소요</span>`;
+                    }
+                }
+
+                let descDisplay = escapeHtml(item.desc);
+                if (item.status === '완료' && item.resolveNote) {
+                    descDisplay += `<br><span class="text-[11px] text-slate-400">[조치: ${escapeHtml(item.resolveNote)}]</span>`;
+                }
+
                 tr.innerHTML = `
                     <td class="py-3 px-3 text-xs text-slate-400 whitespace-nowrap">${item.date}</td>
                     <td class="py-3 px-3 font-medium text-white">${escapeHtml(item.location)}</td>
                     <td class="py-3 px-3"><span class="bg-slate-800 text-slate-300 px-2 py-1 rounded-md text-xs border border-white/5">${item.category}</span></td>
-                    <td class="py-3 px-3 text-slate-300">${escapeHtml(item.desc)}</td>
+                    <td class="py-3 px-3 text-slate-300">${descDisplay}</td>
+                    <td class="py-3 px-3 text-xs text-emerald-400 font-mono whitespace-nowrap">${resolveDateDisplay}</td>
+                    <td class="py-3 px-3 text-xs whitespace-nowrap">${durationDisplay}</td>
                     <td class="py-3 px-3 text-center whitespace-nowrap">
                         <button onclick="toggleStatus(${item.id})" class="px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${item.status === '완료' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'}">
-                            ${item.status === '완료' ? '✔ 해결완료' : '⏳ 처리중 (변경)'}
+                            ${item.status === '완료' ? '✔ 해결완료' : '⏳ 처리중 (완료로 변경)'}
                         </button>
                     </td>
                     <td class="py-3 px-3 text-right whitespace-nowrap">
@@ -1283,10 +1435,13 @@
             report += ` - 해결 완료: ` + resolved + `건 (` + rate + `%)\n`;
             report += ` - 처리 중: ` + pending + `건\n`;
             report += ` - 당월(` + currentYearMonth + `) 접수: ` + thisMonthIssues.length + `건\n\n`;
-            report += `2. 주요 진행 내역 (최근 순)\n`;
+            report += `2. 주요 진행 내역 및 조치 결과 (최근 순)\n`;
             
             issues.slice(0, 5).forEach((i, idx) => {
-                report += ` ` + (idx+1) + `. [` + i.status + `] ` + i.date + ` / ` + i.location + ` (` + i.category + `) - ` + i.desc + `\n`;
+                report += ` ` + (idx+1) + `. [` + i.status + `] ` + i.date + ` / ` + i.location + ` (` + i.category + `) - ` + i.desc;
+                if(i.resolveDate) report += ` [완료일: ${i.resolveDate}]`;
+                if(i.resolveNote) report += ` [조치: ${i.resolveNote}]`;
+                report += `\n`;
             });
 
             document.getElementById('report-text-area').value = report;
