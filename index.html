@@ -623,7 +623,7 @@
                 });
                 const result = await response.json();
                 if(result.id) {
-                    alert('구글 드라이브 폴더에 실시간 데이터가 성공적으로 동기화되었습니다!');
+                    alert('지정된 구글 드라이브 폴더에 실시간 데이터가 성공적으로 동기화되었습니다!');
                 } else {
                     alert('드라이브 동기화 중 오류가 발생했습니다.');
                 }
@@ -646,7 +646,7 @@
             a.href = url;
             a.download = `building_data_backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
-            alert('구글 드라이브 폴더에 업로드할 수 있도록 백업 파일이 다운로드되었습니다.');
+            alert('지정된 구글 드라이브 폴더(1Ac8NUrAhZdb3lVJ_EGaZS9Ary3pLhHJc)에 업로드할 수 있도록 백업 파일이 다운로드되었습니다.');
         }
 
         // 회원 DB (approved: true/false 로 승인 대기 관리)
@@ -812,7 +812,7 @@
             } else {
                 badge.innerText = `STAFF (${currentUser.name})`;
                 badge.className = "bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-blue-500/30";
-                notice.innerText = `일반 권한 (담당 사업장: ${currentUser.assigned}) 만 접근 가능`;
+                notice.innerText = `일반 권한 (담당 현장: ${currentUser.assigned}) 만 접근 가능`;
                 btnAddBuilding.style.display = "none";
                 btnMasterSettings.style.display = "none";
                 if(btnCatModal) btnCatModal.style.display = "none";
@@ -906,7 +906,7 @@
             initApp();
         }
 
-        // 회원 승인 대기 목록 및 권한/매칭 관리 모달
+        // 승인 대기 인원 관리 기능이 추가된 마스터 모달
         function openMasterModal() {
             if(!isMaster()) return;
             const container = document.getElementById('staff-mapping-container');
