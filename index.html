@@ -278,7 +278,7 @@
 
             <div class="glass-card p-6 rounded-2xl space-y-4 shadow-lg text-center">
                 <h2 class="text-lg font-bold text-white">🏢 구글 드라이브 폴더 실시간 연동 시스템</h2>
-                <p class="text-xs text-slate-300 max-w-xl mx-auto">지정된 드라이브 폴더(<code class="text-blue-400">1Ac8NUrAhZdb3lVJ_EGaZS9Ary3pLhHJc</code>)와 데이터가 실시간 연동되어 팀원들과 공유됩니다.</p>
+                <p class="text-xs text-slate-300 max-w-xl mx-auto">지정된 드라이브 폴더(<code class="text-blue-400">1Ac8NUrAhZdb3lVJ_EGaZS9Ary3pLhHJc</code>)와 데이터가 자동 실시간 연동됩니다.</p>
                 <div class="pt-2 flex justify-center gap-3">
                     <button onclick="switchTab('register')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">문제 등록하러 가기</button>
                     <button onclick="syncWithGoogleDrive()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">드라이브 동기화</button>
@@ -446,7 +446,7 @@
         </div>
     </div>
 
-    <!-- 마스터 전용 모달 (가입 승인 대기 알림 및 승인/반려 관리 포함) -->
+    <!-- 마스터 전용 모달 (승인 대기 및 가입 알림 포함) -->
     <div id="master-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl border border-purple-500/40">
             <div class="flex justify-between items-center border-b border-white/10 pb-3">
@@ -568,6 +568,7 @@
 
         let targetResolveId = null;
 
+        // 구글 드라이브 폴더에 자동으로 파일 생성 및 저장 (동기화)
         function syncWithGoogleDrive() {
             if (!gapiInited || !gisInited || !CLIENT_ID) {
                 exportLocalDataAsFile();
@@ -623,7 +624,7 @@
                 });
                 const result = await response.json();
                 if(result.id) {
-                    alert('지정된 구글 드라이브 폴더에 실시간 데이터가 성공적으로 동기화되었습니다!');
+                    alert('구글 드라이브 지정 폴더(1Ac8NUrAhZdb3lVJ_EGaZS9Ary3pLhHJc)에 데이터가 자동으로 저장되었습니다!');
                 } else {
                     alert('드라이브 동기화 중 오류가 발생했습니다.');
                 }
@@ -649,7 +650,6 @@
             alert('지정된 구글 드라이브 폴더(1Ac8NUrAhZdb3lVJ_EGaZS9Ary3pLhHJc)에 업로드할 수 있도록 백업 파일이 다운로드되었습니다.');
         }
 
-        // 회원 DB (approved: true/false 로 승인 대기 관리)
         let systemUsers = JSON.parse(localStorage.getItem('system_user_database_v4')) || {
             "master1": { pw: "1234", name: "총괄관리자", phone: "010-1111-2222", email: "master1@building.com", field: "전체관리", role: "MASTER-1", assigned: "", approved: true },
             "master2": { pw: "1234", name: "중간관리자", phone: "010-2222-3333", email: "master2@building.com", field: "지점총괄", role: "MASTER-2", assigned: "", approved: true },
@@ -700,12 +700,11 @@
                 return;
             }
 
-            // 가입 신청시 approved: false 로 생성 (승인 대기 상태)
             systemUsers[id] = {
                 pw, name, phone, email, field,
                 role: 'STAFF',
                 assigned: allBuildings.includes(field) ? field : (allBuildings[0] || ""),
-                approved: false 
+                approved: false // 승인 대기 상태
             };
 
             localStorage.setItem('system_user_database_v4', JSON.stringify(systemUsers));
@@ -744,6 +743,19 @@
             } else {
                 loginScreen.classList.add('hidden');
                 initApp();
+                
+                // 마스터 권한자가 로그인했을 때 미승인 인원이 있으면 알림 팝업 띄우기
+                if (isMaster()) {
+                    let pendingCount = 0;
+                    for (const info of Object.values(systemUsers)) {
+                        if (info.approved === false) pendingCount++;
+                    }
+                    if (pendingCount > 0) {
+                        setTimeout(() => {
+                            alert(`🚨 [알림] 현재 승인을 대기 중인 신규 회원가입 신청이 ${pendingCount}건 있습니다.\n상단 우측 [회원 및 사업장 관리] 메뉴에서 확인 후 승인해주세요.`);
+                        }, 500);
+                    }
+                }
             }
         }
 
@@ -774,7 +786,6 @@
             updatePendingBadge();
         }
 
-        // 승인 대기 인원 카운트 배지 업데이트
         function updatePendingBadge() {
             if (!isMaster()) return;
             let pendingCount = 0;
@@ -812,7 +823,7 @@
             } else {
                 badge.innerText = `STAFF (${currentUser.name})`;
                 badge.className = "bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-blue-500/30";
-                notice.innerText = `일반 권한 (담당 현장: ${currentUser.assigned}) 만 접근 가능`;
+                notice.innerText = `일반 권한 (담당 사업장: ${currentUser.assigned}) 만 접근 가능`;
                 btnAddBuilding.style.display = "none";
                 btnMasterSettings.style.display = "none";
                 if(btnCatModal) btnCatModal.style.display = "none";
@@ -906,7 +917,6 @@
             initApp();
         }
 
-        // 승인 대기 인원 관리 기능이 추가된 마스터 모달
         function openMasterModal() {
             if(!isMaster()) return;
             const container = document.getElementById('staff-mapping-container');
@@ -1060,9 +1070,9 @@
             allBuildings.push(bName);
             if(!issuesMap[bName]) issuesMap[bName] = [];
             localStorage.setItem('multi_buildings', JSON.stringify(allBuildings));
+            saveData();
             nameInput.value = '';
             renderBuildingManageList();
-            saveData();
         }
 
         function deleteBuilding(index) {
