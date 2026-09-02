@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 다중 사업장 관리 통합 관제 시스템</title>
+    <title>전사 통합 관제 및 사용자 인증 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -38,6 +38,72 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
 
+    <!-- 첫 접속 시 강제 노출되는 개인별 로그인 및 회원가입 모달 -->
+    <div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-card rounded-2xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-blue-500/40">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-500/30">
+                    🏢
+                </div>
+                <h2 id="authModalTitle" class="text-xl font-bold text-white">전사 통합 관제 시스템 로그인</h2>
+                <p id="authModalDesc" class="text-xs text-slate-400">아이디와 비밀번호를 입력하여 로그인하세요.</p>
+            </div>
+            
+            <!-- 로그인 뷰 -->
+            <div id="loginView" class="space-y-4">
+                <form onsubmit="handleLoginSubmit(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">아이디 (ID)</label>
+                        <input type="text" id="loginId" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="아이디 입력 (예: master01)" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">비밀번호</label>
+                        <input type="password" id="loginPwd" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="비밀번호 입력" required>
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl text-xs shadow-lg shadow-blue-500/20 transition-all">
+                            로그인하기
+                        </button>
+                        <button type="button" onclick="toggleAuthMode('signup')" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs transition-all">
+                            신규 회원가입 신청하기
+                        </button>
+                    </div>
+                </form>
+                <div class="text-[11px] text-slate-500 bg-slate-900/50 p-2.5 rounded-xl border border-white/5 space-y-1">
+                    <div class="font-semibold text-slate-400">💡 테스트용 기본 계정 안내:</div>
+                    <div>• 1단계(최고관리자): master01 / 123</div>
+                    <div>• 2단계(전체조회): manager01 / 123</div>
+                    <div>• 3단계(특정사업장): sub01 / 123</div>
+                </div>
+            </div>
+
+            <!-- 회원가입 뷰 (사업장 선택 제거됨) -->
+            <div id="signupView" class="space-y-4 hidden">
+                <form onsubmit="handleSignupSubmit(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">아이디 (ID)</label>
+                        <input type="text" id="regId" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="사용할 아이디 입력" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">이름</label>
+                        <input type="text" id="regName" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="성명 입력" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">비밀번호</label>
+                        <input type="password" id="regPwd" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="비밀번호 입력" required>
+                    </div>
+                    <div class="p-3 bg-blue-950/40 border border-blue-500/30 rounded-xl text-[11px] text-blue-300">
+                        ℹ️ 신규 가입 시 기본 권한(일반 사용자)으로 가입되며, <strong>1단계 최고관리자</strong>가 로그인 후 담당 사업장 및 권한을 승인 및 지정해 드립니다.
+                    </div>
+                    <div class="pt-2 flex gap-2">
+                        <button type="button" onclick="toggleAuthMode('login')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs">돌아가기</button>
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg">가입 신청</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- 상단 헤더 -->
     <header class="glass-card shadow-lg sticky top-0 z-40 border-b border-white/10">
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-3">
@@ -48,28 +114,23 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="font-bold text-lg text-white leading-tight">전사 통합 관제 대시보드</h1>
-                        <span id="role-badge" class="bg-purple-500/20 text-purple-400 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-purple-500/30">1단계 (최고관리자)</span>
+                        <span id="role-badge" class="bg-purple-500/20 text-purple-400 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-purple-500/30"></span>
                     </div>
-                    <p class="text-xs text-slate-400">3단계 권한 제어 및 다중 사업장 시설 관리 시스템</p>
+                    <p id="loggedUserDesc" class="text-xs text-slate-400">접속 중: -</p>
                 </div>
             </div>
 
-            <!-- 컨트롤 및 권한 테스트 버튼 영역 -->
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
                 <div class="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10">
                     <span class="text-xs text-slate-400">조회 사업장:</span>
                     <select id="building-select" onchange="changeBuilding(this.value)" class="bg-transparent text-xs font-bold text-blue-400 focus:outline-none cursor-pointer">
-                        <!-- 동적 사업장 선택 -->
                     </select>
                 </div>
-                <button onclick="openLoginModal()" class="bg-slate-800 hover:bg-slate-700 text-blue-300 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1">
-                    <span>🔄</span> 권한 계정 전환
+                <button onclick="openAuthModal()" class="bg-slate-800 hover:bg-slate-700 text-blue-300 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-700 transition-all flex items-center gap-1">
+                    <span>🔄</span> 로그아웃 / 계정전환
                 </button>
                 <button id="btn-master-category" onclick="switchTab('masterCategory')" class="bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 px-3 py-2 rounded-xl text-xs font-semibold border border-amber-500/40 transition-all hidden items-center gap-1">
                     <span>👑</span> [1단계] 시스템 카테고리 관리
-                </button>
-                <button onclick="openReportModal()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow-lg shadow-blue-500/20 transition-all">
-                    📊 보고서
                 </button>
             </div>
         </div>
@@ -138,13 +199,13 @@
                 </div>
             </div>
 
-            <!-- 실시간 처리 현황 테이블 (완료일자 및 소요 기한 분리 포함) -->
+            <!-- 실시간 처리 현황 테이블 -->
             <div class="glass-card p-6 rounded-2xl space-y-4 shadow-lg">
                 <div class="flex justify-between items-center border-b border-white/10 pb-3">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
                         <span>📈</span> 실시간 처리 현황 및 소요 기간 산출
                     </h2>
-                    <span class="text-xs text-slate-400" id="filterNotice">조회 가능 권한 범위 기준 집계</span>
+                    <span class="text-xs text-slate-400">조회 가능 권한 범위 기준 집계</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
@@ -157,6 +218,7 @@
                                 <th class="py-3 px-3">완료일자</th>
                                 <th class="py-3 px-3">소요 기간</th>
                                 <th class="py-3 px-3 text-center">상태</th>
+                                <th class="py-3 px-3 text-center" id="dashHeaderDelete">관리</th>
                             </tr>
                         </thead>
                         <tbody id="dashboardTableBody" class="divide-y divide-white/5 text-sm"></tbody>
@@ -224,7 +286,7 @@
                                 <th class="py-3 px-3">이름</th>
                                 <th class="py-3 px-3">권한 등급</th>
                                 <th class="py-3 px-3">담당 사업장</th>
-                                <th class="py-3 px-3 text-center">계정 제어 (삭제/비번변경)</th>
+                                <th class="py-3 px-3 text-center">계정 제어 (아이디/비번/권한/사업장변경/삭제)</th>
                             </tr>
                         </thead>
                         <tbody id="userTableBody" class="divide-y divide-white/5 text-sm"></tbody>
@@ -269,18 +331,6 @@
 
     </main>
 
-    <!-- 계정 전환 모달 (3단계 권한 테스트용) -->
-    <div id="loginModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-card rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-blue-500/40">
-            <div class="flex justify-between items-center border-b border-white/10 pb-3">
-                <h3 class="font-bold text-base text-white">🔄 권한 단계별 테스트 계정 선택</h3>
-                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
-            </div>
-            <p class="text-xs text-slate-400">원하시는 권한 단계의 계정을 선택하여 시스템 동작을 테스트하세요.</p>
-            <div class="space-y-2.5" id="accountSelectionList"></div>
-        </div>
-    </div>
-
     <!-- 이슈 등록/수정 모달 -->
     <div id="issueModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-white/20">
@@ -301,6 +351,9 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">이슈 내용</label>
                     <textarea id="issueContent" rows="3" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs resize-none" placeholder="이슈 내용을 입력하세요" required></textarea>
+                </div>
+                <div class="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-[11px] text-slate-400">
+                    🕒 등록 일시는 시스템에 의해 현재 시간으로 자동 기록됩니다.
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -324,36 +377,42 @@
         </div>
     </div>
 
-    <!-- 비밀번호 변경 모달 (1단계 전용) -->
-    <div id="pwdModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- 1단계 전용 사용자 정보/권한/사업장 지정 및 아이디/비밀번호 변경 모달 -->
+    <div id="userEditModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-blue-500/40">
             <div class="flex justify-between items-center border-b border-white/10 pb-3">
-                <h3 class="font-bold text-base text-white">비밀번호 변경 (1단계 전용)</h3>
-                <button onclick="closePwdModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
+                <h3 class="font-bold text-base text-white">사용자 계정 제어 (1단계)</h3>
+                <button onclick="closeUserEditModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
             </div>
-            <input type="hidden" id="targetUserId">
-            <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">새 비밀번호</label>
-                <input type="password" id="newPasswordInput" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs" placeholder="새 비밀번호 입력">
+            <input type="hidden" id="editTargetUserId">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">아이디 (ID) 변경</label>
+                    <input type="text" id="editUserLoginId" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs" placeholder="변경할 아이디 입력">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">비밀번호 변경</label>
+                    <input type="password" id="editUserPwd" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs" placeholder="변경할 비밀번호 입력 (미입력시 유지)">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">권한 등급 설정</label>
+                    <select id="editUserRole" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs">
+                        <option value="1" class="bg-slate-900">1단계 (최고관리자)</option>
+                        <option value="2" class="bg-slate-900">2단계 (전체조회 관리자)</option>
+                        <option value="3" class="bg-slate-900">3단계 (특정사업장 조회자)</option>
+                        <option value="4" class="bg-slate-900">일반 사용자</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">담당 사업장 지정</label>
+                    <select id="editUserSite" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs">
+                        <option value="전체" class="bg-slate-900">전체 (1, 2단계 전용)</option>
+                    </select>
+                </div>
             </div>
             <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closePwdModal()" class="px-3 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">취소</button>
-                <button onclick="confirmChangePassword()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold">변경하기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 보고서 모달 -->
-    <div id="report-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-card rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-white/20">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg text-white">📄 전사 통합 보고서 요약</h3>
-                <button onclick="closeReportModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
-            </div>
-            <textarea id="report-text-area" readonly class="w-full h-48 p-3 bg-slate-950 border border-white/10 rounded-xl text-xs font-mono text-slate-300 resize-none focus:outline-none"></textarea>
-            <div class="flex gap-2">
-                <button onclick="copyReportText()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl text-xs shadow-lg">보고서 복사하기</button>
-                <button onclick="closeReportModal()" class="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs">닫기</button>
+                <button onclick="closeUserEditModal()" class="px-3 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">취소</button>
+                <button onclick="confirmUpdateUser()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold">설정 저장</button>
             </div>
         </div>
     </div>
@@ -362,7 +421,7 @@
         <p>© 2026 Enterprise Multi-Building Management Solution. All Rights Reserved.</p>
     </footer>
 
-    <!-- 자바스크립트 권한 및 시스템 로직 -->
+    <!-- 자바스크립트 인증 및 관제 로직 -->
     <script>
         let sites = JSON.parse(localStorage.getItem('sys_sites')) || [
             { id: 'site_1', name: '본사 타워 (서울)', address: '서울시 강남구 테헤란로 123' },
@@ -373,18 +432,18 @@
         let categories = JSON.parse(localStorage.getItem('sys_categories')) || ['시설안전', 'IT인프라', '미화/방범', '기타 민원'];
 
         let users = JSON.parse(localStorage.getItem('sys_users')) || [
-            { id: 'master01', name: '김관리 (최고)', role: 1, site: '전체' },
-            { id: 'manager01', name: '이총괄 (전체조회)', role: 2, site: '전체' },
-            { id: 'sub01', name: '박파트장 (특정사업장)', role: 3, site: '본사 타워 (서울)' },
-            { id: 'user01', name: '정사원 (일반)', role: 4, site: '본사 타워 (서울)' }
+            { id: 'master01', pwd: '123', name: '김관리 (최고)', role: 1, site: '전체' },
+            { id: 'manager01', pwd: '123', name: '이총괄 (전체조회)', role: 2, site: '전체' },
+            { id: 'sub01', pwd: '123', name: '박파트장 (특정사업장)', role: 3, site: '본사 타워 (서울)' },
+            { id: 'user01', pwd: '123', name: '정사원 (일반)', role: 4, site: '본사 타워 (서울)' }
         ];
 
         let issues = JSON.parse(localStorage.getItem('sys_issues')) || [
-            { id: 'iss_1', site: '본사 타워 (서울)', category: 'IT인프라', content: '3층 회의실 무선랜 끊김 현상', author: '정사원 (일반)', regDate: '2026-06-01', doneDate: '2026-06-03', status: '완료' },
-            { id: 'iss_2', site: 'R&D 센터 (판교)', category: '시설안전', content: '연구동 지하 1층 누수 점검 요청', author: '박파트장 (특정사업장)', regDate: '2026-06-03', doneDate: '', status: '진행중' }
+            { id: 'iss_1', site: '본사 타워 (서울)', category: 'IT인프라', content: '3층 회의실 무선랜 끊김 현상', author: '정사원 (일반)', regDate: '2026-06-01 09:30', doneDate: '2026-06-03', status: '완료' },
+            { id: 'iss_2', site: 'R&D 센터 (판교)', category: '시설안전', content: '연구동 지하 1층 누수 점검 요청', author: '박파트장 (특정사업장)', regDate: '2026-06-03 10:15', doneDate: '', status: '진행중' }
         ];
 
-        let currentUser = users[0]; // 기본: 1단계 최고관리자
+        let currentUser = null;
         let currentBuilding = sites[0].name;
 
         function saveData() {
@@ -395,37 +454,110 @@
         }
 
         window.onload = function() {
-            updateUserInterface();
-            switchTab('dashboard');
+            document.getElementById('authModal').classList.remove('hidden');
         };
 
+        function toggleAuthMode(mode) {
+            if (mode === 'signup') {
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('signupView').classList.remove('hidden');
+                document.getElementById('authModalTitle').innerText = '신규 회원가입 신청';
+                document.getElementById('authModalDesc').innerText = '기본 정보를 입력하여 가입을 신청하세요.';
+            } else {
+                document.getElementById('signupView').classList.add('hidden');
+                document.getElementById('loginView').classList.remove('hidden');
+                document.getElementById('authModalTitle').innerText = '전사 통합 관제 시스템 로그인';
+                document.getElementById('authModalDesc').innerText = '아이디와 비밀번호를 입력하여 로그인하세요.';
+            }
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('loginId').value.trim();
+            const pwdInput = document.getElementById('loginPwd').value.trim();
+
+            const found = users.find(u => u.id === idInput);
+            if (!found) {
+                return alert('존재하지 않는 아이디입니다. 회원가입 후 이용해주세요.');
+            }
+
+            if (found.pwd && found.pwd !== pwdInput) {
+                return alert('비밀번호가 일치하지 않습니다.');
+            }
+
+            currentUser = found;
+            currentBuilding = currentUser.role <= 2 ? sites[0].name : currentUser.site;
+            document.getElementById('authModal').classList.add('hidden');
+            updateUserInterface();
+            switchTab('dashboard');
+        }
+
+        function openAuthModal() {
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginPwd').value = '';
+            toggleAuthMode('login');
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function handleSignupSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('regId').value.trim();
+            const name = document.getElementById('regName').value.trim();
+            const pwd = document.getElementById('regPwd').value.trim();
+
+            if (users.some(u => u.id === id)) {
+                return alert('이미 존재하는 아이디입니다.');
+            }
+
+            users.push({
+                id: id,
+                pwd: pwd,
+                name: name,
+                role: 4, 
+                site: sites[0].name
+            });
+
+            saveData();
+            alert('회원가입이 완료되었습니다. 로그인해주세요.');
+            toggleAuthMode('login');
+            document.getElementById('loginId').value = id;
+        }
+
         function updateUserInterface() {
+            if (!currentUser) return;
             document.getElementById('current-building-title').innerText = currentBuilding;
+            document.getElementById('loggedUserDesc').innerText = `접속 중: ${currentUser.name} (${currentUser.id})`;
             
             const badge = document.getElementById('role-badge');
             const notice = document.getElementById('user-role-notice');
             const btnMasterCategory = document.getElementById('btn-master-category');
+            const dashHeaderDelete = document.getElementById('dashHeaderDelete');
 
+            // 1단계 관리자만 대시보드 테이블에서 기존 데이터 삭제 가능하도록 제어
             if (currentUser.role === 1) {
                 badge.className = "bg-amber-500/20 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-amber-500/30";
                 badge.innerText = '1단계 (최고관리자)';
-                notice.innerText = '모든 사업장 관제 및 모든 사용자 삭제/비번변경 가능';
+                notice.innerText = '모든 사업장 관제 및 사용자 계정 제어, 시스템 설정 및 등록 데이터 삭제 가능';
                 btnMasterCategory.style.display = "flex";
+                if (dashHeaderDelete) dashHeaderDelete.style.display = "table-cell";
             } else if (currentUser.role === 2) {
                 badge.className = "bg-blue-500/20 text-blue-400 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-blue-500/30";
                 badge.innerText = '2단계 (전체조회 관리자)';
-                notice.innerText = '모든 사업장 확인 가능 (사용자 삭제/비번변경 권한 없음)';
+                notice.innerText = '모든 사업장 확인 가능 (데이터 삭제 및 사용자 제어 권한 없음)';
                 btnMasterCategory.style.display = "none";
+                if (dashHeaderDelete) dashHeaderDelete.style.display = "none";
             } else if (currentUser.role === 3) {
                 badge.className = "bg-indigo-500/20 text-indigo-400 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-indigo-500/30";
                 badge.innerText = '3단계 (특정사업장 조회자)';
                 notice.innerText = `지정 사업장(${currentUser.site}) 확인만 가능`;
                 btnMasterCategory.style.display = "none";
+                if (dashHeaderDelete) dashHeaderDelete.style.display = "none";
             } else {
                 badge.className = "bg-slate-700 text-slate-300 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-slate-600";
                 badge.innerText = '일반 사용자';
                 notice.innerText = `지정 사업장(${currentUser.site}) 문제 입력 및 수정 가능`;
                 btnMasterCategory.style.display = "none";
+                if (dashHeaderDelete) dashHeaderDelete.style.display = "none";
             }
 
             renderBuildingSelect();
@@ -465,14 +597,14 @@
                     else sec.classList.add('hidden');
                 }
             });
-            if (tabName === 'masterCategory' && currentUser.role !== 1) {
+            if (tabName === 'masterCategory' && currentUser && currentUser.role !== 1) {
                 alert('1단계 최고관리자만 접근할 수 있는 메뉴입니다.');
                 switchTab('dashboard');
             }
         }
 
         function getAccessibleSites() {
-            if (currentUser.role <= 2) {
+            if (!currentUser || currentUser.role <= 2) {
                 return sites.map(s => s.name);
             } else {
                 return [currentUser.site];
@@ -500,11 +632,15 @@
             tbody.innerHTML = '';
 
             if (filteredIssues.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-500 text-xs">등록된 현황 데이터가 없습니다.</td></tr>`;
+                const colSpan = currentUser.role === 1 ? 8 : 7;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="py-6 text-center text-slate-500 text-xs">등록된 현황 데이터가 없습니다.</td></tr>`;
                 return;
             }
 
             filteredIssues.forEach(iss => {
+                // 원래 배열에서의 인덱스 찾기
+                const origIndex = issues.findIndex(item => item.id === iss.id);
+
                 let durationStr = '-';
                 if (iss.status === '완료' && iss.doneDate) {
                     const start = new Date(iss.regDate);
@@ -513,6 +649,11 @@
                     durationStr = `<span class="text-emerald-400 font-bold">${diffDays === 0 ? '당일 완료' : diffDays + '일 소요'}</span>`;
                 } else {
                     durationStr = '<span class="text-amber-400 font-medium">처리 진행중</span>';
+                }
+
+                let deleteBtnHtml = '';
+                if (currentUser.role === 1) {
+                    deleteBtnHtml = `<td class="py-3 px-3 text-center"><button onclick="deleteIssueData(${origIndex})" class="bg-rose-950/60 hover:bg-rose-900 text-rose-300 px-2 py-1 rounded text-xs border border-rose-500/30">삭제</button></td>`;
                 }
 
                 tbody.innerHTML += `
@@ -524,9 +665,24 @@
                         <td class="py-3 px-3 text-xs text-emerald-400 font-mono">${iss.doneDate || '-'}</td>
                         <td class="py-3 px-3 text-xs">${durationStr}</td>
                         <td class="py-3 px-3 text-center"><span class="px-2 py-1 rounded-full text-xs font-semibold ${iss.status === '완료' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}">${iss.status}</span></td>
+                        ${deleteBtnHtml}
                     </tr>
                 `;
             });
+        }
+
+        // 1단계 최고관리자 전용 기존 등록 데이터 삭제 함수
+        function deleteIssueData(index) {
+            if (currentUser.role !== 1) {
+                return alert('등록 데이터 삭제 권한은 1단계 최고관리자에게만 있습니다.');
+            }
+            if (confirm(`선택하신 이슈 항목을 영구 삭제하시겠습니까?`)) {
+                issues.splice(index, 1);
+                saveData();
+                renderDashboard();
+                renderIssues();
+                alert('해당 이슈 데이터가 삭제되었습니다.');
+            }
         }
 
         function renderIssues() {
@@ -581,30 +737,28 @@
             tbody.innerHTML = '';
 
             if (currentUser.role === 1) {
-                notice.innerHTML = '<span class="text-emerald-400 font-semibold">✔ 1단계 최고관리자: 모든 사용자 삭제 및 비밀번호 변경 가능</span>';
+                notice.innerHTML = '<span class="text-emerald-400 font-semibold">✔ 1단계 최고관리자: 모든 사용자 아이디/비밀번호 변경, 삭제 및 권한/사업장 지정 가능</span>';
             } else if (currentUser.role === 2) {
-                notice.innerHTML = '<span class="text-amber-400 font-semibold">⚠ 2단계 전체조회: 사용자 삭제 및 비번변경 권한 없음</span>';
+                notice.innerHTML = '<span class="text-amber-400 font-semibold">⚠ 2단계 전체조회: 사용자 계정 제어 권한 없음</span>';
             } else {
                 notice.innerHTML = '<span class="text-slate-500">조회 전용 권한입니다.</span>';
             }
 
             users.forEach((u, index) => {
-                let roleBadge = u.role === 1 ? '<span class="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300 font-bold">1단계(최고)</span>' :
-                                u.role === 2 ? '<span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-300 font-bold">2단계(전체)</span>' :
-                                u.role === 3 ? '<span class="px-2 py-0.5 rounded text-xs bg-indigo-500/20 text-indigo-300 font-bold">3단계(특정)</span>' :
-                                '<span class="px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-300 font-bold">일반</span>';
+                let roleName = u.role === 1 ? '1단계(최고)' : u.role === 2 ? '2단계(전체)' : u.role === 3 ? '3단계(특정)' : '일반사용자';
+                let roleBadge = `<span class="px-2 py-0.5 rounded text-xs ${u.role === 1 ? 'bg-amber-500/20 text-amber-300' : u.role === 2 ? 'bg-blue-500/20 text-blue-300' : u.role === 3 ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-800 text-slate-300'} font-bold">${roleName}</span>`;
 
                 let controlBtns = '-';
                 if (currentUser.role === 1) {
                     controlBtns = `
-                        <button onclick="openPwdModal('${u.id}')" class="bg-blue-600/20 text-blue-300 hover:bg-blue-600/40 px-2.5 py-1 rounded-lg text-xs font-semibold mr-1">비번변경</button>
+                        <button onclick="openUserEditModal('${u.id}')" class="bg-blue-600/20 text-blue-300 hover:bg-blue-600/40 px-2.5 py-1 rounded-lg text-xs font-semibold mr-1">계정정보/권한설정</button>
                         ${u.id !== currentUser.id ? `<button onclick="deleteUser(${index})" class="bg-rose-600/20 text-rose-300 hover:bg-rose-600/40 px-2.5 py-1 rounded-lg text-xs font-semibold">삭제</button>` : '<span class="text-xs text-slate-600">(본인)</span>'}
                     `;
                 }
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-white/5 transition-colors">
-                        <td class="py-3 px-3 font-mono text-xs text-slate-400">${u.id}</td>
+                        <td class="py-3 px-3 font-mono text-xs text-blue-400 font-bold">${u.id}</td>
                         <td class="py-3 px-3 font-medium text-white">${u.name}</td>
                         <td class="py-3 px-3">${roleBadge}</td>
                         <td class="py-3 px-3 text-xs text-slate-300">${u.site}</td>
@@ -647,37 +801,6 @@
             renderMasterCategories();
         }
 
-        function openLoginModal() {
-            const list = document.getElementById('accountSelectionList');
-            list.innerHTML = '';
-            users.forEach(u => {
-                let roleName = u.role === 1 ? '1단계 (최고관리자)' : u.role === 2 ? '2단계 (전체조회)' : u.role === 3 ? '3단계 (특정사업장)' : '일반 사용자';
-                list.innerHTML += `
-                    <div onclick="switchUser('${u.id}')" class="bg-slate-900 border border-white/10 p-3 rounded-xl hover:bg-blue-950/40 cursor-pointer flex justify-between items-center transition">
-                        <div>
-                            <div class="font-bold text-white text-xs">${u.name} (${u.id})</div>
-                            <div class="text-[11px] text-slate-400">담당: ${u.site}</div>
-                        </div>
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">${roleName}</span>
-                    </div>
-                `;
-            });
-            document.getElementById('loginModal').classList.remove('hidden');
-        }
-
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.add('hidden');
-        }
-
-        function switchUser(userId) {
-            const found = users.find(u => u.id === userId);
-            if (found) {
-                currentUser = found;
-                updateUserInterface();
-                closeLoginModal();
-            }
-        }
-
         function openSiteAddModal() {
             const name = prompt('추가할 사업장 이름을 입력하세요:');
             if (!name) return;
@@ -697,22 +820,55 @@
             }
         }
 
-        function openPwdModal(userId) {
-            document.getElementById('targetUserId').value = userId;
-            document.getElementById('newPasswordInput').value = '';
-            document.getElementById('pwdModal').classList.remove('hidden');
+        function openUserEditModal(userId) {
+            const target = users.find(u => u.id === userId);
+            if (!target) return;
+
+            document.getElementById('editTargetUserId').value = userId;
+            document.getElementById('editUserLoginId').value = target.id;
+            document.getElementById('editUserRole').value = target.role;
+            document.getElementById('editUserPwd').value = '';
+
+            const siteSelect = document.getElementById('editUserSite');
+            siteSelect.innerHTML = `<option value="전체" class="bg-slate-900">전체 (1, 2단계 전용)</option>`;
+            sites.forEach(s => {
+                siteSelect.innerHTML += `<option value="${s.name}" class="bg-slate-900">${s.name}</option>`;
+            });
+            siteSelect.value = target.site;
+
+            document.getElementById('userEditModal').classList.remove('hidden');
         }
 
-        function closePwdModal() {
-            document.getElementById('pwdModal').classList.add('hidden');
+        function closeUserEditModal() {
+            document.getElementById('userEditModal').classList.add('hidden');
         }
 
-        function confirmChangePassword() {
-            const uid = document.getElementById('targetUserId').value;
-            const newPwd = document.getElementById('newPasswordInput').value;
-            if (!newPwd) return alert('새 비밀번호를 입력해주세요.');
-            alert(`[${uid}] 사용자의 비밀번호가 1단계 마스터 권한으로 변경되었습니다.`);
-            closePwdModal();
+        function confirmUpdateUser() {
+            const oldId = document.getElementById('editTargetUserId').value;
+            const newId = document.getElementById('editUserLoginId').value.trim();
+            const newRole = parseInt(document.getElementById('editUserRole').value);
+            const newSite = document.getElementById('editUserSite').value;
+            const newPwd = document.getElementById('editUserPwd').value.trim();
+
+            if (!newId) return alert('아이디를 입력해주세요.');
+
+            if (newId !== oldId && users.some(u => u.id === newId)) {
+                return alert('이미 존재하는 아이디입니다.');
+            }
+
+            const target = users.find(u => u.id === oldId);
+            if (target) {
+                target.id = newId;
+                target.role = newRole;
+                target.site = newSite;
+                if (newPwd) {
+                    target.pwd = newPwd;
+                }
+                saveData();
+                renderUsers();
+                alert(`사용자 계정 정보가 성공적으로 수정되었습니다.`);
+            }
+            closeUserEditModal();
         }
 
         function deleteUser(index) {
@@ -785,13 +941,15 @@
             }
 
             if (idVal === '') {
+                // 신규 등록 시 현재 날짜/시간 자동 기입
+                const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
                 issues.unshift({
                     id: 'iss_' + Date.now(),
                     site,
                     category,
                     content,
                     author: currentUser.name,
-                    regDate: new Date().toISOString().split('T')[0],
+                    regDate: nowStr,
                     doneDate,
                     status
                 });
@@ -809,28 +967,6 @@
             renderDashboard();
             renderIssues();
             alert('이슈가 저장되었습니다.');
-        }
-
-        function openReportModal() {
-            let report = `[전사 통합 관제 보고서]\n`;
-            report += `■ 작성자: ${currentUser.name}\n`;
-            report += `■ 대상 사업장: ${currentBuilding}\n\n`;
-            report += `1. 총 접수 건수: ${issues.length}건\n`;
-            report += `2. 카테고리 구성: ${categories.join(', ')}\n`;
-            document.getElementById('report-text-area').value = report;
-            document.getElementById('report-modal').classList.remove('hidden');
-        }
-
-        function closeReportModal() {
-            document.getElementById('report-modal').classList.add('hidden');
-        }
-
-        function copyReportText() {
-            const ta = document.getElementById('report-text-area');
-            ta.select();
-            document.execCommand('copy');
-            alert('보고서 내용이 복사되었습니다.');
-            closeReportModal();
         }
     </script>
 </body>
