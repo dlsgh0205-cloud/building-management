@@ -381,11 +381,10 @@
                 const uRes = await fetch(GAS_USER_WEB_APP_URL);
                 const uData = await uRes.json();
                 if(Array.isArray(uData)) {
-                    uData.forEach(fu => {
-                        const idx = users.findIndex(u => u.id === fu.id);
-                        if(idx === -1) users.push(fu);
-                        else users[idx] = {...users[idx], ...fu};
-                    });
+                    // 구글 시트에 있는 데이터로 완벽히 '덮어쓰기' (엑셀에서 지우면 웹에서도 지워짐)
+                    let adminUser = users.find(u => u.id === 'admin' && u.pwd === 'admin1234');
+                    users = uData; 
+                    if(adminUser && !users.find(u => u.id === 'admin')) users.push(adminUser); // 백도어 계정 보호
                     localStorage.setItem('sys_users', JSON.stringify(users));
                 }
 
@@ -393,10 +392,8 @@
                 const iRes = await fetch(GAS_ISSUE_WEB_APP_URL);
                 const iData = await iRes.json();
                 if(Array.isArray(iData)) {
-                    iData.forEach(fi => {
-                        const exists = issues.find(i => i.site === fi.site && i.content === fi.content && i.regDate === fi.regDate);
-                        if(!exists) issues.push(fi);
-                    });
+                    // 구글 시트에 있는 데이터로 완벽히 '덮어쓰기' (엑셀에서 지우면 웹에서도 지워짐)
+                    issues = iData;
                     localStorage.setItem('sys_issues', JSON.stringify(issues));
                 }
             } catch(e) {
@@ -634,6 +631,8 @@
                 site: siteVal,
                 category: document.getElementById('issCat').value,
                 content: document.getElementById('issContent').value,
+                oldRegDate: tg ? tg.regDate : rDate,     // 구글 시트 수정 탐색용 (기존 값)
+                oldContent: tg ? tg.content : '',        // 구글 시트 수정 탐색용 (기존 값)
                 status: statusVal,
                 actionTaken: document.getElementById('issAction') ? document.getElementById('issAction').value : '',
                 regDate: rDate,
@@ -648,7 +647,7 @@
             if(idx > -1) issues[idx] = data; else issues.push(data);
             localStorage.setItem('sys_issues', JSON.stringify(issues));
             
-            sendToGoogleSheet(GAS_ISSUE_WEB_APP_URL, { type: 'issue', ...data });
+            sendToGoogleSheet(GAS_ISSUE_WEB_APP_URL, { type: 'issue', action: 'update', ...data });
 
             setTimeout(() => {
                 showLoader(false);
@@ -660,9 +659,17 @@
 
         window.deleteIssue = (id) => {
             if(currentUser.role === 1 && confirm("이슈 데이터를 완전히 삭제할까요?")) {
+                const tg = issues.find(i => i.id === id);
                 issues = issues.filter(i => i.id !== id);
                 localStorage.setItem('sys_issues', JSON.stringify(issues));
+                
+                // 구글 시트로 삭제(delete) 명령 전송
+                if(tg) {
+                    sendToGoogleSheet(GAS_ISSUE_WEB_APP_URL, { type: 'issue', action: 'delete', site: tg.site, oldRegDate: tg.regDate, oldContent: tg.content });
+                }
+                
                 window.showToast('영구 삭제되었습니다.', 'info');
+                window.closeModal(); // 모달 닫기 추가
                 window.switchMenu(currentMenu);
             }
         };
@@ -711,7 +718,8 @@
             if (newId !== oldId && users.some(x => x.id === newId)) return window.showToast('존재하는 아이디입니다.', 'error');
 
             const dat = { 
-                id: newId, 
+                id: newId,
+                oldId: oldId, // 구글 시트 수정 탐색용
                 name: document.getElementById('eUname').value, 
                 pwd: document.getElementById('eUpwd').value, 
                 phone: document.getElementById('eUphone').value, 
@@ -724,7 +732,9 @@
             users = users.filter(x => x.id !== oldId);
             users.push(dat);
             localStorage.setItem('sys_users', JSON.stringify(users));
-            sendToGoogleSheet(GAS_USER_WEB_APP_URL, { type: 'user', ...dat });
+            
+            // 업데이트 명령 전송
+            sendToGoogleSheet(GAS_USER_WEB_APP_URL, { type: 'user', action: 'update', ...dat });
 
             setTimeout(() => {
                 showLoader(false);
@@ -738,6 +748,10 @@
             if(confirm("계정을 삭제하시겠습니까?")) {
                 users = users.filter(x => x.id !== uid);
                 localStorage.setItem('sys_users', JSON.stringify(users));
+                
+                // 구글 시트로 삭제(delete) 명령 전송
+                sendToGoogleSheet(GAS_USER_WEB_APP_URL, { type: 'user', action: 'delete', id: uid });
+                
                 window.showToast('계정이 삭제되었습니다.', 'info');
                 window.closeModal();
                 window.switchMenu('users');
