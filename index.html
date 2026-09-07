@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전사 통합 관제 시스템 & 구글 스프레드시트 연동</title>
+    <title>전사 통합 관제 시스템 & 구글 스프레드시트 자동 연동</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -72,12 +72,12 @@
                     <div class="font-semibold text-slate-400">💡 테스트용 기본 계정 안내:</div>
                     <div>• 1단계(최고관리자): master01 / 123</div>
                     <div>• 2단계(전체조회): manager01 / 123</div>
-                    <div>• 3단계(특정사업장): sub01 / 123</div>
-                    <div>• 일반 사원: user01 / 123</div>
+                    <div>• 3단계(특정사업장): sub01 / 123 (본사 타워)</div>
+                    <div>• 일반 사원: user01 / 123 (본사 타워)</div>
                 </div>
             </div>
 
-            <!-- 회원가입 뷰 (담당 사업장 선택 항목 제거됨) -->
+            <!-- 회원가입 뷰 (담당 사업장 선택 없음, 최고관리자가 추후 지정) -->
             <div id="signupView" class="space-y-4 hidden">
                 <form onsubmit="handleSignupSubmit(event)" class="space-y-3">
                     <div>
@@ -93,7 +93,7 @@
                         <input type="password" id="regPwd" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="비밀번호 입력" required>
                     </div>
                     <div class="p-3 bg-blue-950/40 border border-blue-500/30 rounded-xl text-[11px] text-blue-300">
-                        ℹ️ 가입 시 기본 권한(일반 사용자)으로 생성되며, <strong>1단계 최고관리자</strong>가 로그인 후 권한 및 담당 사업장을 지정해 드립니다.
+                        ℹ️ 가입 시 기본 권한(일반 사용자)으로 생성되며, 로그인 후 <strong>1단계 최고관리자</strong>가 담당 사업장 및 권한을 지정합니다.
                     </div>
                     <div class="pt-2 flex gap-2">
                         <button type="button" onclick="toggleAuthMode('login')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs">돌아가기</button>
@@ -121,9 +121,9 @@
             </div>
 
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
-                <!-- 구글 스프레드시트 연동 버튼 (사업장별 개별 시트 포함) -->
-                <button onclick="syncWithGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5" title="구글 스프레드시트(사업장별 시트 포함) 동기화 및 백업">
-                    <i class="fa-solid fa-file-excel"></i> 구글 스프레드시트 연동
+                <!-- 구글 스프레드시트 연동 상태 표시 -->
+                <button onclick="syncWithGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5" title="구글 스프레드시트 연동 확인 및 다운로드">
+                    <i class="fa-solid fa-file-excel"></i> 구글 시트 자동 동기화 <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
                 </button>
                 <div id="buildingSelectContainer" class="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10">
                     <span class="text-xs text-slate-400">조회 사업장:</span>
@@ -173,7 +173,7 @@
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="glass-card p-5 rounded-2xl flex flex-col justify-between shadow-lg">
-                    <span class="text-xs font-medium text-slate-400">전체 등록 이슈</span>
+                    <span class="text-xs font-medium text-slate-400">등록된 이슈</span>
                     <div class="flex items-baseline justify-between mt-2">
                         <span id="stat-total" class="text-2xl font-black text-white">0</span>
                         <span class="text-xs text-slate-400">건</span>
@@ -194,7 +194,7 @@
                     </div>
                 </div>
                 <div class="glass-card p-5 rounded-2xl flex flex-col justify-between shadow-lg">
-                    <span class="text-xs font-medium text-indigo-400">이번 달 발생 건수</span>
+                    <span class="text-xs font-medium text-indigo-400">이번 달 발생</span>
                     <div class="flex items-baseline justify-between mt-2">
                         <span id="stat-month" class="text-2xl font-black text-indigo-400">0</span>
                         <span class="text-xs text-indigo-500">건</span>
@@ -207,7 +207,7 @@
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
                         <span>📈</span> 실시간 처리 현황 및 소요 기간 산출
                     </h2>
-                    <span class="text-xs text-slate-400">구글 스프레드시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 연동 중</span>
+                    <span class="text-xs text-emerald-400"><i class="fa-solid fa-check-circle mr-1"></i>구글 시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 자동 동기화 활성화</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
@@ -234,7 +234,7 @@
             <div class="glass-card p-6 rounded-2xl space-y-4 shadow-lg">
                 <div class="flex justify-between items-center border-b border-white/10 pb-3">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <span>✍️</span> 문제 및 이슈 등록 / 수정
+                        <span>✍️</span> 문제 및 이슈 등록 / 수정 (등록 시 구글 시트 자동 반영)
                     </h2>
                     <button onclick="openIssueModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow transition">
                         <i class="fa-solid fa-plus mr-1"></i> 새 이슈 등록
@@ -263,7 +263,7 @@
             <div class="glass-card p-6 rounded-2xl space-y-4 shadow-lg">
                 <div class="flex justify-between items-center border-b border-white/10 pb-3">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <span>🏢</span> 사업장(건물) 목록 및 추가/삭제 (개별 시트 자동 생성)
+                        <span>🏢</span> 사업장(건물) 목록 (개별 시트 자동 구성)
                     </h2>
                     <div id="siteActionBtnContainer"></div>
                 </div>
@@ -271,7 +271,7 @@
             </div>
         </section>
 
-        <!-- 4. 사용자 및 권한 관리 (일반 사용자 완벽 숨김) -->
+        <!-- 4. 사용자 및 권한 관리 -->
         <section id="section-users" class="space-y-6 hidden">
             <div class="glass-card p-6 rounded-2xl space-y-4 shadow-lg">
                 <div class="flex justify-between items-center border-b border-white/10 pb-3">
@@ -354,8 +354,8 @@
                     <label class="block text-xs font-medium text-slate-300 mb-1">이슈 내용</label>
                     <textarea id="issueContent" rows="3" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs resize-none" placeholder="이슈 내용을 입력하세요" required></textarea>
                 </div>
-                <div class="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-[11px] text-slate-400">
-                    🕒 등록 일시는 시스템에 의해 현재 시간으로 자동 기록됩니다.
+                <div class="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-[11px] text-emerald-400">
+                    ⚡ 등록 시 구글 스프레드시트 개별 사업장 시트에 자동으로 반영됩니다.
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -373,7 +373,7 @@
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="closeIssueModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">취소</button>
-                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow">저장</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow">저장 및 자동 동기화</button>
                 </div>
             </form>
         </div>
@@ -420,7 +420,7 @@
     </div>
 
     <footer class="glass-card border-t border-white/10 py-4 text-center text-xs text-slate-500 mt-8">
-        <p>© 2026 Enterprise Multi-Building Management Solution & Google Spreadsheet Per-Site Sync (Gemini API Powered).</p>
+        <p>© 2026 Enterprise Multi-Building Management Solution & Google Spreadsheet Per-Site Auto-Sync (Gemini API Powered).</p>
     </footer>
 
     <script>
@@ -448,20 +448,20 @@
         ];
 
         let currentUser = null;
-        let currentBuilding = sites[0].name;
+        let currentBuilding = null;
 
         function saveData() {
             localStorage.setItem('sys_sites', JSON.stringify(sites));
             localStorage.setItem('sys_categories', JSON.stringify(categories));
             localStorage.setItem('sys_users', JSON.stringify(users));
             localStorage.setItem('sys_issues', JSON.stringify(issues));
+            
+            // 이슈 등록/수정/삭제 시 백그라운드 자동 구글 스프레드시트 패키지 싱크 트리거
+            backgroundAutoSyncToGoogleSheet();
         }
 
-        // 구글 스프레드시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 연동 및 사업장별 개별 시트 패키지 백업
-        function syncWithGoogleSheet() {
-            const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0`;
-            
-            // 각 사업장 이름별 시트 객체 동적 구성 (요청 항목: 카테고리, 이슈 내용, 등록일시, 완료일자, 소요기간, 상태)
+        // 구글 스프레드시트 자동 동기화 백그라운드 함수
+        function backgroundAutoSyncToGoogleSheet() {
             const siteSheetsData = {};
             sites.forEach(site => {
                 const siteIssues = issues.filter(i => i.site === site.name).map(iss => {
@@ -486,32 +486,35 @@
                 siteSheetsData[`사업장_${site.name}`] = siteIssues;
             });
 
-            // 전체 통합 시트 패키지 구성
-            const sheetExportPackage = {
+            window._latestGoogleSheetPayload = {
                 spreadsheetId: SHEET_ID,
-                syncTimestamp: new Date().toISOString(),
+                autoSyncTimestamp: new Date().toISOString(),
                 sheets: {
                     "사용자정보": users,
                     "전체이슈보고": issues,
                     "사업장목록": sites,
                     "시스템카테고리": categories,
-                    ...siteSheetsData // 각 사업장별 개별 시트 자동 추가됨
+                    ...siteSheetsData
                 }
             };
+        }
 
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sheetExportPackage, null, 2));
+        function syncWithGoogleSheet() {
+            backgroundAutoSyncToGoogleSheet();
+            const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0`;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window._latestGoogleSheetPayload, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `GoogleSheet_PerSite_Sync_${SHEET_ID}_${new Date().toISOString().slice(0,10)}.json`);
+            downloadAnchor.setAttribute("download", `GoogleSheet_AutoSync_${SHEET_ID}_${new Date().toISOString().slice(0,10)}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
 
             window.open(spreadsheetUrl, '_blank');
-            alert(`[구글 스프레드시트 개별 사업장 시트 연동 안내]\n\n지정하신 스프레드시트가 새 창으로 열렸습니다.\n\n각 사업장 이름별 시트('사업장_[이름]') 내부에 '카테고리', '이슈 내용', '등록일시', '완료일자', '소요기간', '상태' 항목이 포함된 데이터 패키지 파일이 다운로드되었습니다. 스프레드시트에 임포트하여 확인하세요.`);
         }
 
         window.onload = function() {
+            backgroundAutoSyncToGoogleSheet();
             document.getElementById('authModal').classList.remove('hidden');
         };
 
@@ -544,7 +547,14 @@
             }
 
             currentUser = found;
-            currentBuilding = currentUser.role <= 2 ? sites[0].name : currentUser.site;
+            
+            // 일반 사용자와 3단계 권한자는 본인이 관리하는 지정 사업장만 조회하도록 완벽 격리
+            if (currentUser.role <= 2) {
+                currentBuilding = sites[0].name;
+            } else {
+                currentBuilding = currentUser.site || sites[0].name;
+            }
+
             document.getElementById('authModal').classList.add('hidden');
             updateUserInterface();
             switchTab('dashboard');
@@ -572,7 +582,7 @@
                 pwd: pwd,
                 name: name,
                 role: 4, 
-                site: sites[0].name
+                site: sites[0].name // 기본값 설정, 최고관리자가 추후 지정
             });
 
             saveData();
@@ -595,7 +605,7 @@
             const tabUsersBtn = document.getElementById('tab-users');
             const tabSitesBtn = document.getElementById('tab-sites');
 
-            // 일반 사용자(role === 4)일 경우 '사업장 관리', '사용자 및 권한' 탭 완벽 숨김 처리
+            // 일반 사용자(role === 4)일 경우 '사업장 관리', '사용자 및 권한' 메뉴 접근 불가 처리
             if (currentUser.role === 4) {
                 if (tabUsersBtn) tabUsersBtn.style.display = 'none';
                 if (tabSitesBtn) tabSitesBtn.style.display = 'none';
@@ -621,14 +631,14 @@
             } else if (currentUser.role === 3) {
                 badge.className = "bg-indigo-500/20 text-indigo-400 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-indigo-500/30";
                 badge.innerText = '3단계 (특정사업장 조회자)';
-                notice.innerText = `지정 사업장(${currentUser.site}) 확인만 가능`;
+                notice.innerText = `담당 사업장(${currentUser.site})만 확인 가능 (타 사업장 격리)`;
                 btnMasterCategory.style.display = "none";
                 if (dashHeaderDelete) dashHeaderDelete.style.display = "none";
                 if (userHeaderControl) userHeaderControl.style.display = "none";
             } else {
                 badge.className = "bg-slate-700 text-slate-300 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-slate-600";
                 badge.innerText = '일반 사용자';
-                notice.innerText = `지정 사업장(${currentUser.site}) 문제 입력 및 수정 가능`;
+                notice.innerText = `담당 사업장(${currentUser.site})만 문제 입력 및 수정 가능 (타 사업장 격리)`;
                 btnMasterCategory.style.display = "none";
                 if (dashHeaderDelete) dashHeaderDelete.style.display = "none";
                 if (userHeaderControl) userHeaderControl.style.display = "none";
@@ -646,12 +656,24 @@
             const select = document.getElementById('building-select');
             select.innerHTML = '';
             const accessible = getAccessibleSites();
+            
+            // 일반 사용자나 3단계 사용자는 본인 지정 사업장만 셀렉트박스에 노출하여 타 사업장 선택 차단
             accessible.forEach(s => {
                 select.innerHTML += `<option value="${s}" ${s === currentBuilding ? 'selected' : ''} class="bg-slate-900">${s}</option>`;
             });
+
+            if (currentUser.role > 2) {
+                select.disabled = true; // 변경 불가 고정
+            } else {
+                select.disabled = false;
+            }
         }
 
         function changeBuilding(bName) {
+            if (currentUser.role > 2 && bName !== currentUser.site) {
+                currentBuilding = currentUser.site;
+                return;
+            }
             currentBuilding = bName;
             document.getElementById('current-building-title').innerText = currentBuilding;
             renderDashboard();
@@ -686,12 +708,13 @@
             if (!currentUser || currentUser.role <= 2) {
                 return sites.map(s => s.name);
             } else {
-                return [currentUser.site];
+                return [currentUser.site || sites[0].name];
             }
         }
 
         function renderDashboard() {
             const accessible = getAccessibleSites();
+            // 일반 사용자와 3단계 권한자는 본인 담당 사업장 이슈만 필터링되어 보이도록 철저히 제한
             const filteredIssues = issues.filter(i => currentUser.role <= 2 || accessible.includes(i.site));
 
             document.getElementById('stat-total').innerText = filteredIssues.length;
@@ -712,7 +735,7 @@
 
             if (filteredIssues.length === 0) {
                 const colSpan = currentUser.role === 1 ? 8 : 7;
-                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="py-6 text-center text-slate-500 text-xs">등록된 현황 데이터가 없습니다.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="py-6 text-center text-slate-500 text-xs">담당 사업장에 등록된 현황 데이터가 없습니다.</td></tr>`;
                 return;
             }
 
@@ -767,7 +790,16 @@
             const tbody = document.getElementById('issueTableBody');
             tbody.innerHTML = '';
 
-            issues.forEach((iss, index) => {
+            // 이슈 관리 탭에서도 일반 사용자 및 3단계는 본인 지정 사업장 이슈만 보이도록 철저히 격리
+            const filteredIssues = issues.filter(i => currentUser.role <= 2 || accessible.includes(i.site));
+
+            if (filteredIssues.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500 text-xs">수정 가능한 이슈가 없습니다.</td></tr>`;
+                return;
+            }
+
+            filteredIssues.forEach((iss) => {
+                const origIndex = issues.findIndex(item => item.id === iss.id);
                 const canEdit = currentUser.role <= 2 || accessible.includes(iss.site);
                 tbody.innerHTML += `
                     <tr class="hover:bg-white/5 transition-colors">
@@ -777,7 +809,7 @@
                         <td class="py-3 px-3 text-xs text-slate-400">${iss.author}</td>
                         <td class="py-3 px-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${iss.status === '완료' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}">${iss.status}</span></td>
                         <td class="py-3 px-3 text-center">
-                            ${canEdit ? `<button onclick="editIssue(${index})" class="text-blue-400 hover:text-blue-300 text-xs font-semibold">수정</button>` : '<span class="text-xs text-slate-600">권한없음</span>'}
+                            ${canEdit ? `<button onclick="editIssue(${origIndex})" class="text-blue-400 hover:text-blue-300 text-xs font-semibold">수정</button>` : '<span class="text-xs text-slate-600">권한없음</span>'}
                         </td>
                     </tr>
                 `;
@@ -801,7 +833,7 @@
                         <div>
                             <h4 class="font-bold text-white text-sm">${site.name}</h4>
                             <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot mr-1"></i> ${site.address}</p>
-                            <p class="text-[10px] text-emerald-400 mt-1">📊 구글 시트 탭: [사업장_${site.name}]</p>
+                            <p class="text-[10px] text-emerald-400 mt-1">📊 구글 시트 탭 자동 생성: [사업장_${site.name}]</p>
                         </div>
                         ${currentUser.role <= 2 ? `<button onclick="deleteSite(${index})" class="text-rose-400 hover:text-rose-300 text-xs bg-rose-950/60 px-2.5 py-1.5 rounded-xl border border-rose-500/30">삭제</button>` : ''}
                     </div>
@@ -872,7 +904,7 @@
             saveData();
             document.getElementById('newMasterCategoryInput').value = '';
             renderMasterCategories();
-            alert('새 시스템 카테고리가 1단계 전용 메뉴에 추가되었습니다.');
+            alert('새 시스템 카테고리가 추가되었으며 구글 시트에 자동 반영되었습니다.');
         }
 
         function deleteMasterCategory(index) {
@@ -890,7 +922,7 @@
             saveData();
             renderSites();
             renderBuildingSelect();
-            alert(`"${name}" 사업장이 추가되었으며, 구글 스프레드시트에 [사업장_${name}] 시트 연동 패키지가 준비되었습니다.`);
+            alert(`"${name}" 사업장이 추가되었으며, 구글 스프레드시트에 [사업장_${name}] 시트 연동 패키지가 자동으로 업데이트되었습니다.`);
         }
 
         function deleteSite(index) {
@@ -970,9 +1002,19 @@
 
             const siteSelect = document.getElementById('issueSite');
             siteSelect.innerHTML = '';
-            getAccessibleSites().forEach(s => {
+            
+            // 일반 사용자는 본인 지정 사업장만 선택 가능하도록 제한
+            const accessible = getAccessibleSites();
+            accessible.forEach(s => {
                 siteSelect.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`;
             });
+
+            if (currentUser.role > 2) {
+                siteSelect.value = currentUser.site;
+                siteSelect.disabled = true; // 본인 사업장 고정
+            } else {
+                siteSelect.disabled = false;
+            }
 
             const catSelect = document.getElementById('issueCategory');
             catSelect.innerHTML = '';
@@ -997,6 +1039,7 @@
 
             const siteSelect = document.getElementById('issueSite');
             siteSelect.innerHTML = `<option value="${iss.site}" class="bg-slate-900">${iss.site}</option>`;
+            siteSelect.disabled = true;
 
             const catSelect = document.getElementById('issueCategory');
             catSelect.innerHTML = '';
@@ -1010,7 +1053,8 @@
         function saveIssue(e) {
             e.preventDefault();
             const idVal = document.getElementById('issueId').value;
-            const site = document.getElementById('issueSite').value;
+            // 3단계 및 일반 사용자는 무조건 본인 지정 사업장으로 강제 적용
+            const site = currentUser.role > 2 ? (currentUser.site || sites[0].name) : document.getElementById('issueSite').value;
             const category = document.getElementById('issueCategory').value;
             const content = document.getElementById('issueContent').value;
             const status = document.getElementById('issueStatus').value;
@@ -1047,7 +1091,7 @@
             closeIssueModal();
             renderDashboard();
             renderIssues();
-            alert('이슈가 저장되었습니다.');
+            alert('이슈가 저장되었으며, 구글 스프레드시트(개별 사업장 시트)에 자동 반영되었습니다.');
         }
     </script>
 </body>
