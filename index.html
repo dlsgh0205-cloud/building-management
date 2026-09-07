@@ -65,7 +65,7 @@
         }
         
         // 2. 사용자 계정 DB 전용 패키지 생성 - USER_DB_SHEET_ID 용
-        // 아이디, 이름, 비밀번호, 연락처, 권한 순으로 구성
+        // 아이디, 이름, 비밀번호, 연락처, 권한, 담당사업장 순으로 구성
         function generateUserDBSheetPackage() {
             const userSheetData = users.map(u => {
                 let roleName = u.role === 1 ? '1단계(최고관리자)' : u.role === 2 ? '2단계(전체조회)' : u.role === 3 ? '3단계(특정사업장)' : '일반사용자';
@@ -74,7 +74,8 @@
                     "이름": u.name,
                     "비밀번호": u.pwd,
                     "연락처": u.phone || '미입력',
-                    "권한": roleName
+                    "권한": roleName,
+                    "담당사업장": u.site || '미지정'
                 };
             });
 
