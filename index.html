@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전사 통합 관리 시스템 & 구글 시트 연동</title>
+    <title>전사 통합 관제 시스템 & 구글 스프레드시트 연동</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -121,8 +121,8 @@
             </div>
 
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
-                <!-- 구글 스프레드시트 연동 버튼 (1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) -->
-                <button onclick="syncWithGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5" title="구글 스프레드시트(사용자정보/이슈보고 시트) 동기화 및 백업">
+                <!-- 구글 스프레드시트 연동 버튼 (사업장별 개별 시트 포함) -->
+                <button onclick="syncWithGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5" title="구글 스프레드시트(사업장별 시트 포함) 동기화 및 백업">
                     <i class="fa-solid fa-file-excel"></i> 구글 스프레드시트 연동
                 </button>
                 <div id="buildingSelectContainer" class="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10">
@@ -207,7 +207,7 @@
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
                         <span>📈</span> 실시간 처리 현황 및 소요 기간 산출
                     </h2>
-                    <span class="text-xs text-slate-400">구글 스프레드시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 시트 연동 중</span>
+                    <span class="text-xs text-slate-400">구글 스프레드시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 연동 중</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
@@ -263,7 +263,7 @@
             <div class="glass-card p-6 rounded-2xl space-y-4 shadow-lg">
                 <div class="flex justify-between items-center border-b border-white/10 pb-3">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <span>🏢</span> 사업장(건물) 목록 및 추가/삭제
+                        <span>🏢</span> 사업장(건물) 목록 및 추가/삭제 (개별 시트 자동 생성)
                     </h2>
                     <div id="siteActionBtnContainer"></div>
                 </div>
@@ -420,7 +420,7 @@
     </div>
 
     <footer class="glass-card border-t border-white/10 py-4 text-center text-xs text-slate-500 mt-8">
-        <p>© 2026 Enterprise Multi-Building Management Solution & Google Spreadsheet Sync (Gemini API Powered).</p>
+        <p>© 2026 Enterprise Multi-Building Management Solution & Google Spreadsheet Per-Site Sync (Gemini API Powered).</p>
     </footer>
 
     <script>
@@ -457,32 +457,58 @@
             localStorage.setItem('sys_issues', JSON.stringify(issues));
         }
 
-        // 구글 스프레드시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 연동 및 시트별 데이터 패키지 백업
+        // 구글 스프레드시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 연동 및 사업장별 개별 시트 패키지 백업
         function syncWithGoogleSheet() {
             const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0`;
             
-            // 시트별 구조화된 데이터 패키지 생성
+            // 각 사업장 이름별 시트 객체 동적 구성 (요청 항목: 카테고리, 이슈 내용, 등록일시, 완료일자, 소요기간, 상태)
+            const siteSheetsData = {};
+            sites.forEach(site => {
+                const siteIssues = issues.filter(i => i.site === site.name).map(iss => {
+                    let durationStr = '-';
+                    if (iss.status === '완료' && iss.doneDate) {
+                        const start = new Date(iss.regDate);
+                        const end = new Date(iss.doneDate);
+                        const diffDays = Math.max(0, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)));
+                        durationStr = diffDays === 0 ? '당일 완료' : diffDays + '일 소요';
+                    } else {
+                        durationStr = '진행중';
+                    }
+                    return {
+                        카테고리: iss.category,
+                        이슈내용: iss.content,
+                        등록일시: iss.regDate,
+                        완료일자: iss.doneDate || '-',
+                        소요기간: durationStr,
+                        상태: iss.status
+                    };
+                });
+                siteSheetsData[`사업장_${site.name}`] = siteIssues;
+            });
+
+            // 전체 통합 시트 패키지 구성
             const sheetExportPackage = {
                 spreadsheetId: SHEET_ID,
                 syncTimestamp: new Date().toISOString(),
                 sheets: {
                     "사용자정보": users,
-                    "이슈보고": issues,
+                    "전체이슈보고": issues,
                     "사업장목록": sites,
-                    "시스템카테고리": categories
+                    "시스템카테고리": categories,
+                    ...siteSheetsData // 각 사업장별 개별 시트 자동 추가됨
                 }
             };
 
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sheetExportPackage, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `GoogleSheet_DataSync_${SHEET_ID}_${new Date().toISOString().slice(0,10)}.json`);
+            downloadAnchor.setAttribute("download", `GoogleSheet_PerSite_Sync_${SHEET_ID}_${new Date().toISOString().slice(0,10)}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
 
             window.open(spreadsheetUrl, '_blank');
-            alert(`[구글 스프레드시트 연동 안내]\n\n지정하신 스프레드시트(ID: ${SHEET_ID})가 새 창으로 열렸습니다.\n\n동시에 '사용자정보', '이슈보고', '사업장목록' 시트별 데이터가 포함된 연동 JSON 파일이 다운로드되었습니다. 해당 파일을 구글 스프레드시트에 임포트하거나 드라이브에 업로드하여 실시간 데이터를 공유하세요.`);
+            alert(`[구글 스프레드시트 개별 사업장 시트 연동 안내]\n\n지정하신 스프레드시트가 새 창으로 열렸습니다.\n\n각 사업장 이름별 시트('사업장_[이름]') 내부에 '카테고리', '이슈 내용', '등록일시', '완료일자', '소요기간', '상태' 항목이 포함된 데이터 패키지 파일이 다운로드되었습니다. 스프레드시트에 임포트하여 확인하세요.`);
         }
 
         window.onload = function() {
@@ -531,7 +557,6 @@
             document.getElementById('authModal').classList.remove('hidden');
         }
 
-        // 신규 가입 시 담당 사업장 선택 항목 제거 및 최고관리자 지정 구조
         function handleSignupSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('regId').value.trim();
@@ -547,7 +572,7 @@
                 pwd: pwd,
                 name: name,
                 role: 4, 
-                site: sites[0].name // 초기 기본 사업장, 이후 최고관리자가 변경 가능
+                site: sites[0].name
             });
 
             saveData();
@@ -569,7 +594,6 @@
             const userHeaderControl = document.getElementById('userHeaderControl');
             const tabUsersBtn = document.getElementById('tab-users');
             const tabSitesBtn = document.getElementById('tab-sites');
-            const buildingSelectContainer = document.getElementById('buildingSelectContainer');
 
             // 일반 사용자(role === 4)일 경우 '사업장 관리', '사용자 및 권한' 탭 완벽 숨김 처리
             if (currentUser.role === 4) {
@@ -766,7 +790,7 @@
             container.innerHTML = '';
 
             if (currentUser.role <= 2) {
-                btnContainer.innerHTML = `<button onclick="openSiteAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow transition"><i class="fa-solid fa-plus mr-1"></i> 사업장 추가</button>`;
+                btnContainer.innerHTML = `<button onclick="openSiteAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow transition"><i class="fa-solid fa-plus mr-1"></i> 사업장 추가 (개별 시트 자동 구성)</button>`;
             } else {
                 btnContainer.innerHTML = `<span class="text-xs text-slate-500">사업장 추가 권한 없음 (1, 2단계 전용)</span>`;
             }
@@ -777,6 +801,7 @@
                         <div>
                             <h4 class="font-bold text-white text-sm">${site.name}</h4>
                             <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot mr-1"></i> ${site.address}</p>
+                            <p class="text-[10px] text-emerald-400 mt-1">📊 구글 시트 탭: [사업장_${site.name}]</p>
                         </div>
                         ${currentUser.role <= 2 ? `<button onclick="deleteSite(${index})" class="text-rose-400 hover:text-rose-300 text-xs bg-rose-950/60 px-2.5 py-1.5 rounded-xl border border-rose-500/30">삭제</button>` : ''}
                     </div>
@@ -858,13 +883,14 @@
         }
 
         function openSiteAddModal() {
-            const name = prompt('추가할 사업장 이름을 입력하세요:');
+            const name = prompt('추가할 사업장 이름을 입력하세요 (구글 시트에 새 시트 탭이 생성됩니다):');
             if (!name) return;
             const address = prompt('사업장 위치(주소)를 입력하세요:');
             sites.push({ id: 'site_' + Date.now(), name, address: address || '주소 미입력' });
             saveData();
             renderSites();
             renderBuildingSelect();
+            alert(`"${name}" 사업장이 추가되었으며, 구글 스프레드시트에 [사업장_${name}] 시트 연동 패키지가 준비되었습니다.`);
         }
 
         function deleteSite(index) {
@@ -981,7 +1007,6 @@
             document.getElementById('issueModal').classList.remove('hidden');
         }
 
-        // 문제점 등록 시 등록 일시 시스템 자동 기록
         function saveIssue(e) {
             e.preventDefault();
             const idVal = document.getElementById('issueId').value;
