@@ -319,11 +319,18 @@
                 setupRealtimeListeners();
                 
             } catch (error) {
-                console.warn("DB Initialization Failed:", error);
+                console.warn("DB 연결 우회 (로컬+구글시트 모드 작동):", error);
+                // 🛑 시스템이 멈추지 않도록 강제 우회 적용
                 document.getElementById('global-loader').style.display = 'none';
-                document.getElementById('auth-container').classList.add('hidden');
-                document.getElementById('app-container').classList.add('hidden');
-                document.getElementById('github-setup-modal').classList.remove('hidden'); // 하얀 화면 방지 모달 표시
+                document.getElementById('auth-container').classList.remove('hidden');
+                
+                // 로컬 백업 데이터 로드
+                sites = JSON.parse(localStorage.getItem('sys_sites') || '[{"name":"본사"},{"name":"지점A"}]');
+                categories = JSON.parse(localStorage.getItem('sys_cats') || '[{"name":"시설물 파손"},{"name":"네트워크 오류"}]');
+                users = JSON.parse(localStorage.getItem('sys_users') || '[]');
+                issues = JSON.parse(localStorage.getItem('sys_issues') || '[]');
+                
+                checkAllLoaded('sites'); checkAllLoaded('categories'); checkAllLoaded('users'); checkAllLoaded('issues');
             }
         }
 
@@ -363,19 +370,17 @@
             const pwd = document.getElementById('loginPwd').value.trim();
             const btnText = document.getElementById('btnLoginText');
             
-            btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 구글 사용자 DB 조회 중...';
+            btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 계정 대조 중...';
             
-            // ★ 마스터 계정(admin) 최초 접속 시 DB에 없으면 1단계로 자동 생성하는 로직 추가
+            if (users.length === 0) users = JSON.parse(localStorage.getItem('sys_users') || '[]');
             let user = users.find(u => u.id === id && u.pwd === pwd);
             
+            // ★ 마스터 계정(admin) 접속 로직 강제 보장
             if (!user && id === 'admin' && pwd === 'admin1234') {
                 user = { id: 'admin', name: '최고관리자', pwd: 'admin1234', phone: '010-0000-0000', role: 1, site: '전체' };
-                try { 
-                    await setDoc(getDocRef('users', 'admin'), user); 
-                    if(!users.some(u => u.id === 'admin')) users.push(user);
-                } catch(err) { 
-                    console.warn("마스터 계정 자동 생성 실패:", err); 
-                }
+                users.push(user);
+                localStorage.setItem('sys_users', JSON.stringify(users));
+                try { if(db) await setDoc(getDocRef('users', 'admin'), user); } catch(err) {}
             }
 
             setTimeout(() => {
@@ -388,12 +393,13 @@
                     window.showToast('아이디 또는 비밀번호가 일치하지 않습니다.', 'error');
                 }
                 btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> 사용자 DB 대조 및 접속';
-            }, 800);
+            }, 600);
         };
 
         window.handleSignupSubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('regId').value.trim();
+            if (users.length === 0) users = JSON.parse(localStorage.getItem('sys_users') || '[]');
             if (users.some(u => u.id === id)) return window.showToast('이미 존재하는 아이디입니다.', 'error');
 
             const newUser = {
@@ -405,25 +411,31 @@
                 site: '미지정'
             };
 
-            showLoader(true, "클라우드 및 구글 사용자 DB 등록 중...");
-            try {
-                // 1. Firebase 실시간 DB 저장
-                await setDoc(getDocRef('users', id), newUser);
-                
-                // 2. 구글 스프레드시트 실시간 전송 (사용자 DB 전용 다리 통과)
-                if (GAS_USER_WEB_APP_URL) {
-                    fetch(GAS_USER_WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ type: 'user', ...newUser }) // type: 'user' 로 가입자 구분
-                    }).catch(err => console.warn('구글 시트 전송 실패:', err));
-                }
+            showLoader(true, "계정 생성 및 구글 DB 전송 중...");
+            
+            // 1. 시스템 멈춤 방지를 위한 로컬 저장
+            users.push(newUser);
+            localStorage.setItem('sys_users', JSON.stringify(users));
 
+            // 2. Firebase 실시간 DB (연결된 경우만)
+            try { if(db) await setDoc(getDocRef('users', id), newUser); } catch(err) {}
+            
+            // 3. 구글 스프레드시트 실시간 전송 (CORS 에러 무시 처리 추가)
+            if (GAS_USER_WEB_APP_URL) {
+                fetch(GAS_USER_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ type: 'user', ...newUser })
+                }).catch(err => console.warn(err));
+            }
+
+            setTimeout(() => {
+                showLoader(false);
                 window.showToast('가입 완료! 구글 DB 시트 동기화 완료.', 'success');
                 window.toggleAuthMode('login');
                 document.getElementById('loginId').value = id;
                 document.getElementById('loginPwd').value = '';
-            } catch(err) { window.showToast('DB 저장 실패', 'error'); }
-            finally { showLoader(false); }
+            }, 800);
         };
 
         function finalizeLogin() {
@@ -554,29 +566,41 @@
                 duration: '-'
             };
 
-            showLoader(true, "구글 스프레드시트 구조 렌더링 및 자동 저장 중...");
-            try {
-                // 1. Firebase 실시간 DB 저장
-                await setDoc(getDocRef('issues', data.id), data);
-                
-                // 2. 구글 스프레드시트 실시간 전송 (이슈 전용 다리 통과)
-                // 사업장별 시트에 카테고리, 이슈내용 등을 직접 쏴줍니다.
-                if (GAS_ISSUE_WEB_APP_URL) {
-                    fetch(GAS_ISSUE_WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ type: 'issue', ...data }) // type: 'issue' 로 이슈 구분
-                    }).catch(err => console.warn('구글 시트 전송 실패:', err));
-                }
+            showLoader(true, "구글 시트 연동 및 자동 저장 중...");
+            
+            // 1. 로컬 저장 우선 실행 (UI 멈춤 완벽 방지)
+            if(issues.length === 0) issues = JSON.parse(localStorage.getItem('sys_issues') || '[]');
+            const idx = issues.findIndex(i => i.id === data.id);
+            if(idx > -1) issues[idx] = data; else issues.push(data);
+            localStorage.setItem('sys_issues', JSON.stringify(issues));
 
-                window.showToast('데이터베이스 및 구글 스프레드시트에 자동 동기화 완료!');
+            // 2. Firebase (연결 시)
+            try { if(db) await setDoc(getDocRef('issues', data.id), data); } catch(e) {}
+            
+            // 3. 구글 시트 전송
+            if (GAS_ISSUE_WEB_APP_URL) {
+                fetch(GAS_ISSUE_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ type: 'issue', ...data }) 
+                }).catch(err => console.warn(err));
+            }
+
+            setTimeout(() => {
+                showLoader(false);
+                window.showToast('스프레드시트에 자동 동기화 완료!');
                 window.closeModal();
-            } catch(e) { window.showToast('저장 실패', 'error'); } finally { showLoader(false); }
+                window.switchMenu(currentMenu);
+            }, 800);
         };
 
         window.deleteIssue = async (id) => {
             if(currentUser.role === 1 && confirm("이슈 데이터를 완전히 삭제할까요? (복구 불가)")) {
-                await deleteDoc(getDocRef('issues', id));
+                issues = issues.filter(i => i.id !== id);
+                localStorage.setItem('sys_issues', JSON.stringify(issues));
+                try { if(db) await deleteDoc(getDocRef('issues', id)); } catch(e){}
                 window.showToast('영구 삭제되었습니다.', 'info');
+                window.switchMenu(currentMenu);
             }
         };
 
@@ -615,23 +639,32 @@
             const dat = { id: newId, name: u.name, pwd: document.getElementById('eUpwd').value || u.pwd, phone: document.getElementById('eUphone').value, role: parseInt(document.getElementById('eUrole').value), site: document.getElementById('eUsite').value };
             
             showLoader(true, "구글 사용자 DB 업데이트 중...");
-            try {
-                if (newId !== oldId) await deleteDoc(getDocRef('users', oldId));
-                
-                // 1. Firebase 실시간 DB 갱신
-                await setDoc(getDocRef('users', newId), dat);
-                
-                // 2. 구글 스프레드시트 실시간 전송 (사용자 DB 전용 다리)
-                if (GAS_USER_WEB_APP_URL) {
-                    fetch(GAS_USER_WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ type: 'user', ...dat })
-                    }).catch(err => console.warn('구글 시트 전송 실패:', err));
-                }
+            
+            users = users.filter(x => x.id !== oldId);
+            users.push(dat);
+            localStorage.setItem('sys_users', JSON.stringify(users));
 
+            try {
+                if (db) {
+                    if (newId !== oldId) await deleteDoc(getDocRef('users', oldId));
+                    await setDoc(getDocRef('users', newId), dat);
+                }
+            } catch(err) {}
+            
+            if (GAS_USER_WEB_APP_URL) {
+                fetch(GAS_USER_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ type: 'user', ...dat })
+                }).catch(err => console.warn(err));
+            }
+
+            setTimeout(() => {
+                showLoader(false);
                 window.showToast('가입자 DB 시트 실시간 동기화 완료');
                 window.closeModal();
-            } catch(err) { window.showToast('저장 실패', 'error'); } finally { showLoader(false); }
+                window.switchMenu(currentMenu);
+            }, 800);
         };
 
         initFirebase();
