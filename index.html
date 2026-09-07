@@ -188,12 +188,15 @@
                         <span class="text-[9px] text-slate-500 mt-0.5">버튼을 누르지 않아도 자동 저장됩니다</span>
                     </div>
 
-                    <a href="https://docs.google.com/spreadsheets/d/1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0/edit" target="_blank" class="px-3 py-1.5 bg-emerald-900/50 border border-emerald-500/50 rounded-lg hover:bg-emerald-800/80 text-emerald-300 transition-all text-xs font-medium flex items-center justify-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-file-excel"></i> 이슈 DB
-                    </a>
-                    <a href="https://docs.google.com/spreadsheets/d/1Ww7ymGa-rYxCtXFNz8SgEPb55uqz2GVsnGGb6l7Vf-4/edit" target="_blank" class="px-3 py-1.5 bg-blue-900/50 border border-blue-500/50 rounded-lg hover:bg-blue-800/80 text-blue-300 transition-all text-xs font-medium flex items-center justify-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-users"></i> 사용자 DB
-                    </a>
+                    <!-- 관리자 전용 DB 바로가기 버튼 영역 -->
+                    <div id="admin-db-links" class="flex items-center gap-3 hidden">
+                        <a href="https://docs.google.com/spreadsheets/d/1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0/edit" target="_blank" class="px-3 py-1.5 bg-emerald-900/50 border border-emerald-500/50 rounded-lg hover:bg-emerald-800/80 text-emerald-300 transition-all text-xs font-medium flex items-center justify-center gap-2 whitespace-nowrap">
+                            <i class="fa-solid fa-file-excel"></i> 이슈 DB
+                        </a>
+                        <a href="https://docs.google.com/spreadsheets/d/1Ww7ymGa-rYxCtXFNz8SgEPb55uqz2GVsnGGb6l7Vf-4/edit" target="_blank" class="px-3 py-1.5 bg-blue-900/50 border border-blue-500/50 rounded-lg hover:bg-blue-800/80 text-blue-300 transition-all text-xs font-medium flex items-center justify-center gap-2 whitespace-nowrap">
+                            <i class="fa-solid fa-users"></i> 사용자 DB
+                        </a>
+                    </div>
                 </div>
             </header>
 
@@ -352,10 +355,14 @@
 
             // 일반 사용자 (Role 3, 4) 관리자 메뉴 완벽 숨김 처리
             const adminMenuArea = document.getElementById('admin-menus');
+            const adminDbLinks = document.getElementById('admin-db-links');
+            
             if (currentUser.role >= 3) {
                 adminMenuArea.classList.add('hidden');
+                if (adminDbLinks) adminDbLinks.classList.add('hidden');
             } else {
                 adminMenuArea.classList.remove('hidden');
+                if (adminDbLinks) adminDbLinks.classList.remove('hidden');
                 document.getElementById('menuBtn-sites').classList.toggle('hidden', currentUser.role > 2);
                 document.getElementById('menuBtn-users').classList.toggle('hidden', currentUser.role !== 1);
                 document.getElementById('menuBtn-categories').classList.toggle('hidden', currentUser.role !== 1);
@@ -416,19 +423,30 @@
                 <div class="glass-panel rounded-xl overflow-hidden">
                     <table class="w-full text-left whitespace-nowrap text-sm">
                         <thead class="bg-white/5 border-b border-white/10 text-xs text-slate-400">
-                            <tr><th class="p-3">사업장</th><th class="p-3">카테고리</th><th class="p-3">이슈 내용</th><th class="p-3">등록일시</th><th class="p-3">상태</th><th class="p-3 text-center">관리</th></tr>
+                            <tr><th class="p-3">사업장</th><th class="p-3">카테고리</th><th class="p-3">이슈 내용</th><th class="p-3">등록일시</th><th class="p-3">상태 (클릭하여 조치)</th></tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
             `;
-            if (vis.length === 0) html += `<tr><td colspan="6" class="p-8 text-center text-slate-500">등록된 이슈가 없습니다.</td></tr>`;
+            if (vis.length === 0) html += `<tr><td colspan="5" class="p-8 text-center text-slate-500">등록된 이슈가 없습니다.</td></tr>`;
             vis.forEach(iss => {
-                let badge = iss.status === '완료' ? 'text-emerald-400 bg-emerald-500/20' : (iss.status === '진행중' ? 'text-amber-400 bg-amber-500/20' : 'text-red-400 bg-red-500/20');
-                let delBtn = currentUser.role === 1 ? `<button onclick="window.deleteIssue('${iss.id}')" class="text-red-400 hover:text-red-300 ml-2" title="이슈 영구 삭제"><i class="fa-solid fa-trash-can"></i></button>` : '';
-                html += `<tr class="hover:bg-white/5"><td class="p-3 text-xs">${iss.site}</td><td class="p-3 text-xs">${iss.category}</td><td class="p-3 truncate max-w-[200px]">${iss.content}</td><td class="p-3 text-xs text-slate-400">${iss.regDate.substring(0,16)}</td><td class="p-3"><span class="px-2 py-1 rounded text-[10px] font-bold ${badge}">${iss.status}</span></td><td class="p-3 text-center"><button onclick="window.openIssueModal('${iss.id}')" class="text-indigo-400 hover:text-indigo-300" title="수정 및 완료처리"><i class="fa-solid fa-pen-to-square"></i></button>${delBtn}</td></tr>`;
+                // 상태 뱃지 스타일을 누를 수 있는 버튼 형태로 업그레이드
+                let badge = iss.status === '완료' ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' : (iss.status === '진행중' ? 'text-amber-400 bg-amber-500/20 border-amber-500/30' : 'text-red-400 bg-red-500/20 border-red-500/30');
+                
+                html += `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="p-3 text-xs">${iss.site}</td>
+                        <td class="p-3 text-xs">${iss.category}</td>
+                        <td class="p-3 truncate max-w-[200px] cursor-pointer" onclick="window.openIssueModal('${iss.id}')" title="상세보기">${iss.content}</td>
+                        <td class="p-3 text-xs text-slate-400">${iss.regDate.substring(0,16)}</td>
+                        <td class="p-3">
+                            <button onclick="window.openIssueModal('${iss.id}')" class="px-3 py-1.5 rounded-lg text-[11px] font-bold border ${badge} hover:opacity-80 transition shadow-sm flex items-center gap-1.5 w-max">
+                                ${iss.status === '완료' ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-pen"></i>'} ${iss.status}
+                            </button>
+                        </td>
+                    </tr>`;
             });
             container.innerHTML = html + `</tbody></table></div>`;
         }
-
 
         window.openModal = (title, html) => {
             document.getElementById('modalTitleText').textContent = title;
@@ -450,14 +468,28 @@
             let siteOpts = currentUser.role >= 3 ? `<option value="${currentUser.site}">${currentUser.site}</option>` : sites.map(s => `<option value="${s.name}" ${tg && tg.site===s.name?'selected':''}>${s.name}</option>`).join('');
             let catOpts = categories.map(c => `<option value="${c.name}" ${tg && tg.category===c.name?'selected':''}>${c.name}</option>`).join('');
 
-            window.openModal(tg ? '이슈 조치 및 수정' : '신규 이슈 등록', `
+            // 완료된 상태일 경우 모달 안에 조치일자 및 소요시간 표시 영역 추가
+            let actionDetailHtml = '';
+            if (tg && tg.status === '완료') {
+                actionDetailHtml = `
+                    <div class="mt-3 p-3 bg-slate-900/50 rounded-xl border border-white/5 space-y-2">
+                        <div class="flex justify-between text-xs"><span class="text-slate-400">조치 완료일시:</span> <span class="text-slate-200">${tg.completeDate || '-'}</span></div>
+                        <div class="flex justify-between text-xs"><span class="text-slate-400">총 소요 시간:</span> <span class="text-emerald-400 font-bold">${tg.duration || '-'}</span></div>
+                    </div>
+                `;
+            }
+
+            // 삭제 버튼은 관리자(1단계)만 볼 수 있도록 모달 하단으로 이동
+            let delBtnHtml = (tg && currentUser.role === 1) ? `<button type="button" onclick="window.deleteIssue('${tg.id}'); window.closeModal();" class="text-xs text-red-400 hover:text-red-300 transition flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> 이슈 완전 삭제</button>` : '<div></div>';
+
+            window.openModal(tg ? '이슈 상세 정보 및 조치' : '신규 이슈 등록', `
                 <form onsubmit="window.saveIssue(event, '${id||''}')" class="space-y-4 text-sm">
                     <div><label class="block text-xs mb-1 text-slate-400">사업장</label><select id="issSite" class="w-full p-2 glass-input rounded-xl" ${currentUser.role>=3?'disabled':''}>${siteOpts}</select></div>
                     <div><label class="block text-xs mb-1 text-slate-400">카테고리</label><select id="issCat" class="w-full p-2 glass-input rounded-xl">${catOpts}</select></div>
                     <div><label class="block text-xs mb-1 text-slate-400">이슈 내용</label><textarea id="issContent" rows="3" class="w-full p-2 glass-input rounded-xl" required>${tg?tg.content:''}</textarea></div>
                     <div>
-                        <label class="block text-xs mb-1 text-slate-400">상태 변경</label>
-                        <select id="issStatus" onchange="window.toggleActionField(this.value)" class="w-full p-2 glass-input rounded-xl">
+                        <label class="block text-xs mb-1 text-slate-400">진행 상태</label>
+                        <select id="issStatus" onchange="window.toggleActionField(this.value)" class="w-full p-2 glass-input rounded-xl focus:border-indigo-500">
                             <option value="대기" ${tg&&tg.status==='대기'?'selected':''}>대기</option>
                             <option value="진행중" ${tg&&tg.status==='진행중'?'selected':''}>진행중</option>
                             <option value="완료" ${tg&&tg.status==='완료'?'selected':''}>조치 완료</option>
@@ -465,12 +497,19 @@
                     </div>
                     
                     <div id="actionField" class="${tg&&tg.status==='완료'?'':'hidden'}">
-                        <label class="block text-xs mb-1 text-emerald-400 font-bold">조치 방법 (해결 내역)</label>
-                        <textarea id="issAction" rows="2" class="w-full p-2 glass-input border-emerald-500/50 rounded-xl" placeholder="어떻게 해결하셨나요?">${tg?(tg.actionTaken||''):''}</textarea>
+                        <label class="block text-xs mb-1 text-emerald-400 font-bold">조치 내용</label>
+                        <textarea id="issAction" rows="2" class="w-full p-2 glass-input border-emerald-500/50 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="어떻게 조치하셨나요?">${tg?(tg.actionTaken||''):''}</textarea>
+                        ${actionDetailHtml}
                     </div>
 
-                    <div class="p-3 bg-black/20 rounded-xl"><label class="block text-xs text-slate-500">등록일시</label><input type="text" value="${tg?tg.regDate:d}" class="w-full bg-transparent text-slate-300 text-xs focus:ring-0" readonly></div>
-                    <div class="pt-2 flex justify-end gap-2"><button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium text-white shadow-lg"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> 시트 연동 및 저장</button></div>
+                    <div class="p-3 bg-black/20 rounded-xl"><label class="block text-xs text-slate-500">최초 등록일시</label><input type="text" value="${tg?tg.regDate:d}" class="w-full bg-transparent text-slate-300 text-xs focus:ring-0 cursor-default" readonly></div>
+                    
+                    <div class="pt-4 flex justify-between items-center border-t border-white/10 mt-4">
+                        ${delBtnHtml}
+                        <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium text-white shadow-lg shadow-indigo-900/30 transition flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 및 저장
+                        </button>
+                    </div>
                 </form>
             `);
         };
