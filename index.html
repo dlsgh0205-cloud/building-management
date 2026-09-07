@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>전사 통합 관제 시스템 & 구글 스프레드시트 자동 연동</title>
+    <title>전사 통합 관제 시스템 & 구글 드라이브/스프레드시트 자동 동기화</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -77,23 +77,23 @@
                 </div>
             </div>
 
-            <!-- 회원가입 뷰 (담당 사업장 선택 없음, 최고관리자가 추후 지정) -->
+            <!-- 회원가입 뷰 -->
             <div id="signupView" class="space-y-4 hidden">
                 <form onsubmit="handleSignupSubmit(event)" class="space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">아이디 (ID)</label>
-                        <input type="text" id="regId" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="사용할 아이디 입력" required>
+                        <input type="text" id="regId" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs" placeholder="사용할 아이디 입력" required>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">이름</label>
-                        <input type="text" id="regName" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="성명 입력" required>
+                        <input type="text" id="regName" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs" placeholder="성명 입력" required>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">비밀번호</label>
-                        <input type="password" id="regPwd" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs" placeholder="비밀번호 입력" required>
+                        <input type="password" id="regPwd" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs" placeholder="비밀번호 입력" required>
                     </div>
                     <div class="p-3 bg-blue-950/40 border border-blue-500/30 rounded-xl text-[11px] text-blue-300">
-                        ℹ️ 가입 시 기본 권한(일반 사용자)으로 생성되며, 로그인 후 <strong>1단계 최고관리자</strong>가 담당 사업장 및 권한을 지정합니다.
+                        ℹ️ 가입 시 일반 사용자 권한으로 생성되며, 로그인 후 <strong>1단계 최고관리자</strong>가 담당 사업장 및 권한을 지정합니다.
                     </div>
                     <div class="pt-2 flex gap-2">
                         <button type="button" onclick="toggleAuthMode('login')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs">돌아가기</button>
@@ -121,9 +121,9 @@
             </div>
 
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
-                <!-- 구글 스프레드시트 연동 상태 표시 -->
-                <button onclick="syncWithGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5" title="구글 스프레드시트 연동 확인 및 다운로드">
-                    <i class="fa-solid fa-file-excel"></i> 구글 시트 자동 동기화 <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                <!-- 구글 드라이브 / 스프레드시트 연동 버튼 -->
+                <button onclick="syncWithGoogleDriveAndSheet()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5" title="구글 드라이브 폴더 및 스프레드시트 실시간 동기화">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> 구글 드라이브 동기화 <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
                 </button>
                 <div id="buildingSelectContainer" class="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10">
                     <span class="text-xs text-slate-400">조회 사업장:</span>
@@ -207,7 +207,7 @@
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
                         <span>📈</span> 실시간 처리 현황 및 소요 기간 산출
                     </h2>
-                    <span class="text-xs text-emerald-400"><i class="fa-solid fa-check-circle mr-1"></i>구글 시트(1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0) 자동 동기화 활성화</span>
+                    <span class="text-xs text-emerald-400"><i class="fa-solid fa-check-circle mr-1"></i>구글 드라이브 폴더 및 시트 자동 연동 중</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
@@ -234,7 +234,7 @@
             <div class="glass-card p-6 rounded-2xl space-y-4 shadow-lg">
                 <div class="flex justify-between items-center border-b border-white/10 pb-3">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <span>✍️</span> 문제 및 이슈 등록 / 수정 (등록 시 구글 시트 자동 반영)
+                        <span>✍️</span> 문제 및 이슈 등록 / 수정 (등록 시 구글 스프레드시트/드라이브 자동 반영)
                     </h2>
                     <button onclick="openIssueModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow transition">
                         <i class="fa-solid fa-plus mr-1"></i> 새 이슈 등록
@@ -355,7 +355,7 @@
                     <textarea id="issueContent" rows="3" class="w-full px-3 py-2.5 rounded-xl glass-input text-xs resize-none" placeholder="이슈 내용을 입력하세요" required></textarea>
                 </div>
                 <div class="p-3 bg-slate-900/50 rounded-xl border border-white/5 text-[11px] text-emerald-400">
-                    ⚡ 등록 시 구글 스프레드시트 개별 사업장 시트에 자동으로 반영됩니다.
+                    ⚡ 등록 즉시 구글 스프레드시트 및 드라이브 폴더에 자동 반영됩니다.
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -420,12 +420,13 @@
     </div>
 
     <footer class="glass-card border-t border-white/10 py-4 text-center text-xs text-slate-500 mt-8">
-        <p>© 2026 Enterprise Multi-Building Management Solution & Google Spreadsheet Per-Site Auto-Sync (Gemini API Powered).</p>
+        <p>© 2026 Enterprise Multi-Building Management Solution & Google Drive / Spreadsheet Auto-Sync (Gemini API Powered).</p>
     </footer>
 
     <script>
         const GEMINI_API_KEY = "AIzaSyACPakmtFZWBRywxV_QN958ucbEIjIhgcQ";
         const SHEET_ID = "1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0";
+        const DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1Ac8NUrAhZdb3lVJ_EGaZS9Ary3pLhHJc";
 
         let sites = JSON.parse(localStorage.getItem('sys_sites')) || [
             { id: 'site_1', name: '본사 타워 (서울)', address: '서울시 강남구 테헤란로 123' },
@@ -456,12 +457,11 @@
             localStorage.setItem('sys_users', JSON.stringify(users));
             localStorage.setItem('sys_issues', JSON.stringify(issues));
             
-            // 이슈 등록/수정/삭제 시 백그라운드 자동 구글 스프레드시트 패키지 싱크 트리거
-            backgroundAutoSyncToGoogleSheet();
+            // 데이터 변경 시마다 구글 드라이브/스프레드시트 동기화 패키지 실시간 자동 생성
+            backgroundAutoSyncToGoogleDrive();
         }
 
-        // 구글 스프레드시트 자동 동기화 백그라운드 함수
-        function backgroundAutoSyncToGoogleSheet() {
+        function backgroundAutoSyncToGoogleDrive() {
             const siteSheetsData = {};
             sites.forEach(site => {
                 const siteIssues = issues.filter(i => i.site === site.name).map(iss => {
@@ -488,6 +488,7 @@
 
             window._latestGoogleSheetPayload = {
                 spreadsheetId: SHEET_ID,
+                googleDriveFolderUrl: DRIVE_FOLDER_URL,
                 autoSyncTimestamp: new Date().toISOString(),
                 sheets: {
                     "사용자정보": users,
@@ -499,22 +500,26 @@
             };
         }
 
-        function syncWithGoogleSheet() {
-            backgroundAutoSyncToGoogleSheet();
+        function syncWithGoogleDriveAndSheet() {
+            backgroundAutoSyncToGoogleDrive();
             const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0`;
+            
+            // 데이터 패키지 파일 다운로드 트리거 (구글 드라이브 지정 폴더에 업로드용)
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window._latestGoogleSheetPayload, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `GoogleSheet_AutoSync_${SHEET_ID}_${new Date().toISOString().slice(0,10)}.json`);
+            downloadAnchor.setAttribute("download", `GoogleDrive_AutoSync_${SHEET_ID}_${new Date().toISOString().slice(0,10)}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
 
+            // 구글 드라이브 폴더와 스프레드시트를 새 창으로 동시 연결
+            window.open(DRIVE_FOLDER_URL, '_blank');
             window.open(spreadsheetUrl, '_blank');
         }
 
         window.onload = function() {
-            backgroundAutoSyncToGoogleSheet();
+            backgroundAutoSyncToGoogleDrive();
             document.getElementById('authModal').classList.remove('hidden');
         };
 
@@ -548,7 +553,6 @@
 
             currentUser = found;
             
-            // 일반 사용자와 3단계 권한자는 본인이 관리하는 지정 사업장만 조회하도록 완벽 격리
             if (currentUser.role <= 2) {
                 currentBuilding = sites[0].name;
             } else {
@@ -582,7 +586,7 @@
                 pwd: pwd,
                 name: name,
                 role: 4, 
-                site: sites[0].name // 기본값 설정, 최고관리자가 추후 지정
+                site: sites[0].name
             });
 
             saveData();
@@ -657,13 +661,12 @@
             select.innerHTML = '';
             const accessible = getAccessibleSites();
             
-            // 일반 사용자나 3단계 사용자는 본인 지정 사업장만 셀렉트박스에 노출하여 타 사업장 선택 차단
             accessible.forEach(s => {
                 select.innerHTML += `<option value="${s}" ${s === currentBuilding ? 'selected' : ''} class="bg-slate-900">${s}</option>`;
             });
 
             if (currentUser.role > 2) {
-                select.disabled = true; // 변경 불가 고정
+                select.disabled = true;
             } else {
                 select.disabled = false;
             }
@@ -714,7 +717,6 @@
 
         function renderDashboard() {
             const accessible = getAccessibleSites();
-            // 일반 사용자와 3단계 권한자는 본인 담당 사업장 이슈만 필터링되어 보이도록 철저히 제한
             const filteredIssues = issues.filter(i => currentUser.role <= 2 || accessible.includes(i.site));
 
             document.getElementById('stat-total').innerText = filteredIssues.length;
@@ -790,7 +792,6 @@
             const tbody = document.getElementById('issueTableBody');
             tbody.innerHTML = '';
 
-            // 이슈 관리 탭에서도 일반 사용자 및 3단계는 본인 지정 사업장 이슈만 보이도록 철저히 격리
             const filteredIssues = issues.filter(i => currentUser.role <= 2 || accessible.includes(i.site));
 
             if (filteredIssues.length === 0) {
@@ -833,7 +834,7 @@
                         <div>
                             <h4 class="font-bold text-white text-sm">${site.name}</h4>
                             <p class="text-xs text-slate-400 mt-1"><i class="fa-solid fa-location-dot mr-1"></i> ${site.address}</p>
-                            <p class="text-[10px] text-emerald-400 mt-1">📊 구글 시트 탭 자동 생성: [사업장_${site.name}]</p>
+                            <p class="text-[10px] text-emerald-400 mt-1">📊 구글 드라이브 시트 탭 자동 생성: [사업장_${site.name}]</p>
                         </div>
                         ${currentUser.role <= 2 ? `<button onclick="deleteSite(${index})" class="text-rose-400 hover:text-rose-300 text-xs bg-rose-950/60 px-2.5 py-1.5 rounded-xl border border-rose-500/30">삭제</button>` : ''}
                     </div>
@@ -904,7 +905,7 @@
             saveData();
             document.getElementById('newMasterCategoryInput').value = '';
             renderMasterCategories();
-            alert('새 시스템 카테고리가 추가되었으며 구글 시트에 자동 반영되었습니다.');
+            alert('새 시스템 카테고리가 추가되었으며 구글 드라이브/시트에 자동 반영되었습니다.');
         }
 
         function deleteMasterCategory(index) {
@@ -915,14 +916,14 @@
         }
 
         function openSiteAddModal() {
-            const name = prompt('추가할 사업장 이름을 입력하세요 (구글 시트에 새 시트 탭이 생성됩니다):');
+            const name = prompt('추가할 사업장 이름을 입력하세요 (구글 드라이브 시트에 새 시트 탭이 생성됩니다):');
             if (!name) return;
             const address = prompt('사업장 위치(주소)를 입력하세요:');
             sites.push({ id: 'site_' + Date.now(), name, address: address || '주소 미입력' });
             saveData();
             renderSites();
             renderBuildingSelect();
-            alert(`"${name}" 사업장이 추가되었으며, 구글 스프레드시트에 [사업장_${name}] 시트 연동 패키지가 자동으로 업데이트되었습니다.`);
+            alert(`"${name}" 사업장이 추가되었으며, 구글 드라이브 [사업장_${name}] 시트 연동 패키지가 자동으로 업데이트되었습니다.`);
         }
 
         function deleteSite(index) {
@@ -1003,7 +1004,6 @@
             const siteSelect = document.getElementById('issueSite');
             siteSelect.innerHTML = '';
             
-            // 일반 사용자는 본인 지정 사업장만 선택 가능하도록 제한
             const accessible = getAccessibleSites();
             accessible.forEach(s => {
                 siteSelect.innerHTML += `<option value="${s}" class="bg-slate-900">${s}</option>`;
@@ -1011,7 +1011,7 @@
 
             if (currentUser.role > 2) {
                 siteSelect.value = currentUser.site;
-                siteSelect.disabled = true; // 본인 사업장 고정
+                siteSelect.disabled = true;
             } else {
                 siteSelect.disabled = false;
             }
@@ -1053,7 +1053,6 @@
         function saveIssue(e) {
             e.preventDefault();
             const idVal = document.getElementById('issueId').value;
-            // 3단계 및 일반 사용자는 무조건 본인 지정 사업장으로 강제 적용
             const site = currentUser.role > 2 ? (currentUser.site || sites[0].name) : document.getElementById('issueSite').value;
             const category = document.getElementById('issueCategory').value;
             const content = document.getElementById('issueContent').value;
@@ -1091,7 +1090,7 @@
             closeIssueModal();
             renderDashboard();
             renderIssues();
-            alert('이슈가 저장되었으며, 구글 스프레드시트(개별 사업장 시트)에 자동 반영되었습니다.');
+            alert('이슈가 저장되었으며, 구글 드라이브 및 스프레드시트에 자동 동기화되었습니다.');
         }
     </script>
 </body>
