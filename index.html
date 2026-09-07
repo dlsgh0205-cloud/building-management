@@ -363,11 +363,45 @@
                 document.getElementById('menuBtn-users').classList.toggle('hidden', currentUser.role !== 1);
                 document.getElementById('menuBtn-categories').classList.toggle('hidden', currentUser.role !== 1);
             }
+            
+            // 로그인 완료 후 구글 시트 기존 데이터 긁어오기 (양방향 동기화)
+            syncDataFromGoogle();
+        }
+
+        async function syncDataFromGoogle() {
+            showLoader(true, "구글 시트 기존 데이터를 동기화 중...");
+            try {
+                // 1. 사용자 DB 불러오기
+                const uRes = await fetch(GAS_USER_WEB_APP_URL);
+                const uData = await uRes.json();
+                if(Array.isArray(uData)) {
+                    uData.forEach(fu => {
+                        const idx = users.findIndex(u => u.id === fu.id);
+                        if(idx === -1) users.push(fu);
+                        else users[idx] = {...users[idx], ...fu};
+                    });
+                    localStorage.setItem('sys_users', JSON.stringify(users));
+                }
+
+                // 2. 이슈 DB 불러오기
+                const iRes = await fetch(GAS_ISSUE_WEB_APP_URL);
+                const iData = await iRes.json();
+                if(Array.isArray(iData)) {
+                    iData.forEach(fi => {
+                        // 중복 방지 (사업장 + 등록일자 + 내용이 완전히 같으면 덮어씀)
+                        const exists = issues.find(i => i.site === fi.site && i.content === fi.content && i.regDate === fi.regDate);
+                        if(!exists) issues.push(fi);
+                    });
+                    localStorage.setItem('sys_issues', JSON.stringify(issues));
+                }
+            } catch(e) {
+                console.warn("데이터 불러오기(GET) 실패 - 로컬 데이터로 진행:", e);
+            }
+            showLoader(false);
             window.switchMenu('dashboard');
         }
 
         window.logout = () => { currentUser = null; location.reload(); };
-
 
         // 담당 사업장 데이터만 가져오도록 철저히 격리
         function getVisibleIssues() {
@@ -401,53 +435,53 @@
             const vis = getVisibleIssues();
             let warnMsg = (currentUser.role >= 3) ? `<div class="mb-4 p-3 bg-blue-900/30 border border-blue-500/30 rounded-xl text-sm text-blue-200"><i class="fa-solid fa-lock mr-1"></i> [${currentUser.site}] 사업장의 데이터만 격리 조회됩니다.</div>` : '';
             
-            container.innerHTML = `
+            // 기존 4개 요약판
+            let html = `
                 ${warnMsg}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <div class="glass-panel p-5 rounded-xl border-l-4 border-slate-500"><p class="text-xs text-slate-400">총 누적</p><h3 class="text-3xl font-bold mt-1">${vis.length}</h3></div>
                     <div class="glass-panel p-5 rounded-xl border-l-4 border-red-500"><p class="text-xs text-slate-400">대기중</p><h3 class="text-3xl font-bold mt-1">${vis.filter(i=>i.status==='대기').length}</h3></div>
                     <div class="glass-panel p-5 rounded-xl border-l-4 border-amber-500"><p class="text-xs text-slate-400">진행중</p><h3 class="text-3xl font-bold mt-1">${vis.filter(i=>i.status==='진행중').length}</h3></div>
                     <div class="glass-panel p-5 rounded-xl border-l-4 border-emerald-500"><p class="text-xs text-slate-400">조치완료</p><h3 class="text-3xl font-bold mt-1">${vis.filter(i=>i.status==='완료').length}</h3></div>
                 </div>
             `;
+
+            // 1, 2단계 관리자 전용: 사업장별 요약 현황판 추가
+            if (currentUser.role <= 2) {
+                let siteStats = {};
+                sites.forEach(s => siteStats[s.name] = { total:0, wait:0, ing:0, done:0 });
+                vis.forEach(iss => {
+                    if(!siteStats[iss.site]) siteStats[iss.site] = { total:0, wait:0, ing:0, done:0 };
+                    siteStats[iss.site].total++;
+                    if(iss.status==='대기') siteStats[iss.site].wait++;
+                    if(iss.status==='진행중') siteStats[iss.site].ing++;
+                    if(iss.status==='완료') siteStats[iss.site].done++;
+                });
+
+                html += `<h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-layer-group text-indigo-400 mr-2"></i>사업장별 요약 현황</h3>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">`;
+                
+                for(const [sName, stat] of Object.entries(siteStats)) {
+                    html += `
+                    <div class="glass-panel p-4 rounded-xl border border-white/5 hover:border-indigo-500/50 transition relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                        <h4 class="font-bold text-white mb-3 ml-2 text-sm">${sName}</h4>
+                        <div class="grid grid-cols-4 gap-2 text-center text-[11px]">
+                            <div class="bg-white/5 p-2 rounded flex flex-col justify-center"><p class="text-slate-400 mb-0.5">총건</p><p class="font-bold text-sm">${stat.total}</p></div>
+                            <div class="bg-red-500/10 text-red-400 p-2 rounded flex flex-col justify-center"><p class="text-red-400/70 mb-0.5">대기</p><p class="font-bold text-sm">${stat.wait}</p></div>
+                            <div class="bg-amber-500/10 text-amber-400 p-2 rounded flex flex-col justify-center"><p class="text-amber-400/70 mb-0.5">진행</p><p class="font-bold text-sm">${stat.ing}</p></div>
+                            <div class="bg-emerald-500/10 text-emerald-400 p-2 rounded flex flex-col justify-center"><p class="text-emerald-400/70 mb-0.5">완료</p><p class="font-bold text-sm">${stat.done}</p></div>
+                        </div>
+                    </div>`;
+                }
+                html += `</div>`;
+            }
+            container.innerHTML = html;
         }
 
         function renderIssues(container) {
-            const vis = getVisibleIssues().sort((a,b) => new Date(b.regDate) - new Date(a.regDate));
-            let html = `
-                <div class="mb-4 flex justify-end">
-                    <button onclick="window.openIssueModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm shadow-lg font-medium transition"><i class="fa-solid fa-plus mr-1"></i> 신규 등록 (구글 시트 자동 저장)</button>
-                </div>
-                <div class="glass-panel rounded-xl overflow-hidden overflow-x-auto">
-                    <table class="w-full text-left whitespace-nowrap text-sm min-w-[800px]">
-                        <thead class="bg-white/5 border-b border-white/10 text-xs text-slate-400">
-                            <tr>
-                                <th class="p-3">사업장</th>
-                                <th class="p-3">카테고리</th>
-                                <th class="p-3">이슈 내용</th>
-                                <th class="p-3">등록일시</th>
-                                <th class="p-3">조치일시</th>
-                                <th class="p-3">소요시간</th>
-                                <th class="p-3 text-center">상태 (클릭)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
-            `;
-            if (vis.length === 0) html += `<tr><td colspan="7" class="p-8 text-center text-slate-500">등록된 이슈가 없습니다.</td></tr>`;
-            vis.forEach(iss => {
-                let badge = iss.status === '완료' ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' : (iss.status === '진행중' ? 'text-amber-400 bg-amber-500/20 border-amber-500/30' : 'text-red-400 bg-red-500/20 border-red-500/30');
-                
-                let cDate = iss.completeDate ? iss.completeDate.substring(0,16) : '-';
-                let dur = (iss.duration && iss.duration !== '-') ? iss.duration : '-';
-
-                html += `
-                    <tr class="hover:bg-white/5 transition-colors">
-                        <td class="p-3 text-xs">${iss.site}</td>
-                        <td class="p-3 text-xs">${iss.category}</td>
-                        <td class="p-3 truncate max-w-[180px] cursor-pointer" onclick="window.openIssueModal('${iss.id}')" title="상세보기">${iss.content}</td>
-                        <td class="p-3 text-xs text-slate-400">${iss.regDate.substring(0,16)}</td>
-                        <td class="p-3 text-xs text-slate-400">${cDate}</td>
-                        <td class="p-3 text-xs font-semibold ${dur !== '-' ? 'text-emerald-400' : 'text-slate-500'}">${dur}</td>
+            // 시간순 정렬: 타임스탬프가 클수록(가장 최근) 위로 올라오게 내림차순 정렬 적용!
+            const vis = getVisibleIssues().sort((a,b) => (b.regTimestamp || 0) - (a.regTimestamp || 0));
                         <td class="p-3 flex justify-center">
                             <button onclick="window.openIssueModal('${iss.id}')" class="px-3 py-1.5 rounded-lg text-[11px] font-bold border ${badge} hover:opacity-80 transition shadow-sm flex items-center justify-center gap-1.5 w-24">
                                 ${iss.status === '완료' ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-pen"></i>'} ${iss.status}
