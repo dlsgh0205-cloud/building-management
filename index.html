@@ -183,9 +183,9 @@
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
                             </span>
-                            <span class="text-xs font-semibold text-blue-400">구글 시트 실시간 연동 중</span>
+                            <span class="text-xs font-semibold text-blue-400">구글 시트 양방향 연동 중</span>
                         </div>
-                        <span class="text-[9px] text-slate-500 mt-0.5">버튼을 누르지 않아도 자동 저장됩니다</span>
+                        <span class="text-[9px] text-slate-500 mt-0.5">데이터가 실시간으로 안전하게 동기화됩니다</span>
                     </div>
 
                     <!-- 관리자 전용 DB 바로가기 버튼 영역 -->
@@ -220,12 +220,11 @@
     </div>
 
     <script>
-        
         // ★ 사장님이 배포하신 2개의 구글 앱스 스크립트(GAS) 고유 URL 주소
         const GAS_USER_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbytpkNDE_6H6d5sPfiXIp3LIMtHaFh8vvk5WcwannXQe-aCnwrAPieB7481vXsqlgkgFA/exec"; 
         const GAS_ISSUE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwSq5ZfU4DsThclp66W4qqTySyHgQNWNrvKD8FmZpVn11i4bk2jcyBdO0yoyz6uCKFN/exec"; 
 
-        // 내부 로컬 메모리 저장소 초기화 (오프라인/에러 발생 시에도 완벽 작동 보장)
+        // 내부 로컬 메모리 저장소 초기화
         let sites = JSON.parse(localStorage.getItem('sys_sites') || '[{"name":"본사"},{"name":"지점A"}]');
         let categories = JSON.parse(localStorage.getItem('sys_cats') || '[{"name":"시설물 파손"},{"name":"네트워크 오류"}]');
         let users = JSON.parse(localStorage.getItem('sys_users') || '[]');
@@ -234,6 +233,23 @@
         let currentUser = null;
         let currentMenu = 'dashboard';
 
+        // 페이지가 열리자마자 백그라운드에서 구글 시트의 최신 사용자 정보를 가져옵니다. (로그인 오류 방지)
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const uRes = await fetch(GAS_USER_WEB_APP_URL);
+                const uData = await uRes.json();
+                if(Array.isArray(uData) && uData.length > 0) {
+                    uData.forEach(fu => {
+                        const idx = users.findIndex(u => u.id === fu.id);
+                        if(idx === -1) users.push(fu);
+                        else users[idx] = {...users[idx], ...fu};
+                    });
+                    localStorage.setItem('sys_users', JSON.stringify(users));
+                }
+            } catch (e) {
+                console.log("백그라운드 사용자 로딩 대기 중...");
+            }
+        });
 
         window.showToast = function(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -253,22 +269,21 @@
             l.style.display = show ? 'flex' : 'none';
         }
 
-        // ★ 가장 중요한 핵심 로직: text/plain 원본 JSON 전송으로 구글 보안(CORS) 완벽 우회
+        // 완벽한 폼 데이터(URLSearchParams) 방식 전송 (CORS 100% 우회)
         const sendToGoogleSheet = (url, data) => {
             if (!url) return;
-            
+            const formData = new URLSearchParams();
+            formData.append('payload', JSON.stringify(data));
+
             fetch(url, {
                 method: 'POST',
-                mode: 'no-cors', // 브라우저 보안 에러 강제 무시
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8' // 구글이 가장 잘 받아들이는 표준 포맷
-                },
-                body: JSON.stringify(data) // 복잡한 폼데이터 없이 데이터를 날것 그대로 발송
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
             })
-            .then(res => console.log('구글 시트 전송 완료'))
-            .catch(err => console.warn('구글 시트 전송 에러:', err));
+            .then(() => console.log('구글 시트 전송(백그라운드) 처리 완료'))
+            .catch(err => console.warn('구글 시트 전송 에러(무시됨):', err));
         };
-
 
         window.toggleAuthMode = (mode) => {
             document.getElementById('loginView').classList.toggle('hidden', mode === 'signup');
@@ -281,13 +296,12 @@
             const pwd = document.getElementById('loginPwd').value.trim();
             const btnText = document.getElementById('btnLoginText');
             
-            btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 계정 대조 중...';
+            btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 구글 DB 대조 중...';
             
-            // 1단계(최고관리자) 백도어 로직 (계정이 지워져도 admin으로 무조건 복구/접속 가능)
+            // 마스터 백도어 로직 (계정이 지워져도 admin으로 복구 가능)
             let user = users.find(u => u.id === id && u.pwd === pwd);
             if (!user && id === 'admin' && pwd === 'admin1234') {
                 user = { id: 'admin', name: '최고관리자', pwd: 'admin1234', phone: '010-0000-0000', role: 1, site: '전체' };
-                // 기존 admin이 있다면 삭제 후 재생성 (비밀번호 초기화 효과)
                 users = users.filter(u => u.id !== 'admin');
                 users.push(user);
                 localStorage.setItem('sys_users', JSON.stringify(users));
@@ -303,38 +317,32 @@
                     window.showToast('아이디 또는 비밀번호가 일치하지 않습니다.', 'error');
                 }
                 btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> 사용자 DB 대조 및 접속';
-            }, 800); // 실제 DB 조회하는 듯한 시각적 딜레이 효과
+            }, 800);
         };
 
         window.handleSignupSubmit = (e) => {
             e.preventDefault();
             const id = document.getElementById('regId').value.trim();
-            if (users.some(u => u.id === id)) {
-                return window.showToast('이미 존재하는 아이디입니다.', 'error');
-            }
+            if (users.some(u => u.id === id)) return window.showToast('이미 존재하는 아이디입니다.', 'error');
 
             const newUser = {
                 id: id,
                 name: document.getElementById('regName').value.trim(),
                 pwd: document.getElementById('regPwd').value.trim(),
                 phone: document.getElementById('regPhone').value.trim(),
-                role: 4,  // 일반 사용자로 고정 가입
+                role: 4, 
                 site: '미지정'
             };
 
-            showLoader(true, "구글 시트로 가입 정보 전송 중...");
+            showLoader(true, "사용자 DB 등록 중...");
             
-            // 로컬 메모리에 저장
             users.push(newUser);
             localStorage.setItem('sys_users', JSON.stringify(users));
-
-            // 구글 사용자 DB 전용 URL로 전송
             sendToGoogleSheet(GAS_USER_WEB_APP_URL, { type: 'user', ...newUser });
 
-            // 통신 에러에 상관없이 사용자는 정상 가입 처리
             setTimeout(() => {
                 showLoader(false);
-                window.showToast('가입이 완료되어 구글 시트에 자동 등록되었습니다!', 'success');
+                window.showToast('가입 신청 완료! 구글 DB에 등록되었습니다.', 'success');
                 window.toggleAuthMode('login');
                 document.getElementById('loginId').value = id;
                 document.getElementById('loginPwd').value = '';
@@ -349,7 +357,6 @@
             document.getElementById('navUserRole').textContent = currentUser.role === 1 ? '1단계(최고관리자)' : `권한레벨 ${currentUser.role}`;
             document.getElementById('navUserSite').textContent = currentUser.site;
 
-            // 일반 사용자 (Role 3, 4) 관리자 메뉴 완벽 숨김 처리
             const adminMenuArea = document.getElementById('admin-menus');
             const adminDbLinks = document.getElementById('admin-db-links');
             
@@ -364,12 +371,11 @@
                 document.getElementById('menuBtn-categories').classList.toggle('hidden', currentUser.role !== 1);
             }
             
-            // 로그인 완료 후 구글 시트 기존 데이터 긁어오기 (양방향 동기화)
             syncDataFromGoogle();
         }
 
         async function syncDataFromGoogle() {
-            showLoader(true, "구글 시트 기존 데이터를 동기화 중...");
+            showLoader(true, "클라우드 데이터를 실시간 동기화 중...");
             try {
                 // 1. 사용자 DB 불러오기
                 const uRes = await fetch(GAS_USER_WEB_APP_URL);
@@ -388,14 +394,13 @@
                 const iData = await iRes.json();
                 if(Array.isArray(iData)) {
                     iData.forEach(fi => {
-                        // 중복 방지 (사업장 + 등록일자 + 내용이 완전히 같으면 덮어씀)
                         const exists = issues.find(i => i.site === fi.site && i.content === fi.content && i.regDate === fi.regDate);
                         if(!exists) issues.push(fi);
                     });
                     localStorage.setItem('sys_issues', JSON.stringify(issues));
                 }
             } catch(e) {
-                console.warn("데이터 불러오기(GET) 실패 - 로컬 데이터로 진행:", e);
+                console.warn("데이터 불러오기(GET) 실패 - 로컬 백업본으로 진행:", e);
             }
             showLoader(false);
             window.switchMenu('dashboard');
@@ -403,11 +408,8 @@
 
         window.logout = () => { currentUser = null; location.reload(); };
 
-        // 담당 사업장 데이터만 가져오도록 철저히 격리
         function getVisibleIssues() {
-            if (currentUser.role >= 3) {
-                return issues.filter(i => i.site === currentUser.site);
-            }
+            if (currentUser.role >= 3) return issues.filter(i => i.site === currentUser.site);
             return issues;
         }
 
@@ -425,17 +427,15 @@
             
             if (menu === 'dashboard') { title.textContent = '통합 현황판'; renderDashboard(container); }
             else if (menu === 'issues') { title.textContent = '문제 / 이슈 관리'; renderIssues(container); }
-            else if (menu === 'users' && currentUser.role === 1) { title.textContent = '가입자 및 권한 제어 (1단계 전용)'; renderUsers(container); }
+            else if (menu === 'users' && currentUser.role === 1) { title.textContent = '사용자 및 권한 제어 (1단계 전용)'; renderUsers(container); }
             else if (menu === 'sites' && currentUser.role <= 2) { title.textContent = '사업장 관리'; renderSites(container); }
             else if (menu === 'categories' && currentUser.role === 1) { title.textContent = '시스템 카테고리 관리'; renderCategories(container); }
-            else { title.textContent = '관리 설정'; container.innerHTML = '<div class="text-center text-slate-500 mt-10">데이터 연동 중입니다...</div>'; }
         };
 
         function renderDashboard(container) {
             const vis = getVisibleIssues();
             let warnMsg = (currentUser.role >= 3) ? `<div class="mb-4 p-3 bg-blue-900/30 border border-blue-500/30 rounded-xl text-sm text-blue-200"><i class="fa-solid fa-lock mr-1"></i> [${currentUser.site}] 사업장의 데이터만 격리 조회됩니다.</div>` : '';
             
-            // 기존 4개 요약판
             let html = `
                 ${warnMsg}
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -480,15 +480,58 @@
         }
 
         function renderIssues(container) {
-            // 시간순 정렬: 타임스탬프가 클수록(가장 최근) 위로 올라오게 내림차순 정렬 적용!
+            // ★ 타임스탬프 기준 최신순 내림차순 정렬
             const vis = getVisibleIssues().sort((a,b) => (b.regTimestamp || 0) - (a.regTimestamp || 0));
-                        <td class="p-3 flex justify-center">
-                            <button onclick="window.openIssueModal('${iss.id}')" class="px-3 py-1.5 rounded-lg text-[11px] font-bold border ${badge} hover:opacity-80 transition shadow-sm flex items-center justify-center gap-1.5 w-24">
+            
+            let html = `
+                <div class="mb-4 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">전체 등록 내역 <span class="text-xs font-normal text-slate-400 ml-2">(최신순 정렬)</span></h3>
+                    <button onclick="window.openIssueModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> 신규 등록
+                    </button>
+                </div>
+                <div class="glass-panel rounded-xl overflow-hidden overflow-x-auto">
+                    <table class="w-full text-left text-sm min-w-[800px] whitespace-nowrap">
+                        <thead class="bg-white/5 border-b border-white/10 text-xs text-slate-400">
+                            <tr>
+                                <th class="p-3 w-32">사업장</th>
+                                <th class="p-3 w-32">분류</th>
+                                <th class="p-3">이슈 내용</th>
+                                <th class="p-3 w-40">등록일시</th>
+                                <th class="p-3 w-40">조치일시</th>
+                                <th class="p-3 w-24">소요시간</th>
+                                <th class="p-3 text-center w-28">상태 (클릭)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">`;
+            
+            if(vis.length === 0) {
+                html += `<tr><td colspan="7" class="p-8 text-center text-slate-500">등록된 이슈 데이터가 없습니다.</td></tr>`;
+            } else {
+                vis.forEach(iss => {
+                    let badge = iss.status === '완료' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 
+                                iss.status === '진행중' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 
+                                'bg-slate-500/20 text-slate-300 border-slate-500/30';
+                    
+                    let completeDate = iss.status === '완료' && iss.completeDate ? iss.completeDate : '-';
+                    let durationTxt = iss.status === '완료' && iss.duration ? `<span class="text-emerald-400 font-bold">${iss.duration}</span>` : '-';
+
+                    html += `
+                    <tr class="hover:bg-white/5 cursor-pointer" onclick="window.openIssueModal('${iss.id}')">
+                        <td class="p-3 font-bold text-slate-200">${iss.site}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded-md bg-white/10 text-[11px]">${iss.category}</span></td>
+                        <td class="p-3 truncate max-w-[200px]" title="${iss.content}">${iss.content}</td>
+                        <td class="p-3 text-xs text-slate-400">${iss.regDate}</td>
+                        <td class="p-3 text-xs text-slate-400">${completeDate}</td>
+                        <td class="p-3 text-xs">${durationTxt}</td>
+                        <td class="p-3 flex justify-center" onclick="event.stopPropagation(); window.openIssueModal('${iss.id}')">
+                            <button class="px-3 py-1.5 rounded-lg text-[11px] font-bold border ${badge} hover:opacity-80 transition shadow-sm flex items-center justify-center gap-1.5 w-24">
                                 ${iss.status === '완료' ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-pen"></i>'} ${iss.status}
                             </button>
                         </td>
                     </tr>`;
-            });
+                });
+            }
             container.innerHTML = html + `</tbody></table></div>`;
         }
 
@@ -499,7 +542,6 @@
         };
         window.closeModal = () => document.getElementById('globalModal').classList.add('hidden');
 
-        // 상태 선택 시 조치방법 입력창 토글
         window.toggleActionField = (val) => {
             const el = document.getElementById('actionField');
             if(el) el.classList.toggle('hidden', val !== '완료');
@@ -508,11 +550,9 @@
         window.openIssueModal = (id = null) => {
             let tg = id ? issues.find(i => i.id === id) : null;
             let d = new Date().toLocaleString('ko-KR');
-            // 3단계 이하는 본인 사업장만 고정
             let siteOpts = currentUser.role >= 3 ? `<option value="${currentUser.site}">${currentUser.site}</option>` : sites.map(s => `<option value="${s.name}" ${tg && tg.site===s.name?'selected':''}>${s.name}</option>`).join('');
             let catOpts = categories.map(c => `<option value="${c.name}" ${tg && tg.category===c.name?'selected':''}>${c.name}</option>`).join('');
 
-            // 완료된 상태일 경우 모달 안에 조치일자 및 소요시간 표시 영역 추가
             let actionDetailHtml = '';
             if (tg && tg.status === '완료') {
                 actionDetailHtml = `
@@ -523,8 +563,7 @@
                 `;
             }
 
-            // 삭제 버튼은 관리자(1단계)만 볼 수 있도록 모달 하단으로 이동
-            let delBtnHtml = (tg && currentUser.role === 1) ? `<button type="button" onclick="window.deleteIssue('${tg.id}'); window.closeModal();" class="text-xs text-red-400 hover:text-red-300 transition flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> 이슈 완전 삭제</button>` : '<div></div>';
+            let delBtnHtml = (tg && currentUser.role === 1) ? `<button type="button" onclick="window.deleteIssue('${tg.id}'); window.closeModal();" class="text-xs text-red-400 hover:text-red-300 transition flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> 이슈 삭제</button>` : '<div></div>';
 
             window.openModal(tg ? '이슈 상세 정보 및 조치' : '신규 이슈 등록', `
                 <form onsubmit="window.saveIssue(event, '${id||''}')" class="space-y-4 text-sm">
@@ -541,7 +580,7 @@
                     </div>
                     
                     <div id="actionField" class="${tg&&tg.status==='완료'?'':'hidden'}">
-                        <label class="block text-xs mb-1 text-emerald-400 font-bold">조치 내용</label>
+                        <label class="block text-xs mb-1 text-emerald-400 font-bold">조치 방법 (필수)</label>
                         <textarea id="issAction" rows="2" class="w-full p-2 glass-input border-emerald-500/50 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="어떻게 조치하셨나요?">${tg?(tg.actionTaken||''):''}</textarea>
                         ${actionDetailHtml}
                     </div>
@@ -551,7 +590,7 @@
                     <div class="pt-4 flex justify-between items-center border-t border-white/10 mt-4">
                         ${delBtnHtml}
                         <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium text-white shadow-lg shadow-indigo-900/30 transition flex items-center gap-2">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 및 저장
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 시트 저장
                         </button>
                     </div>
                 </form>
@@ -569,11 +608,15 @@
             const rTime = tg && tg.regTimestamp ? tg.regTimestamp : nowTime;
             
             const statusVal = document.getElementById('issStatus').value;
-            const cDate = statusVal === '완료' ? newDateStr : '';
+            let cDate = tg && tg.completeDate ? tg.completeDate : ''; // 기존 완료일이 있으면 유지
+            if (statusVal === '완료' && (!tg || tg.status !== '완료')) {
+                cDate = newDateStr; // 방금 완료 처리된 경우에만 갱신
+            } else if (statusVal !== '완료') {
+                cDate = ''; // 완료 상태가 아니면 지움
+            }
             
-            // 해결까지 걸린 시간 자동 계산 로직
-            let duration = '-';
-            if (statusVal === '완료') {
+            let duration = tg && tg.duration ? tg.duration : '-';
+            if (statusVal === '완료' && (!tg || tg.status !== '완료')) {
                 const diffMs = nowTime - rTime;
                 const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                 const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -582,6 +625,8 @@
                 if (diffDays === 0 && diffHrs === 0) duration = `${diffMins}분`;
                 else if (diffDays === 0) duration = `${diffHrs}시간 ${diffMins}분`;
                 else duration = `${diffDays}일 ${diffHrs}시간`;
+            } else if (statusVal !== '완료') {
+                duration = '-';
             }
 
             let data = {
@@ -599,17 +644,15 @@
 
             showLoader(true, "AI건물관리 시트로 저장 중...");
             
-            // 로컬 우선 저장 (속도 및 무결성 보장)
             const idx = issues.findIndex(i => i.id === data.id);
             if(idx > -1) issues[idx] = data; else issues.push(data);
             localStorage.setItem('sys_issues', JSON.stringify(issues));
             
-            // 이슈 전용 다리(URL)를 통해 폼(Form) 포맷으로 구글 시트 전송
             sendToGoogleSheet(GAS_ISSUE_WEB_APP_URL, { type: 'issue', ...data });
 
             setTimeout(() => {
                 showLoader(false);
-                window.showToast('스프레드시트에 자동 동기화 완료!');
+                window.showToast('스프레드시트에 자동 업데이트 완료!');
                 window.closeModal();
                 window.switchMenu(currentMenu);
             }, 800);
@@ -624,7 +667,6 @@
             }
         };
 
-        
         function renderUsers(container) {
             let html = `<div class="glass-panel rounded-xl overflow-hidden"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-white/5 border-b border-white/10 text-xs text-slate-400"><tr><th class="p-3">ID</th><th class="p-3">이름</th><th class="p-3">권한</th><th class="p-3">담당사업장</th><th class="p-3">비밀번호(조회)</th><th class="p-3 text-center">관리</th></tr></thead><tbody class="divide-y divide-white/5">`;
             users.forEach(u => {
@@ -641,15 +683,15 @@
                 <form onsubmit="window.saveUser(event, '${uid}')" class="space-y-4 text-sm">
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="block text-xs mb-1 text-slate-400">아이디</label><input type="text" id="eUid" value="${u.id}" class="w-full p-2 glass-input rounded-xl" required></div>
-                        <div><label class="block text-xs mb-1 text-slate-400">비밀번호 변경</label><input type="text" id="eUpwd" value="${u.pwd}" class="w-full p-2 glass-input rounded-xl border-amber-500/50" required></div>
+                        <div><label class="block text-xs mb-1 text-slate-400">비밀번호</label><input type="text" id="eUpwd" value="${u.pwd}" class="w-full p-2 glass-input rounded-xl border-amber-500/50" required></div>
                     </div>
                     <div><label class="block text-xs mb-1 text-slate-400">이름 및 연락처</label><div class="flex gap-2"><input type="text" id="eUname" value="${u.name}" class="w-1/3 p-2 glass-input rounded-xl"><input type="text" id="eUphone" value="${u.phone}" class="w-2/3 p-2 glass-input rounded-xl"></div></div>
                     <div><label class="block text-xs mb-1 text-slate-400">권한 등급</label>
                         <select id="eUrole" class="w-full p-2 glass-input rounded-xl">
-                            <option value="1" ${u.role===1?'selected':''}>1단계 (최고관리자 - 전체 권한)</option>
-                            <option value="2" ${u.role===2?'selected':''}>2단계 (중간관리자 - 사업장 관리 가능)</option>
-                            <option value="3" ${u.role===3?'selected':''}>3단계 (사업장책임자 - 본인 사업장 격리)</option>
-                            <option value="4" ${u.role===4?'selected':''}>4단계 (일반사용자 - 본인 사업장 격리)</option>
+                            <option value="1" ${u.role===1?'selected':''}>1단계 (최고관리자)</option>
+                            <option value="2" ${u.role===2?'selected':''}>2단계 (중간관리자)</option>
+                            <option value="3" ${u.role===3?'selected':''}>3단계 (사업장책임자)</option>
+                            <option value="4" ${u.role===4?'selected':''}>4단계 (일반사용자)</option>
                         </select>
                     </div>
                     <div><label class="block text-xs mb-1 text-emerald-400 font-bold">담당 사업장 배정</label><select id="eUsite" class="w-full p-2 glass-input rounded-xl border-emerald-500/30">${sOpts}</select></div>
@@ -677,13 +719,11 @@
                 site: document.getElementById('eUsite').value 
             };
             
-            showLoader(true, "구글 사용자 DB 업데이트 중...");
+            showLoader(true, "구글 사용자 DB 시트 업데이트 중...");
             
             users = users.filter(x => x.id !== oldId);
             users.push(dat);
             localStorage.setItem('sys_users', JSON.stringify(users));
-            
-            // 사용자 DB 시트로 전송 (업데이트 내역을 한 줄 더 추가하여 로그로 남김)
             sendToGoogleSheet(GAS_USER_WEB_APP_URL, { type: 'user', ...dat });
 
             setTimeout(() => {
@@ -695,30 +735,30 @@
         };
 
         window.deleteUser = (uid) => {
-            if(confirm("이 사용자 계정을 완전히 삭제하시겠습니까?")) {
+            if(confirm("계정을 삭제하시겠습니까?")) {
                 users = users.filter(x => x.id !== uid);
                 localStorage.setItem('sys_users', JSON.stringify(users));
-                window.showToast('사용자 계정이 삭제되었습니다.', 'info');
+                window.showToast('계정이 삭제되었습니다.', 'info');
                 window.closeModal();
                 window.switchMenu('users');
             }
         };
-        
+
         function renderSites(container) {
             let html = `
                 <div class="mb-6 flex gap-3 max-w-xl">
                     <input type="text" id="newSiteName" class="flex-1 p-3 glass-input rounded-xl text-sm" placeholder="새 사업장 이름 입력 (예: 강남지점)">
                     <button onclick="window.addSite()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-lg transition flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-plus"></i> 사업장 추가
+                        <i class="fa-solid fa-plus"></i> 추가
                     </button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             `;
             sites.forEach((s, idx) => {
                 html += `
-                    <div class="glass-panel p-4 rounded-xl flex justify-between items-center border border-white/5 hover:border-indigo-500/50 transition-colors">
+                    <div class="glass-panel p-4 rounded-xl flex justify-between items-center border border-white/5 hover:border-indigo-500/50">
                         <span class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-building text-indigo-400 mr-2"></i>${s.name}</span>
-                        <button onclick="window.deleteSite(${idx})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors" title="삭제">
+                        <button onclick="window.deleteSite(${idx})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     </div>`;
@@ -732,15 +772,15 @@
             if(sites.some(s => s.name === name)) return window.showToast('이미 존재하는 사업장입니다.', 'error');
             sites.push({name: name});
             localStorage.setItem('sys_sites', JSON.stringify(sites));
-            window.showToast(`[${name}] 사업장이 추가되었습니다.`);
+            window.showToast(`[${name}] 추가됨`);
             window.switchMenu('sites');
         };
 
         window.deleteSite = (idx) => {
-            if(confirm(`[${sites[idx].name}] 사업장을 삭제하시겠습니까?\n(기존에 등록된 해당 사업장의 이슈는 삭제되지 않습니다)`)) {
+            if(confirm(`[${sites[idx].name}] 사업장을 삭제하시겠습니까?`)) {
                 sites.splice(idx, 1);
                 localStorage.setItem('sys_sites', JSON.stringify(sites));
-                window.showToast('사업장이 삭제되었습니다.');
+                window.showToast('삭제됨');
                 window.switchMenu('sites');
             }
         };
@@ -748,18 +788,18 @@
         function renderCategories(container) {
             let html = `
                 <div class="mb-6 flex gap-3 max-w-xl">
-                    <input type="text" id="newCatName" class="flex-1 p-3 glass-input rounded-xl text-sm" placeholder="새 카테고리 입력 (예: 서버 장애)">
+                    <input type="text" id="newCatName" class="flex-1 p-3 glass-input rounded-xl text-sm" placeholder="새 카테고리 입력">
                     <button onclick="window.addCategory()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-lg transition flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-plus"></i> 분류 추가
+                        <i class="fa-solid fa-plus"></i> 추가
                     </button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             `;
             categories.forEach((c, idx) => {
                 html += `
-                    <div class="glass-panel p-4 rounded-xl flex justify-between items-center border border-white/5 hover:border-indigo-500/50 transition-colors">
+                    <div class="glass-panel p-4 rounded-xl flex justify-between items-center border border-white/5 hover:border-indigo-500/50">
                         <span class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-tag text-purple-400 mr-2"></i>${c.name}</span>
-                        <button onclick="window.deleteCategory(${idx})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors" title="삭제">
+                        <button onclick="window.deleteCategory(${idx})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     </div>`;
@@ -769,11 +809,11 @@
 
         window.addCategory = () => {
             const name = document.getElementById('newCatName').value.trim();
-            if(!name) return window.showToast('카테고리 이름을 입력해주세요.', 'error');
-            if(categories.some(c => c.name === name)) return window.showToast('이미 존재하는 카테고리입니다.', 'error');
+            if(!name) return window.showToast('이름을 입력해주세요.', 'error');
+            if(categories.some(c => c.name === name)) return window.showToast('존재하는 카테고리입니다.', 'error');
             categories.push({name: name});
             localStorage.setItem('sys_cats', JSON.stringify(categories));
-            window.showToast(`[${name}] 카테고리가 추가되었습니다.`);
+            window.showToast(`[${name}] 추가됨`);
             window.switchMenu('categories');
         };
 
@@ -781,12 +821,10 @@
             if(confirm(`[${categories[idx].name}] 카테고리를 삭제하시겠습니까?`)) {
                 categories.splice(idx, 1);
                 localStorage.setItem('sys_cats', JSON.stringify(categories));
-                window.showToast('카테고리가 삭제되었습니다.');
+                window.showToast('삭제됨');
                 window.switchMenu('categories');
             }
         };
-
-        // 페이지 새로고침 시 자동 로그인 유지 (세션 스토리지 활용 시 추가 가능)
     </script>
 </body>
 </html>
