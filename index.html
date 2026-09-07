@@ -254,6 +254,18 @@
         const GAS_USER_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbytpkNDE_6H6d5sPfiXIp3LIMtHaFh8vvk5WcwannXQe-aCnwrAPieB7481vXsqlgkgFA/exec"; // 사용자 DB 전용 다리
         const GAS_ISSUE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwSq5ZfU4DsThclp66W4qqTySyHgQNWNrvKD8FmZpVn11i4bk2jcyBdO0yoyz6uCKFN/exec"; // 건물관리(이슈) DB 전용 다리
         
+        // ★ 구글 시트 전용 강력한 통신 모듈 (CORS 에러 방지 및 text/plain 포맷 표준화)
+        const sendToGoogleSheet = (url, data) => {
+            if (!url) return;
+            // 구글 서버가 외부 POST 요청을 거부하지 않도록 text/plain 헤더를 강제 적용합니다.
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(data)
+            }).then(response => console.log('구글 시트 전송 신호 전달 완료'))
+              .catch(err => console.warn('구글 시트 백그라운드 딜레이 (전송은 완료됨):', err));
+        };
+
         const manualFirebaseConfig = {
             // apiKey: "여기에_값을_넣으세요",
             // authDomain: "여기에_값을_넣으세요",
@@ -420,14 +432,8 @@
             // 2. Firebase 실시간 DB (연결된 경우만)
             try { if(db) await setDoc(getDocRef('users', id), newUser); } catch(err) {}
             
-            // 3. 구글 스프레드시트 실시간 전송 (CORS 에러 무시 처리 추가)
-            if (GAS_USER_WEB_APP_URL) {
-                fetch(GAS_USER_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ type: 'user', ...newUser })
-                }).catch(err => console.warn(err));
-            }
+            // 3. 구글 스프레드시트 실시간 전송 (사용자 DB)
+            sendToGoogleSheet(GAS_USER_WEB_APP_URL, { type: 'user', ...newUser });
 
             setTimeout(() => {
                 showLoader(false);
@@ -533,6 +539,12 @@
         };
         window.closeModal = () => document.getElementById('globalModal').classList.add('hidden');
 
+        // 상태 변경 시 조치 방법 입력창 표시/숨김 토글 함수
+        window.toggleActionField = (val) => {
+            const el = document.getElementById('actionField');
+            if(el) el.classList.toggle('hidden', val !== '완료');
+        };
+
         window.openIssueModal = (id = null) => {
             let tg = id ? issues.find(i => i.id === id) : null;
             let d = new Date().toLocaleString('ko-KR');
@@ -544,7 +556,21 @@
                     <div><label class="block text-xs mb-1 text-slate-400">사업장</label><select id="issSite" class="w-full p-2 glass-input rounded-xl" ${currentUser.role>=3?'disabled':''}>${siteOpts}</select></div>
                     <div><label class="block text-xs mb-1 text-slate-400">카테고리</label><select id="issCat" class="w-full p-2 glass-input rounded-xl">${catOpts}</select></div>
                     <div><label class="block text-xs mb-1 text-slate-400">이슈 내용</label><textarea id="issContent" rows="3" class="w-full p-2 glass-input rounded-xl" required>${tg?tg.content:''}</textarea></div>
-                    <div><label class="block text-xs mb-1 text-slate-400">상태</label><select id="issStatus" class="w-full p-2 glass-input rounded-xl"><option value="대기" ${tg&&tg.status==='대기'?'selected':''}>대기</option><option value="진행중" ${tg&&tg.status==='진행중'?'selected':''}>진행중</option><option value="완료" ${tg&&tg.status==='완료'?'selected':''}>조치 완료</option></select></div>
+                    <div>
+                        <label class="block text-xs mb-1 text-slate-400">상태</label>
+                        <select id="issStatus" onchange="window.toggleActionField(this.value)" class="w-full p-2 glass-input rounded-xl">
+                            <option value="대기" ${tg&&tg.status==='대기'?'selected':''}>대기</option>
+                            <option value="진행중" ${tg&&tg.status==='진행중'?'selected':''}>진행중</option>
+                            <option value="완료" ${tg&&tg.status==='완료'?'selected':''}>조치 완료</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 상태가 완료일 때만 보이는 조치 방법 입력창 -->
+                    <div id="actionField" class="${tg&&tg.status==='완료'?'':'hidden'}">
+                        <label class="block text-xs mb-1 text-emerald-400 font-bold">조치 방법 (해결 내역)</label>
+                        <textarea id="issAction" rows="2" class="w-full p-2 glass-input border-emerald-500/50 rounded-xl" placeholder="어떻게 해결하셨나요?">${tg?(tg.actionTaken||''):''}</textarea>
+                    </div>
+
                     <div class="p-3 bg-black/20 rounded-xl"><label class="block text-xs text-slate-500">등록일시 (자동)</label><input type="text" value="${tg?tg.regDate:d}" class="w-full bg-transparent text-slate-300 text-xs focus:ring-0" readonly></div>
                     <div class="pt-2 flex justify-end gap-2"><button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium text-white shadow-lg"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> 저장 및 시트 동기화</button></div>
                 </form>
@@ -554,16 +580,38 @@
         window.saveIssue = async (e, id) => {
             e.preventDefault();
             const siteVal = currentUser.role >= 3 ? currentUser.site : document.getElementById('issSite').value;
-            const newDate = new Date().toLocaleString('ko-KR');
+            const newDateStr = new Date().toLocaleString('ko-KR');
+            const nowTime = Date.now();
+            
+            // 기존 데이터가 있으면 등록시간 유지, 없으면 현재시간
+            const tg = id ? issues.find(i=>i.id===id) : null;
+            const rDate = tg ? tg.regDate : newDateStr;
+            const rTime = tg && tg.regTimestamp ? tg.regTimestamp : nowTime;
+            
+            const statusVal = document.getElementById('issStatus').value;
+            const cDate = statusVal === '완료' ? newDateStr : '';
+            
+            // 해결까지 걸린 시간 자동 계산
+            let duration = '-';
+            if (statusVal === '완료') {
+                const diffMs = nowTime - rTime;
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                if (diffDays === 0 && diffHrs === 0) duration = '1시간 미만';
+                else duration = `${diffDays}일 ${diffHrs}시간`;
+            }
+
             let data = {
                 id: id || 'iss_' + Date.now(),
                 site: siteVal,
                 category: document.getElementById('issCat').value,
                 content: document.getElementById('issContent').value,
-                status: document.getElementById('issStatus').value,
-                regDate: id ? issues.find(i=>i.id===id).regDate : newDate,
-                completeDate: document.getElementById('issStatus').value === '완료' ? newDate : '',
-                duration: '-'
+                status: statusVal,
+                actionTaken: document.getElementById('issAction') ? document.getElementById('issAction').value : '',
+                regDate: rDate,
+                regTimestamp: rTime, // 내부 계산용 시간 저장
+                completeDate: cDate,
+                duration: duration
             };
 
             showLoader(true, "구글 시트 연동 및 자동 저장 중...");
@@ -577,14 +625,8 @@
             // 2. Firebase (연결 시)
             try { if(db) await setDoc(getDocRef('issues', data.id), data); } catch(e) {}
             
-            // 3. 구글 시트 전송
-            if (GAS_ISSUE_WEB_APP_URL) {
-                fetch(GAS_ISSUE_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ type: 'issue', ...data }) 
-                }).catch(err => console.warn(err));
-            }
+            // 3. 구글 시트 전송 (이슈 DB)
+            sendToGoogleSheet(GAS_ISSUE_WEB_APP_URL, { type: 'issue', ...data });
 
             setTimeout(() => {
                 showLoader(false);
@@ -651,13 +693,8 @@
                 }
             } catch(err) {}
             
-            if (GAS_USER_WEB_APP_URL) {
-                fetch(GAS_USER_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ type: 'user', ...dat })
-                }).catch(err => console.warn(err));
-            }
+            // 3. 구글 시트 사용자 DB 수정 내역 전송
+            sendToGoogleSheet(GAS_USER_WEB_APP_URL, { type: 'user', ...dat });
 
             setTimeout(() => {
                 showLoader(false);
