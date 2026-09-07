@@ -396,6 +396,8 @@
             if (menu === 'dashboard') { title.textContent = '통합 현황판'; renderDashboard(container); }
             else if (menu === 'issues') { title.textContent = '문제 / 이슈 관리'; renderIssues(container); }
             else if (menu === 'users' && currentUser.role === 1) { title.textContent = '가입자 및 권한 제어 (1단계 전용)'; renderUsers(container); }
+            else if (menu === 'sites' && currentUser.role <= 2) { title.textContent = '사업장 관리'; renderSites(container); }
+            else if (menu === 'categories' && currentUser.role === 1) { title.textContent = '시스템 카테고리 관리'; renderCategories(container); }
             else { title.textContent = '관리 설정'; container.innerHTML = '<div class="text-center text-slate-500 mt-10">데이터 연동 중입니다...</div>'; }
         };
 
@@ -672,6 +674,88 @@
             }
         };
         
+        function renderSites(container) {
+            let html = `
+                <div class="mb-6 flex gap-3 max-w-xl">
+                    <input type="text" id="newSiteName" class="flex-1 p-3 glass-input rounded-xl text-sm" placeholder="새 사업장 이름 입력 (예: 강남지점)">
+                    <button onclick="window.addSite()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-lg transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-plus"></i> 사업장 추가
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            `;
+            sites.forEach((s, idx) => {
+                html += `
+                    <div class="glass-panel p-4 rounded-xl flex justify-between items-center border border-white/5 hover:border-indigo-500/50 transition-colors">
+                        <span class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-building text-indigo-400 mr-2"></i>${s.name}</span>
+                        <button onclick="window.deleteSite(${idx})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors" title="삭제">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+        }
+
+        window.addSite = () => {
+            const name = document.getElementById('newSiteName').value.trim();
+            if(!name) return window.showToast('사업장 이름을 입력해주세요.', 'error');
+            if(sites.some(s => s.name === name)) return window.showToast('이미 존재하는 사업장입니다.', 'error');
+            sites.push({name: name});
+            localStorage.setItem('sys_sites', JSON.stringify(sites));
+            window.showToast(`[${name}] 사업장이 추가되었습니다.`);
+            window.switchMenu('sites');
+        };
+
+        window.deleteSite = (idx) => {
+            if(confirm(`[${sites[idx].name}] 사업장을 삭제하시겠습니까?\n(기존에 등록된 해당 사업장의 이슈는 삭제되지 않습니다)`)) {
+                sites.splice(idx, 1);
+                localStorage.setItem('sys_sites', JSON.stringify(sites));
+                window.showToast('사업장이 삭제되었습니다.');
+                window.switchMenu('sites');
+            }
+        };
+
+        function renderCategories(container) {
+            let html = `
+                <div class="mb-6 flex gap-3 max-w-xl">
+                    <input type="text" id="newCatName" class="flex-1 p-3 glass-input rounded-xl text-sm" placeholder="새 카테고리 입력 (예: 서버 장애)">
+                    <button onclick="window.addCategory()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-lg transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-plus"></i> 분류 추가
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            `;
+            categories.forEach((c, idx) => {
+                html += `
+                    <div class="glass-panel p-4 rounded-xl flex justify-between items-center border border-white/5 hover:border-indigo-500/50 transition-colors">
+                        <span class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-tag text-purple-400 mr-2"></i>${c.name}</span>
+                        <button onclick="window.deleteCategory(${idx})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-colors" title="삭제">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+        }
+
+        window.addCategory = () => {
+            const name = document.getElementById('newCatName').value.trim();
+            if(!name) return window.showToast('카테고리 이름을 입력해주세요.', 'error');
+            if(categories.some(c => c.name === name)) return window.showToast('이미 존재하는 카테고리입니다.', 'error');
+            categories.push({name: name});
+            localStorage.setItem('sys_cats', JSON.stringify(categories));
+            window.showToast(`[${name}] 카테고리가 추가되었습니다.`);
+            window.switchMenu('categories');
+        };
+
+        window.deleteCategory = (idx) => {
+            if(confirm(`[${categories[idx].name}] 카테고리를 삭제하시겠습니까?`)) {
+                categories.splice(idx, 1);
+                localStorage.setItem('sys_cats', JSON.stringify(categories));
+                window.showToast('카테고리가 삭제되었습니다.');
+                window.switchMenu('categories');
+            }
+        };
+
         // 페이지 새로고침 시 자동 로그인 유지 (세션 스토리지 활용 시 추가 가능)
     </script>
 </body>
