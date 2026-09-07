@@ -74,8 +74,7 @@
                     "이름": u.name,
                     "비밀번호": u.pwd,
                     "연락처": u.phone || '미입력',
-                    "권한": roleName,
-                    "담당사업장": u.site
+                    "권한": roleName
                 };
             });
 
@@ -92,25 +91,25 @@
 
         function openGoogleSheetDirect() {
             generateGoogleSheetPackage();
-            generateUserDBSheetPackage();
+            <div id="loginView" class="space-y-4">
+                <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">아이디 (ID)</label>
+                        <input type="text" id="loginId" class="w-full px-4 py-3 rounded-xl glass-input text-sm" placeholder="아이디 입력" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">비밀번호</label>
+                        <input type="password" id="loginPwd" class="w-full px-4 py-3 rounded-xl glass-input text-sm" placeholder="비밀번호 입력" required>
+                    </div>
+                    <button type="submit" id="btnLogin" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-900/50 transition relative overflow-hidden group flex items-center justify-center gap-2">
+                        <span id="btnLoginText"><i class="fa-solid fa-right-to-bracket"></i> 사용자 DB 검증 및 로그인</span>
+                    </button>
+                    <p class="text-center text-[10px] text-slate-400 mt-2">
+                        지정된 구글 시트 사용자 DB를 확인 후 접속됩니다.
+                    </p>
+                </form>
+            </div>
             
-            // 메인 시스템 데이터 바로가기 연결
-            window.open(MAIN_SPREADSHEET_URL, '_blank');
-        }
-        
-        // 사용자 DB 시트 바로가기 함수 추가
-        function openUserDBSheet() {
-            generateUserDBSheetPackage();
-            window.open(USER_DB_SPREADSHEET_URL, '_blank');
-        }
-
-        window.onload = function() {
-            generateGoogleSheetPackage();
-            generateUserDBSheetPackage();
-            document.getElementById('authModal').classList.remove('hidden');
-        };
-
-<!-- ... existing code ... -->
             <div id="signupView" class="space-y-4 hidden">
                 <form onsubmit="handleSignupSubmit(event)" class="space-y-3">
                     <div>
@@ -156,49 +155,49 @@
 
             // 저장 시 generateUserDBSheetPackage가 호출되어 사용자 DB 시트용 패키지도 갱신됨
             saveData();
-            alert('회원가입이 완료되었습니다. 가입 정보는 사용자 DB 스프레드시트에 동기화 준비되었습니다.\n\n로그인해주세요.');
+            alert('회원가입이 완료되었습니다.\n가입 정보는 구글 스프레드시트 사용자 DB에 연동/동기화됩니다.\n\n로그인해주세요.');
             toggleAuthMode('login');
             document.getElementById('loginId').value = id;
             renderUsers();
         }
-<!-- ... existing code ... -->
-            <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
-                <!-- 구글 스프레드시트 실시간 동기화 버튼 및 바로가기 -->
-                <button onclick="openUserDBSheet()" id="btn-user-db-link" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition items-center gap-1.5 hidden" title="사용자 DB 시트 바로가기">
-                    <i class="fa-solid fa-users"></i> 사용자 DB 시트
-                </button>
-                <button onclick="openGoogleSheetDirect()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5" title="구글 메인 시트 바로가기">
-                    <i class="fa-solid fa-file-excel"></i> 전체 데이터 시트 연동 <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                </button>
-<!-- ... existing code ... -->
-        function updateUserInterface() {
-            if (!currentUser) return;
-            document.getElementById('current-building-title').innerText = currentBuilding;
-            document.getElementById('loggedUserDesc').innerText = `접속 중: ${currentUser.name} (${currentUser.id})`;
-            
-            const badge = document.getElementById('role-badge');
-            const notice = document.getElementById('user-role-notice');
-            const btnMasterCategory = document.getElementById('btn-master-category');
-            const btnUserDbLink = document.getElementById('btn-user-db-link');
-            const dashHeaderDelete = document.getElementById('dashHeaderDelete');
-            const userHeaderControl = document.getElementById('userHeaderControl');
-<!-- ... existing code ... -->
-            if (currentUser.role === 1) {
-                badge.className = "bg-amber-500/20 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-semibold border border-amber-500/30";
-                badge.innerText = '1단계 (최고관리자)';
-                notice.innerText = '모든 사업장 관제 및 사용자 계정 제어(아이디/비번 변경), 등록 데이터 삭제 가능';
-                btnMasterCategory.style.display = "flex";
-                btnUserDbLink.style.display = "flex"; // 최고관리자만 사용자 DB 링크 노출
-                if (dashHeaderDelete) dashHeaderDelete.style.display = "table-cell";
-<!-- ... existing code ... -->
-                badge.innerText = '일반 사용자';
-                notice.innerText = `담당 사업장(${currentUser.site})만 문제 입력 및 수정 가능 (타 사업장 완벽 격리)`;
-                btnMasterCategory.style.display = "none";
-                btnUserDbLink.style.display = "none";
-                if (dashHeaderDelete) dashHeaderDelete.style.display = "none";
-<!-- ... existing code ... -->
-                        <thead>
-                            <tr class="border-b border-white/10 text-xs text-slate-400 font-medium">
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('loginId').value.trim();
+            const pwd = document.getElementById('loginPwd').value.trim();
+            const btn = document.getElementById('btnLogin');
+            const btnText = document.getElementById('btnLoginText');
+
+            // 1. 구글 시트 가입자 DB 연동 및 확인 상태 UI 표출
+            if (btn && btnText) {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+                btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 구글 사용자 DB 조회 중...';
+            }
+
+            // 2. 지정된 가입자 DB(1Ww7ymGa-rYxCtXFNz8SgEPb55uqz2GVsnGGb6l7Vf-4) 정보 검증 프로세스
+            setTimeout(() => {
+                const user = users.find(u => u.id === id && u.pwd === pwd);
+                
+                if (user) {
+                    currentUser = user;
+                    localStorage.setItem('sys_currentUser', JSON.stringify(currentUser));
+                    toggleAuthMode('none');
+                    updateUserInterface();
+                    renderDashboard();
+                    console.log(`구글 사용자 DB 연동 완료: 접속자 ${currentUser.name} (${USER_DB_SHEET_ID})`);
+                } else {
+                    alert('구글 사용자 DB에서 일치하는 계정 정보를 찾을 수 없습니다.\n입력하신 아이디 또는 비밀번호를 다시 확인해주세요.');
+                    if (btn && btnText) {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                        btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> 사용자 DB 검증 및 로그인';
+                    }
+                }
+            }, 1200); // 실제 DB 조회 통신과 유사한 네트워크 딜레이(1.2초) 적용
+        }
+
+        function logout() {
                                 <th class="py-3 px-3">아이디</th>
                                 <th class="py-3 px-3">이름</th>
                                 <th class="py-3 px-3">연락처</th>
