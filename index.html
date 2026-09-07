@@ -260,10 +260,14 @@
             // fetch는 비동기로 진행되며 사용자 화면을 멈추게 하지 않습니다.
             fetch(url, {
                 method: 'POST',
+                mode: 'no-cors', // 브라우저 보안 에러 강제 무시 및 전송
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
                 body: formData 
             })
-            .then(res => console.log('구글 시트 전송 완료 (네트워크 정상)'))
-            .catch(err => console.warn('구글 시트 전송 지연 (데이터는 폼을 통해 전달됨):', err));
+            .then(res => console.log('구글 시트 전송 패킷 발송 완료'))
+            .catch(err => console.warn('구글 시트 전송 에러:', err));
         };
 
 
