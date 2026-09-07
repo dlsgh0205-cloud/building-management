@@ -491,11 +491,11 @@
                     <table class="w-full text-left text-sm min-w-[800px] whitespace-nowrap">
                         <thead class="bg-white/5 border-b border-white/10 text-xs text-slate-400">
                             <tr>
-                                <th class="p-3 w-32">사업장</th>
-                                <th class="p-3 w-32">분류</th>
+                                <th class="p-3 w-28">사업장</th>
+                                <th class="p-3 w-28">분류</th>
                                 <th class="p-3">이슈 내용</th>
-                                <th class="p-3 w-40">등록일시</th>
-                                <th class="p-3 w-40">조치일시</th>
+                                <th class="p-3 w-44">등록일시</th>
+                                <th class="p-3 w-44">조치일시</th>
                                 <th class="p-3 w-24">소요시간</th>
                                 <th class="p-3 text-center w-28">상태 (클릭)</th>
                             </tr>
@@ -521,8 +521,8 @@
                         <td class="p-3 text-xs text-slate-400">${iss.regDate}</td>
                         <td class="p-3 text-xs text-slate-400">${completeDate}</td>
                         <td class="p-3 text-xs">${durationTxt}</td>
-                        <td class="p-3 flex justify-center" onclick="event.stopPropagation(); window.openIssueModal('${iss.id}')">
-                            <button class="px-3 py-1.5 rounded-lg text-[11px] font-bold border ${badge} hover:opacity-80 transition shadow-sm flex items-center justify-center gap-1.5 w-24">
+                        <td class="p-3 text-center" onclick="event.stopPropagation(); window.openIssueModal('${iss.id}')">
+                            <button class="mx-auto px-3 py-1.5 rounded-lg text-[11px] font-bold border ${badge} hover:opacity-80 transition shadow-sm flex items-center justify-center gap-1.5 w-24">
                                 ${iss.status === '완료' ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-pen"></i>'} ${iss.status}
                             </button>
                         </td>
