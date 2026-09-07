@@ -253,23 +253,19 @@
             l.style.display = show ? 'flex' : 'none';
         }
 
-        // ★ 가장 중요한 핵심 로직: 폼 데이터(URLSearchParams) 형식으로 구글 통신 (CORS 완벽 회피)
+        // ★ 가장 중요한 핵심 로직: text/plain 원본 JSON 전송으로 구글 보안(CORS) 완벽 우회
         const sendToGoogleSheet = (url, data) => {
             if (!url) return;
             
-            const formData = new URLSearchParams();
-            formData.append('payload', JSON.stringify(data)); // payload라는 이름표를 붙여서 전송
-
-            // fetch는 비동기로 진행되며 사용자 화면을 멈추게 하지 않습니다.
             fetch(url, {
                 method: 'POST',
-                mode: 'no-cors', // 브라우저 보안 에러 강제 무시 및 전송
+                mode: 'no-cors', // 브라우저 보안 에러 강제 무시
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'text/plain;charset=utf-8' // 구글이 가장 잘 받아들이는 표준 포맷
                 },
-                body: formData 
+                body: JSON.stringify(data) // 복잡한 폼데이터 없이 데이터를 날것 그대로 발송
             })
-            .then(res => console.log('구글 시트 전송 패킷 발송 완료'))
+            .then(res => console.log('구글 시트 전송 완료'))
             .catch(err => console.warn('구글 시트 전송 에러:', err));
         };
 
