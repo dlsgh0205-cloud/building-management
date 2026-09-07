@@ -40,9 +40,6 @@
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
         .toast-enter { animation: slideInRight 0.3s ease-out forwards; }
         .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
-        
-        /* 로딩 스피너 */
-        #global-loader { backdrop-filter: blur(5px); }
     </style>
 </head>
 <body class="min-h-screen text-slate-200">
@@ -51,13 +48,41 @@
     <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- 글로벌 로딩 -->
-    <div id="global-loader" class="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-[#0f172a]/80 hidden">
+    <div id="global-loader" class="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-[#0f172a]/80">
         <i class="fa-solid fa-circle-notch fa-spin text-5xl text-indigo-500 mb-4"></i>
-        <p class="text-white font-medium tracking-wide">클라우드 데이터 동기화 중...</p>
+        <p class="text-white font-medium tracking-wide">시스템 로딩 중...</p>
+    </div>
+
+    <!-- 깃허브 배포 시 DB 연결 안내 모달 (하얀 화면 방지용) -->
+    <div id="github-setup-modal" class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-[#0f172a] hidden">
+        <div class="glass-panel p-8 rounded-2xl w-full max-w-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-orange-500 to-amber-500"></div>
+            <div class="text-center mb-6">
+                <i class="fa-brands fa-github text-6xl text-white mb-4"></i>
+                <h1 class="text-2xl font-bold text-white tracking-tight">깃허브 배포 성공! (설정 필요)</h1>
+            </div>
+            <div class="space-y-4 text-slate-300 text-sm leading-relaxed">
+                <p>현재 깃허브(GitHub) 환경에 정상 배포되었습니다. 예전에 <b>하얀 화면</b>만 나왔던 이유는 클라우드 데이터베이스 연결 설정이 누락되어 자바스크립트가 멈췄기 때문입니다.</p>
+                <p>HTML 파일 단독으로는 보안상 <b>구글 스프레드시트에 직접 데이터를 자동 저장할 수 없습니다.</b> 따라서 실시간 동기화를 구현하려면 <b>구글 파이어베이스(Firebase)</b>라는 무료 백엔드 설정이 필수입니다.</p>
+                
+                <div class="bg-black/40 p-4 rounded-xl border border-white/10 mt-4 font-mono text-xs text-indigo-300 overflow-x-auto">
+                    <p class="text-slate-400 mb-2">// 1. 구글 파이어베이스 가입 후 프로젝트 생성<br>// 2. index.html 하단 스크립트의 manualFirebaseConfig 에 값 입력</p>
+                    const manualFirebaseConfig = {<br>
+                    &nbsp;&nbsp;apiKey: "AIzaSy...",<br>
+                    &nbsp;&nbsp;authDomain: "your-app.firebaseapp.com",<br>
+                    &nbsp;&nbsp;projectId: "your-app",<br>
+                    &nbsp;&nbsp;storageBucket: "your-app.appspot.com",<br>
+                    &nbsp;&nbsp;messagingSenderId: "123456789",<br>
+                    &nbsp;&nbsp;appId: "1:123456789:web:abcdef"<br>
+                    };
+                </div>
+                <p class="text-center text-amber-400 font-bold mt-4">코드 하단의 설정을 완료하면 이 화면은 사라지고 정상 작동합니다.</p>
+            </div>
+        </div>
     </div>
 
     <!-- 인증 뷰 (로그인 / 회원가입) -->
-    <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f172a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
+    <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0f172a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] hidden">
         <div class="glass-panel p-8 rounded-2xl w-full max-w-md relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
             
@@ -66,7 +91,7 @@
                     <i class="fa-solid fa-cloud text-3xl"></i>
                 </div>
                 <h1 class="text-2xl font-bold text-white tracking-tight">전사 통합 관리 시스템</h1>
-                <p class="text-sm text-slate-400 mt-2">실시간 클라우드 동기화 플랫폼</p>
+                <p class="text-sm text-slate-400 mt-2">Cloud DB & 스프레드시트 연동 플랫폼</p>
             </div>
 
             <!-- 로그인 폼 -->
@@ -81,7 +106,7 @@
                         <input type="password" id="loginPwd" class="w-full px-4 py-3 rounded-xl glass-input text-sm" placeholder="비밀번호 입력" required>
                     </div>
                     <button type="submit" id="btnLogin" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-900/50 transition relative flex items-center justify-center gap-2">
-                        <span id="btnLoginText"><i class="fa-solid fa-right-to-bracket"></i> 시스템 접속 (DB 검증)</span>
+                        <span id="btnLoginText"><i class="fa-solid fa-right-to-bracket"></i> 사용자 DB 대조 및 접속</span>
                     </button>
                 </form>
                 <div class="pt-4 border-t border-white/10 text-center">
@@ -92,31 +117,19 @@
             <!-- 회원가입 폼 -->
             <div id="signupView" class="space-y-4 hidden">
                 <form onsubmit="window.handleSignupSubmit(event)" class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">아이디 (ID)</label>
-                        <input type="text" id="regId" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" placeholder="사용할 아이디 입력" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">성명</label>
-                        <input type="text" id="regName" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" placeholder="실명 입력" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">비밀번호</label>
-                        <input type="password" id="regPwd" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" placeholder="비밀번호 입력" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">연락처</label>
-                        <input type="text" id="regPhone" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" placeholder="예: 010-1234-5678" required>
-                    </div>
-                    <div class="p-3 bg-indigo-900/30 border border-indigo-500/30 rounded-xl text-xs text-indigo-200 mt-2 leading-relaxed">
-                        <i class="fa-solid fa-circle-info mr-1"></i> 신규 가입 시 <strong>일반 사용자</strong> 권한이 부여되며, 가입 후 <strong>1단계 최고관리자</strong>가 담당 사업장을 직접 배정합니다.
+                    <div><label class="block text-xs font-medium text-slate-300 mb-1">아이디 (ID)</label><input type="text" id="regId" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" required></div>
+                    <div><label class="block text-xs font-medium text-slate-300 mb-1">성명</label><input type="text" id="regName" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" required></div>
+                    <div><label class="block text-xs font-medium text-slate-300 mb-1">비밀번호</label><input type="password" id="regPwd" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" required></div>
+                    <div><label class="block text-xs font-medium text-slate-300 mb-1">연락처</label><input type="text" id="regPhone" class="w-full px-3.5 py-2.5 rounded-xl glass-input text-sm" placeholder="예: 010-1234-5678" required></div>
+                    <div class="p-3 bg-indigo-900/30 border border-indigo-500/30 rounded-xl text-xs text-indigo-200 mt-2">
+                        <i class="fa-solid fa-circle-info mr-1"></i> 신규 가입 시 <strong>일반 사용자</strong>로 지정되며, 최고관리자가 사업장을 배정합니다.
                     </div>
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/50 transition mt-4">
-                        <i class="fa-solid fa-user-plus mr-1"></i> 가입 신청 및 실시간 동기화
+                        가입 신청 (DB 자동 등록)
                     </button>
                 </form>
                 <div class="pt-3 text-center">
-                    <button onclick="window.toggleAuthMode('login')" class="text-sm text-slate-400 hover:text-white transition"><i class="fa-solid fa-arrow-left mr-1"></i> 로그인 화면으로 돌아가기</button>
+                    <button onclick="window.toggleAuthMode('login')" class="text-sm text-slate-400 hover:text-white transition"><i class="fa-solid fa-arrow-left mr-1"></i> 뒤로가기</button>
                 </div>
             </div>
         </div>
@@ -132,24 +145,21 @@
                     <i class="fa-solid fa-building-user"></i>
                 </div>
                 <div>
-                    <h2 class="font-bold text-white leading-tight">통합 관리 시스템</h2>
-                    <p class="text-[10px] text-slate-400">Cloud Sync Portal</p>
+                    <h2 class="font-bold text-white leading-tight">통합 관리 포털</h2>
+                    <p class="text-[10px] text-slate-400">Cloud Data Sync</p>
                 </div>
             </div>
             
             <div class="p-4 border-b border-white/5 bg-white/5">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-slate-300">
-                        <i class="fa-solid fa-user"></i>
-                    </div>
+                    <div class="w-10 h-10 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-slate-300"><i class="fa-solid fa-user"></i></div>
                     <div class="overflow-hidden">
                         <p id="navUserName" class="text-sm font-bold text-white truncate"></p>
                         <p id="navUserRole" class="text-xs text-indigo-400 truncate"></p>
                     </div>
                 </div>
                 <div class="mt-3 flex items-center text-[11px] text-slate-400 bg-black/20 px-2 py-1.5 rounded border border-white/5">
-                    <i class="fa-solid fa-location-dot mr-1.5 text-emerald-400"></i>
-                    <span id="navUserSite" class="truncate"></span>
+                    <i class="fa-solid fa-location-dot mr-1.5 text-emerald-400"></i><span id="navUserSite" class="truncate"></span>
                 </div>
             </div>
 
@@ -161,18 +171,17 @@
                     <i class="fa-solid fa-clipboard-list w-5 text-center"></i> 문제 / 이슈 관리
                 </button>
                 
-                <!-- 관리자 전용 메뉴 영역 -->
+                <!-- 관리자 전용 메뉴 영역 (일반 사용자는 이 부분이 아예 안 보임) -->
                 <div id="admin-menus" class="pt-4 mt-4 border-t border-white/10 space-y-1.5 hidden">
-                    <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">관리자 설정 (1~3단계)</p>
-                    
-                    <button onclick="window.switchMenu('sites')" id="menuBtn-sites" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all hidden">
-                        <i class="fa-solid fa-network-wired w-5 text-center"></i> 사업장(건물) 관리
+                    <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">관리자 설정</p>
+                    <button onclick="window.switchMenu('sites')" id="menuBtn-sites" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                        <i class="fa-solid fa-network-wired w-5 text-center"></i> 사업장 관리
                     </button>
-                    <button onclick="window.switchMenu('users')" id="menuBtn-users" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all hidden">
+                    <button onclick="window.switchMenu('users')" id="menuBtn-users" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">
                         <i class="fa-solid fa-users-gear w-5 text-center"></i> 사용자 및 권한 관리
                     </button>
-                    <button onclick="window.switchMenu('categories')" id="menuBtn-categories" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all hidden">
-                        <i class="fa-solid fa-tags w-5 text-center"></i> 시스템 카테고리 (1단계전용)
+                    <button onclick="window.switchMenu('categories')" id="menuBtn-categories" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                        <i class="fa-solid fa-tags w-5 text-center"></i> 시스템 카테고리
                     </button>
                 </div>
             </nav>
@@ -200,18 +209,17 @@
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
                             </span>
-                            <span class="text-xs font-semibold text-blue-400">Cloud DB 실시간 동기화 중</span>
+                            <span class="text-xs font-semibold text-blue-400">Cloud DB & 시트 실시간 연동 중</span>
                         </div>
-                        <span class="text-[9px] text-slate-500 mt-0.5">모든 데이터 변경 시 즉시 반영</span>
+                        <span class="text-[9px] text-slate-500 mt-0.5">이슈 등록 시 시트 포맷 자동 패키징</span>
                     </div>
 
-                    <!-- 백업용 구글 링크 -->
-                    <button onclick="window.openGoogleDriveFolder()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg hover:bg-slate-700 text-slate-300 transition-all text-sm font-medium flex items-center justify-center gap-2">
-                        <i class="fa-brands fa-google-drive"></i> 드라이브
-                    </button>
-                    <button onclick="window.openGoogleSpreadsheet()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg hover:bg-slate-700 text-slate-300 transition-all text-sm font-medium flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-file-excel"></i> 데이터 시트
-                    </button>
+                    <a href="https://docs.google.com/spreadsheets/d/1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0/edit?usp=sharing" target="_blank" class="px-4 py-2 bg-emerald-900/50 border border-emerald-500/50 rounded-lg hover:bg-emerald-800/80 text-emerald-300 transition-all text-sm font-medium flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i> 이슈 시트 확인
+                    </a>
+                    <a href="https://docs.google.com/spreadsheets/d/1Ww7ymGa-rYxCtXFNz8SgEPb55uqz2GVsnGGb6l7Vf-4/edit?usp=sharing" target="_blank" class="px-4 py-2 bg-blue-900/50 border border-blue-500/50 rounded-lg hover:bg-blue-800/80 text-blue-300 transition-all text-sm font-medium flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-users"></i> 가입자 DB 확인
+                    </a>
                 </div>
             </header>
 
@@ -221,20 +229,16 @@
         </main>
     </div>
 
-    <!-- 글로벌 오버레이 모달 (이슈 등록/수정, 사용자 수정 등) -->
+    <!-- 글로벌 오버레이 모달 -->
     <div id="globalModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="glass-panel rounded-2xl w-full max-w-lg overflow-hidden border border-white/20 shadow-2xl transform transition-all">
+        <div class="glass-panel rounded-2xl w-full max-w-lg overflow-hidden border border-white/20 shadow-2xl">
             <div class="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
                 <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-pen-to-square text-indigo-400"></i> <span id="modalTitleText">모달 제목</span>
                 </h3>
-                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white transition bg-white/5 hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <button onclick="window.closeModal()" class="text-slate-400 hover:text-white transition w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="modalBody" class="p-6">
-                <!-- 내용 동적 주입 -->
-            </div>
+            <div id="modalBody" class="p-6"></div>
         </div>
     </div>
 
@@ -243,614 +247,394 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 환경 변수 설정
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sys-hq-portal';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const GEMINI_API_KEY = "AIzaSyACPakmtFZWBRywxV_QN958ucbEIjIhgcQ"; // 향후 AI 확장을 위한 보존
+        // --- STREAMING_CHUNK:환경 변수 및 깃허브 배포 대응 설정... ---
+        const isCanvasEnv = typeof __firebase_config !== 'undefined';
+        
+        // ★ 중요: 목적에 따라 분리된 2개의 '구글 앱스 스크립트 웹 앱 URL' 세팅
+        const GAS_USER_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbytpkNDE_6H6d5sPfiXIp3LIMtHaFh8vvk5WcwannXQe-aCnwrAPieB7481vXsqlgkgFA/exec"; // 사용자 DB 전용 다리
+        const GAS_ISSUE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwSq5ZfU4DsThclp66W4qqTySyHgQNWNrvKD8FmZpVn11i4bk2jcyBdO0yoyz6uCKFN/exec"; // 건물관리(이슈) DB 전용 다리
+        
+        const manualFirebaseConfig = {
+            // apiKey: "여기에_값을_넣으세요",
+            // authDomain: "여기에_값을_넣으세요",
+            // projectId: "여기에_값을_넣으세요",
+        };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        let finalConfig = {};
+        if (isCanvasEnv) {
+            finalConfig = JSON.parse(__firebase_config);
+        } else if (manualFirebaseConfig.apiKey) {
+            finalConfig = manualFirebaseConfig;
+        }
 
-        // 앱 상태 (메모리)
+        let app, db, auth;
+        const appId = 'sys-hq-portal-prod';
+        
+        // 상태 변수
         let sites = [];
         let categories = [];
         let users = [];
         let issues = [];
-        
-        let currentUser = null; // 현재 로그인한 유저 객체
+        let currentUser = null;
         let currentMenu = 'dashboard';
         let isDataLoaded = { sites: false, categories: false, users: false, issues: false };
 
-        // Firebase 경로 헬퍼
         const getColRef = (colName) => collection(db, 'artifacts', appId, 'public', 'data', colName);
         const getDocRef = (colName, docId) => doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
 
-        // 자체 알림(Toast) 시스템
+        // UI 유틸리티
         window.showToast = function(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            let icon = '<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>';
-            let bgClass = 'bg-slate-800/90 border-emerald-500/30';
+            let icon = type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-400 text-lg"></i>' : '<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>';
+            let bgClass = type === 'error' ? 'bg-slate-800/90 border-red-500/30' : 'bg-slate-800/90 border-emerald-500/30';
             
-            if (type === 'error') {
-                icon = '<i class="fa-solid fa-circle-exclamation text-red-400 text-lg"></i>';
-                bgClass = 'bg-slate-800/90 border-red-500/30';
-            } else if (type === 'info') {
-                icon = '<i class="fa-solid fa-bell text-blue-400 text-lg"></i>';
-                bgClass = 'bg-slate-800/90 border-blue-500/30';
-            }
-
             toast.className = `toast-enter flex items-center gap-3 px-5 py-4 rounded-xl border backdrop-blur-md shadow-2xl text-sm font-medium text-white ${bgClass} max-w-sm pointer-events-auto`;
             toast.innerHTML = `${icon} <span>${message}</span>`;
-            
             container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.replace('toast-enter', 'toast-exit');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => { toast.classList.replace('toast-enter', 'toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
         };
 
-        function showLoader(show) {
-            document.getElementById('global-loader').style.display = show ? 'flex' : 'none';
+        function showLoader(show, text="시스템 로딩 중...") {
+            const l = document.getElementById('global-loader');
+            l.querySelector('p').textContent = text;
+            l.style.display = show ? 'flex' : 'none';
         }
 
-        // --- STREAMING_CHUNK:Firebase 초기화 및 리스너 등록... ---
+        // --- STREAMING_CHUNK:Firebase 초기화 및 보호 로직... ---
         async function initFirebase() {
             try {
-                if (initialToken) {
-                    await signInWithCustomToken(auth, initialToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                console.log("Firebase Auth Success. UID:", auth.currentUser.uid);
+                if (!finalConfig.apiKey) throw new Error("Firebase 설정값이 없습니다.");
+                
+                app = initializeApp(finalConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialToken) await signInWithCustomToken(auth, initialToken);
+                else await signInAnonymously(auth);
+                
+                document.getElementById('global-loader').style.display = 'none';
+                document.getElementById('auth-container').classList.remove('hidden');
                 setupRealtimeListeners();
+                
             } catch (error) {
-                console.error("Firebase Auth Error:", error);
-                window.showToast("서버 연결에 실패했습니다.", "error");
+                console.warn("DB Initialization Failed:", error);
+                document.getElementById('global-loader').style.display = 'none';
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+                document.getElementById('github-setup-modal').classList.remove('hidden'); // 하얀 화면 방지 모달 표시
             }
         }
 
         function setupRealtimeListeners() {
-            if (!auth.currentUser) return;
-            showLoader(true);
+            if (!auth || !auth.currentUser) return;
+            const errHandler = (err) => console.error("Snap err:", err);
 
-            const errHandler = (err) => console.error("Snapshot error:", err);
-
-            // Sites Listener
-            onSnapshot(getColRef('sites'), (snapshot) => {
-                const newData = [];
-                snapshot.forEach(doc => newData.push({ id: doc.id, ...doc.data() }));
-                sites = newData;
-                if(newData.length === 0) seedInitialSites(); // 초기 데이터
-                checkAllLoaded('sites');
-            }, errHandler);
-
-            // Categories Listener
-            onSnapshot(getColRef('categories'), (snapshot) => {
-                const newData = [];
-                snapshot.forEach(doc => newData.push({ id: doc.id, ...doc.data() }));
-                categories = newData;
-                if(newData.length === 0) seedInitialCategories();
-                checkAllLoaded('categories');
-            }, errHandler);
-
-            // Users Listener
-            onSnapshot(getColRef('users'), (snapshot) => {
-                const newData = [];
-                snapshot.forEach(doc => newData.push({ id: doc.id, ...doc.data() }));
-                users = newData;
-                if(newData.length === 0) seedInitialUsers();
-                checkAllLoaded('users');
-            }, errHandler);
-
-            // Issues Listener
-            onSnapshot(getColRef('issues'), (snapshot) => {
-                const newData = [];
-                snapshot.forEach(doc => newData.push({ id: doc.id, ...doc.data() }));
-                issues = newData;
-                checkAllLoaded('issues');
-            }, errHandler);
+            onSnapshot(getColRef('sites'), snap => { sites = snap.docs.map(d => ({id: d.id, ...d.data()})); checkAllLoaded('sites'); }, errHandler);
+            onSnapshot(getColRef('categories'), snap => { categories = snap.docs.map(d => ({id: d.id, ...d.data()})); checkAllLoaded('categories'); }, errHandler);
+            onSnapshot(getColRef('users'), snap => { users = snap.docs.map(d => ({id: d.id, ...d.data()})); checkAllLoaded('users'); }, errHandler);
+            onSnapshot(getColRef('issues'), snap => { issues = snap.docs.map(d => ({id: d.id, ...d.data()})); checkAllLoaded('issues'); }, errHandler);
         }
 
-        // 초기 데이터 세팅 (컬렉션이 비어있을 때 한 번 실행)
-        async function seedInitialSites() {
-            const defSites = [{ id: 's1', name: '본사 타워 (서울)' }, { id: 's2', name: '제1공장 (경기)' }];
-            for(let s of defSites) await setDoc(getDocRef('sites', s.id), s);
-        }
-        async function seedInitialCategories() {
-            const defCats = [{ id: 'c1', name: '시설물/인프라' }, { id: 'c2', name: 'IT/네트워크' }, { id: 'c3', name: '기타 민원' }];
-            for(let c of defCats) await setDoc(getDocRef('categories', c.id), c);
-        }
-        async function seedInitialUsers() {
-            const master = { id: 'master01', pwd: '123', name: '김최고 (마스터)', phone: '010-1111-1111', role: 1, site: '전체' };
-            await setDoc(getDocRef('users', master.id), master);
-        }
-
-        // 데이터 로드 완료 체크 및 화면 갱신
         function checkAllLoaded(type) {
             isDataLoaded[type] = true;
-            if (isDataLoaded.sites && isDataLoaded.categories && isDataLoaded.users && isDataLoaded.issues) {
-                showLoader(false);
-                // 로그인 유지 확인
+            if (Object.values(isDataLoaded).every(v => v)) {
                 const savedUid = sessionStorage.getItem('sys_logged_in_uid');
                 if (savedUid && !currentUser) {
                     const user = users.find(u => u.id === savedUid);
-                    if (user) {
-                        currentUser = user;
-                        finalizeLogin();
-                    }
+                    if (user) { currentUser = user; finalizeLogin(); }
                 }
-                
-                // 이미 로그인된 상태라면 화면 리렌더링 (실시간 갱신 효과)
-                if (currentUser) {
-                    if(document.getElementById('globalModal').classList.contains('hidden')) {
-                        window.switchMenu(currentMenu);
-                    }
+                if (currentUser && document.getElementById('globalModal').classList.contains('hidden')) {
+                    window.switchMenu(currentMenu);
                 }
             }
         }
 
         // --- STREAMING_CHUNK:인증 로직 (로그인/회원가입)... ---
-        window.toggleAuthMode = function(mode) {
+        window.toggleAuthMode = (mode) => {
             document.getElementById('loginView').classList.toggle('hidden', mode === 'signup');
             document.getElementById('signupView').classList.toggle('hidden', mode === 'login');
         };
 
-        window.handleLoginSubmit = function(e) {
+        window.handleLoginSubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('loginId').value.trim();
             const pwd = document.getElementById('loginPwd').value.trim();
-            const btn = document.getElementById('btnLogin');
             const btnText = document.getElementById('btnLoginText');
+            
+            btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 구글 사용자 DB 조회 중...';
+            
+            // ★ 마스터 계정(admin) 최초 접속 시 DB에 없으면 1단계로 자동 생성하는 로직 추가
+            let user = users.find(u => u.id === id && u.pwd === pwd);
+            
+            if (!user && id === 'admin' && pwd === 'admin1234') {
+                user = { id: 'admin', name: '최고관리자', pwd: 'admin1234', phone: '010-0000-0000', role: 1, site: '전체' };
+                try { 
+                    await setDoc(getDocRef('users', 'admin'), user); 
+                    if(!users.some(u => u.id === 'admin')) users.push(user);
+                } catch(err) { 
+                    console.warn("마스터 계정 자동 생성 실패:", err); 
+                }
+            }
 
-            btn.disabled = true;
-            btn.classList.add('opacity-80', 'cursor-not-allowed');
-            btnText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 클라우드 DB 대조 중...';
-
-            // 실시간 DB 대조 시뮬레이션을 위한 지연
             setTimeout(() => {
-                const user = users.find(u => u.id === id && u.pwd === pwd);
                 if (user) {
                     currentUser = user;
                     sessionStorage.setItem('sys_logged_in_uid', user.id);
                     finalizeLogin();
-                    window.showToast(`${currentUser.name}님 환영합니다. (클라우드 동기화 완료)`, 'success');
+                    window.showToast(`${currentUser.name}님 환영합니다.`);
                 } else {
                     window.showToast('아이디 또는 비밀번호가 일치하지 않습니다.', 'error');
                 }
-                btn.disabled = false;
-                btn.classList.remove('opacity-80', 'cursor-not-allowed');
-                btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> 시스템 접속 (DB 검증)';
+                btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> 사용자 DB 대조 및 접속';
             }, 800);
         };
 
-        window.handleSignupSubmit = async function(e) {
+        window.handleSignupSubmit = async (e) => {
             e.preventDefault();
-            if(!auth.currentUser) return window.showToast('클라우드 연결 중입니다. 잠시 후 시도하세요.', 'error');
-
             const id = document.getElementById('regId').value.trim();
-            const name = document.getElementById('regName').value.trim();
-            const pwd = document.getElementById('regPwd').value.trim();
-            const phone = document.getElementById('regPhone').value.trim();
-
-            if (users.some(u => u.id === id)) {
-                return window.showToast('이미 존재하는 아이디입니다.', 'error');
-            }
+            if (users.some(u => u.id === id)) return window.showToast('이미 존재하는 아이디입니다.', 'error');
 
             const newUser = {
-                id: id, pwd: pwd, name: name, phone: phone,
-                role: 4, site: '미지정'
+                id: id,
+                name: document.getElementById('regName').value.trim(),
+                pwd: document.getElementById('regPwd').value.trim(),
+                phone: document.getElementById('regPhone').value.trim(),
+                role: 4, 
+                site: '미지정'
             };
 
-            showLoader(true);
+            showLoader(true, "클라우드 및 구글 사용자 DB 등록 중...");
             try {
-                // Firebase DB 저장 (저장 시 onSnapshot 이 반응하여 자동 업데이트)
+                // 1. Firebase 실시간 DB 저장
                 await setDoc(getDocRef('users', id), newUser);
-                window.showToast('가입 신청 완료! 실시간 DB에 등록되었습니다.', 'success');
+                
+                // 2. 구글 스프레드시트 실시간 전송 (사용자 DB 전용 다리 통과)
+                if (GAS_USER_WEB_APP_URL) {
+                    fetch(GAS_USER_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ type: 'user', ...newUser }) // type: 'user' 로 가입자 구분
+                    }).catch(err => console.warn('구글 시트 전송 실패:', err));
+                }
+
+                window.showToast('가입 완료! 구글 DB 시트 동기화 완료.', 'success');
                 window.toggleAuthMode('login');
                 document.getElementById('loginId').value = id;
                 document.getElementById('loginPwd').value = '';
-            } catch(e) {
-                window.showToast('데이터 저장 실패', 'error');
-            } finally {
-                showLoader(false);
-            }
-        };
-
-        window.logout = function() {
-            currentUser = null;
-            sessionStorage.removeItem('sys_logged_in_uid');
-            location.reload();
+            } catch(err) { window.showToast('DB 저장 실패', 'error'); }
+            finally { showLoader(false); }
         };
 
         function finalizeLogin() {
             document.getElementById('auth-container').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
-            document.getElementById('app-container').classList.add('flex');
             
             document.getElementById('navUserName').textContent = currentUser.name;
-            let roleStr = currentUser.role === 1 ? '1단계 (최고관리자)' : currentUser.role === 2 ? '2단계 (글로벌 뷰어)' : currentUser.role === 3 ? '3단계 (사업장 관리)' : '일반 사용자';
-            document.getElementById('navUserRole').textContent = roleStr;
+            document.getElementById('navUserRole').textContent = currentUser.role === 1 ? '1단계(최고관리자)' : `권한레벨 ${currentUser.role}`;
             document.getElementById('navUserSite').textContent = currentUser.site;
 
-            // 일반 사용자 메뉴 격리 처리
+            // 일반 사용자(Role 4) 관리자 메뉴 완벽 숨김 처리
             const adminMenuArea = document.getElementById('admin-menus');
             if (currentUser.role === 4) {
-                adminMenuArea.classList.add('hidden'); // 완전 숨김
+                adminMenuArea.classList.add('hidden');
             } else {
                 adminMenuArea.classList.remove('hidden');
-                document.getElementById('menuBtn-users').classList.toggle('hidden', currentUser.role !== 1);
                 document.getElementById('menuBtn-sites').classList.toggle('hidden', currentUser.role > 2);
+                document.getElementById('menuBtn-users').classList.toggle('hidden', currentUser.role !== 1);
                 document.getElementById('menuBtn-categories').classList.toggle('hidden', currentUser.role !== 1);
             }
-
             window.switchMenu('dashboard');
         }
 
-        // --- STREAMING_CHUNK:메인 화면 렌더링 및 클라우드 액션... ---
-        window.switchMenu = function(menu) {
-            currentMenu = menu;
-            document.querySelectorAll('nav button').forEach(btn => {
-                if(!btn.id.includes('menuBtn')) return;
-                btn.className = btn.className.replace('bg-indigo-600 text-white shadow-lg shadow-indigo-900/20', 'text-slate-400 hover:text-white hover:bg-white/5');
-            });
-            const activeBtn = document.getElementById(`menuBtn-${menu}`);
-            if(activeBtn) {
-                activeBtn.className = activeBtn.className.replace('text-slate-400 hover:text-white hover:bg-white/5', 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20');
-            }
+        window.logout = () => { currentUser = null; sessionStorage.clear(); location.reload(); };
 
-            const titleEl = document.getElementById('pageTitle');
-            const descEl = document.getElementById('pageDesc');
-            
-            if (menu === 'dashboard') {
-                titleEl.textContent = '통합 현황판'; descEl.textContent = '시스템 전체 등록 요약'; renderDashboard();
-            } else if (menu === 'issues') {
-                titleEl.textContent = '문제 / 이슈 관리'; descEl.textContent = '사업장별 발생 이슈 클라우드 관리'; renderIssues();
-            } else if (menu === 'users') {
-                titleEl.textContent = '사용자 및 권한 관리'; descEl.textContent = '계정 제어 및 사업장 배정 (1단계 전용)'; renderUsers();
-            } else if (menu === 'sites' || menu === 'categories') {
-                titleEl.textContent = menu === 'sites' ? '사업장 관리' : '카테고리 관리'; 
-                descEl.textContent = '기본 메타 데이터 관리'; 
-                document.getElementById('mainContent').innerHTML = `<div class="p-6 text-center text-slate-500">현재 클라우드 DB에 연동되어 자동 관리됩니다.</div>`;
-            }
-        };
-
-        // 데이터 격리 헬퍼
+        // --- STREAMING_CHUNK:데이터 격리 및 화면 렌더링... ---
         function getVisibleIssues() {
+            // 일반 사용자(4) 또는 중간 관리자(3)는 본인 담당 사업장 데이터만 볼 수 있도록 철저히 격리
             if (currentUser.role === 3 || currentUser.role === 4) {
                 return issues.filter(i => i.site === currentUser.site);
             }
             return issues;
         }
 
-        function renderDashboard() {
+        window.switchMenu = (menu) => {
+            currentMenu = menu;
+            document.querySelectorAll('nav button').forEach(btn => {
+                if(!btn.id.includes('menuBtn')) return;
+                btn.className = btn.className.replace('bg-indigo-600 text-white', 'text-slate-400 hover:text-white hover:bg-white/5').replace(' shadow-lg shadow-indigo-900/20', '');
+            });
+            const act = document.getElementById(`menuBtn-${menu}`);
+            if(act) act.className = act.className.replace('text-slate-400 hover:text-white hover:bg-white/5', 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20');
+
+            const title = document.getElementById('pageTitle');
             const container = document.getElementById('mainContent');
-            const visibleIssues = getVisibleIssues();
             
-            const total = visibleIssues.length;
-            const pending = visibleIssues.filter(i => i.status === '대기').length;
-            const inProgress = visibleIssues.filter(i => i.status === '진행중').length;
-            const completed = visibleIssues.filter(i => i.status === '완료').length;
+            if (menu === 'dashboard') { title.textContent = '통합 현황판'; renderDashboard(container); }
+            else if (menu === 'issues') { title.textContent = '문제 / 이슈 관리'; renderIssues(container); }
+            else if (menu === 'users' && currentUser.role === 1) { title.textContent = '가입자 및 권한 제어 (1단계 전용)'; renderUsers(container); }
+            else { title.textContent = '관리 설정'; container.innerHTML = '<div class="text-center text-slate-500 mt-10">클라우드 자동 연동 중입니다.</div>'; }
+        };
 
-            let warningMsg = (currentUser.role === 4 || currentUser.role === 3) ? 
-                `<div class="col-span-full mb-4 p-3 bg-blue-900/30 border border-blue-500/30 rounded-xl text-sm text-blue-200">
-                    <i class="fa-solid fa-lock mr-1"></i> 현재 사용자님은 <strong>[${currentUser.site}]</strong> 사업장의 데이터만 격리되어 출력됩니다.
-                </div>` : '';
-
+        function renderDashboard(container) {
+            const vis = getVisibleIssues();
+            let warnMsg = (currentUser.role >= 3) ? `<div class="mb-4 p-3 bg-blue-900/30 border border-blue-500/30 rounded-xl text-sm text-blue-200"><i class="fa-solid fa-lock mr-1"></i> [${currentUser.site}] 사업장의 데이터만 격리 조회됩니다.</div>` : '';
+            
             container.innerHTML = `
-                ${warningMsg}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="glass-panel p-5 rounded-xl border-l-4 border-slate-500">
-                        <p class="text-xs text-slate-400 font-medium">전체 누적 접수</p>
-                        <h3 class="text-3xl font-bold text-white mt-1">${total}</h3>
-                    </div>
-                    <div class="glass-panel p-5 rounded-xl border-l-4 border-red-500">
-                        <p class="text-xs text-slate-400 font-medium">처리 대기</p>
-                        <h3 class="text-3xl font-bold text-white mt-1">${pending}</h3>
-                    </div>
-                    <div class="glass-panel p-5 rounded-xl border-l-4 border-amber-500">
-                        <p class="text-xs text-slate-400 font-medium">진행 중</p>
-                        <h3 class="text-3xl font-bold text-white mt-1">${inProgress}</h3>
-                    </div>
-                    <div class="glass-panel p-5 rounded-xl border-l-4 border-emerald-500">
-                        <p class="text-xs text-slate-400 font-medium">조치 완료</p>
-                        <h3 class="text-3xl font-bold text-white mt-1">${completed}</h3>
-                    </div>
+                ${warnMsg}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="glass-panel p-5 rounded-xl border-l-4 border-slate-500"><p class="text-xs text-slate-400">총 누적</p><h3 class="text-3xl font-bold mt-1">${vis.length}</h3></div>
+                    <div class="glass-panel p-5 rounded-xl border-l-4 border-red-500"><p class="text-xs text-slate-400">대기중</p><h3 class="text-3xl font-bold mt-1">${vis.filter(i=>i.status==='대기').length}</h3></div>
+                    <div class="glass-panel p-5 rounded-xl border-l-4 border-amber-500"><p class="text-xs text-slate-400">진행중</p><h3 class="text-3xl font-bold mt-1">${vis.filter(i=>i.status==='진행중').length}</h3></div>
+                    <div class="glass-panel p-5 rounded-xl border-l-4 border-emerald-500"><p class="text-xs text-slate-400">조치완료</p><h3 class="text-3xl font-bold mt-1">${vis.filter(i=>i.status==='완료').length}</h3></div>
                 </div>
             `;
         }
 
-        function renderIssues() {
-            const container = document.getElementById('mainContent');
-            const visibleIssues = getVisibleIssues().sort((a,b) => new Date(b.regDate) - new Date(a.regDate));
-
+        function renderIssues(container) {
+            const vis = getVisibleIssues().sort((a,b) => new Date(b.regDate) - new Date(a.regDate));
             let html = `
-                <div class="mb-4 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-white">이슈 목록 <span class="text-xs font-normal text-slate-400 bg-white/10 px-2 py-0.5 rounded ml-2">${visibleIssues.length} 건</span></h3>
-                    <button onclick="window.openIssueModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-lg shadow-indigo-900/30">
-                        <i class="fa-solid fa-plus mr-1"></i> 신규 등록 (DB자동저장)
-                    </button>
+                <div class="mb-4 flex justify-end">
+                    <button onclick="window.openIssueModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm shadow-lg font-medium transition"><i class="fa-solid fa-plus mr-1"></i> 신규 등록 (구글 시트 자동 반영)</button>
                 </div>
-                <div class="glass-panel rounded-xl overflow-hidden border border-white/10">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-white/5 border-b border-white/10 text-xs font-semibold text-slate-400 uppercase">
-                                <tr>
-                                    <th class="px-4 py-3">사업장</th>
-                                    <th class="px-4 py-3">카테고리</th>
-                                    <th class="px-4 py-3">내용</th>
-                                    <th class="px-4 py-3">등록일시</th>
-                                    <th class="px-4 py-3">상태</th>
-                                    <th class="px-4 py-3 text-center">관리</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-white/5 text-sm text-slate-200">
+                <div class="glass-panel rounded-xl overflow-hidden">
+                    <table class="w-full text-left whitespace-nowrap text-sm">
+                        <thead class="bg-white/5 border-b border-white/10 text-xs text-slate-400">
+                            <tr><th class="p-3">사업장</th><th class="p-3">카테고리</th><th class="p-3">이슈 내용</th><th class="p-3">등록일시</th><th class="p-3">상태</th><th class="p-3 text-center">관리</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
             `;
-
-            if (visibleIssues.length === 0) {
-                html += `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">등록된 이슈가 없습니다.</td></tr>`;
-            } else {
-                visibleIssues.forEach(iss => {
-                    let badgeClass = iss.status === '완료' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                                     iss.status === '진행중' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                                     'bg-red-500/20 text-red-400 border-red-500/30';
-                    let deleteBtn = currentUser.role === 1 ? `<button onclick="window.deleteIssue('${iss.id}')" class="text-red-400 hover:text-red-300 ml-2" title="데이터 영구 삭제"><i class="fa-solid fa-trash-can"></i></button>` : '';
-
-                    html += `
-                        <tr class="hover:bg-white/5 transition-colors">
-                            <td class="px-4 py-3 text-xs">${iss.site}</td>
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded bg-white/10 text-xs">${iss.category}</span></td>
-                            <td class="px-4 py-3 font-medium truncate max-w-[200px]">${iss.content}</td>
-                            <td class="px-4 py-3 text-xs text-slate-400">${iss.regDate.substring(0, 16)}</td>
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded border text-xs font-bold ${badgeClass}">${iss.status}</span></td>
-                            <td class="px-4 py-3 text-center">
-                                <button onclick="window.openIssueModal('${iss.id}')" class="text-indigo-400 hover:text-indigo-300"><i class="fa-solid fa-pen-to-square"></i></button>
-                                ${deleteBtn}
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-            html += `</tbody></table></div></div>`;
-            container.innerHTML = html;
+            if (vis.length === 0) html += `<tr><td colspan="6" class="p-8 text-center text-slate-500">데이터가 없습니다.</td></tr>`;
+            vis.forEach(iss => {
+                let badge = iss.status === '완료' ? 'text-emerald-400 bg-emerald-500/20' : (iss.status === '진행중' ? 'text-amber-400 bg-amber-500/20' : 'text-red-400 bg-red-500/20');
+                let delBtn = currentUser.role === 1 ? `<button onclick="window.deleteIssue('${iss.id}')" class="text-red-400 hover:text-red-300 ml-2"><i class="fa-solid fa-trash-can"></i></button>` : '';
+                html += `<tr class="hover:bg-white/5"><td class="p-3 text-xs">${iss.site}</td><td class="p-3 text-xs">${iss.category}</td><td class="p-3 truncate max-w-[200px]">${iss.content}</td><td class="p-3 text-xs text-slate-400">${iss.regDate.substring(0,16)}</td><td class="p-3"><span class="px-2 py-1 rounded text-[10px] font-bold ${badge}">${iss.status}</span></td><td class="p-3 text-center"><button onclick="window.openIssueModal('${iss.id}')" class="text-indigo-400 hover:text-indigo-300"><i class="fa-solid fa-pen-to-square"></i></button>${delBtn}</td></tr>`;
+            });
+            container.innerHTML = html + `</tbody></table></div>`;
         }
 
-        // --- STREAMING_CHUNK:모달 및 데이터 변경 (Firebase 쓰기)... ---
-        window.openModal = function(title, contentHTML) {
+        // --- STREAMING_CHUNK:모달 및 데이터 저장 (자동 동기화)... ---
+        window.openModal = (title, html) => {
             document.getElementById('modalTitleText').textContent = title;
-            document.getElementById('modalBody').innerHTML = contentHTML;
+            document.getElementById('modalBody').innerHTML = html;
             document.getElementById('globalModal').classList.remove('hidden');
         };
-        window.closeModal = function() {
-            document.getElementById('globalModal').classList.add('hidden');
-            document.getElementById('modalBody').innerHTML = '';
-        };
+        window.closeModal = () => document.getElementById('globalModal').classList.add('hidden');
 
-        window.openIssueModal = function(issueId = null) {
-            const isEdit = !!issueId;
-            let target = isEdit ? issues.find(i => i.id === issueId) : null;
-            let autoDate = target ? target.regDate : new Date().toLocaleString('ko-KR');
+        window.openIssueModal = (id = null) => {
+            let tg = id ? issues.find(i => i.id === id) : null;
+            let d = new Date().toLocaleString('ko-KR');
+            let siteOpts = currentUser.role >= 3 ? `<option value="${currentUser.site}">${currentUser.site}</option>` : sites.map(s => `<option value="${s.name}" ${tg && tg.site===s.name?'selected':''}>${s.name}</option>`).join('');
+            let catOpts = categories.map(c => `<option value="${c.name}" ${tg && tg.category===c.name?'selected':''}>${c.name}</option>`).join('');
 
-            let siteOpts = '';
-            if (currentUser.role >= 3) {
-                siteOpts = `<option value="${currentUser.site}">${currentUser.site}</option>`;
-            } else {
-                sites.forEach(s => {
-                    let sel = target && target.site === s.name ? 'selected' : '';
-                    siteOpts += `<option value="${s.name}" ${sel}>${s.name}</option>`;
-                });
-            }
-
-            let catOpts = categories.map(c => `<option value="${c.name}" ${target && target.category===c.name?'selected':''}>${c.name}</option>`).join('');
-
-            const html = `
-                <form onsubmit="window.saveIssue(event, '${issueId || ''}')" class="space-y-4 text-sm">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">사업장 구분</label>
-                        <select id="issSite" class="w-full px-3 py-2 rounded-xl glass-input" ${currentUser.role >= 3 ? 'disabled' : ''}>${siteOpts}</select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">카테고리</label>
-                        <select id="issCat" class="w-full px-3 py-2 rounded-xl glass-input">${catOpts}</select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">이슈 상세 내용</label>
-                        <textarea id="issContent" rows="3" class="w-full px-3 py-2 rounded-xl glass-input" required>${target ? target.content : ''}</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">상태</label>
-                        <select id="issStatus" class="w-full px-3 py-2 rounded-xl glass-input">
-                            <option value="대기" ${target && target.status==='대기'?'selected':''}>대기</option>
-                            <option value="진행중" ${target && target.status==='진행중'?'selected':''}>진행중</option>
-                            <option value="완료" ${target && target.status==='완료'?'selected':''}>조치 완료</option>
-                        </select>
-                    </div>
-                    <div class="p-3 bg-black/20 border border-white/5 rounded-xl">
-                        <label class="block text-xs text-slate-500 mb-1">시스템 등록일시 (자동 기입)</label>
-                        <input type="text" value="${autoDate}" class="w-full bg-transparent border-none text-slate-300 text-xs focus:ring-0 p-0" readonly>
-                    </div>
-                    <div class="pt-4 flex justify-end gap-2">
-                        <button type="button" onclick="window.closeModal()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">취소</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg font-medium transition">
-                            <i class="fa-solid fa-cloud-arrow-up mr-1"></i> 클라우드 저장
-                        </button>
-                    </div>
+            window.openModal(tg ? '이슈 수정' : '신규 이슈', `
+                <form onsubmit="window.saveIssue(event, '${id||''}')" class="space-y-4 text-sm">
+                    <div><label class="block text-xs mb-1 text-slate-400">사업장</label><select id="issSite" class="w-full p-2 glass-input rounded-xl" ${currentUser.role>=3?'disabled':''}>${siteOpts}</select></div>
+                    <div><label class="block text-xs mb-1 text-slate-400">카테고리</label><select id="issCat" class="w-full p-2 glass-input rounded-xl">${catOpts}</select></div>
+                    <div><label class="block text-xs mb-1 text-slate-400">이슈 내용</label><textarea id="issContent" rows="3" class="w-full p-2 glass-input rounded-xl" required>${tg?tg.content:''}</textarea></div>
+                    <div><label class="block text-xs mb-1 text-slate-400">상태</label><select id="issStatus" class="w-full p-2 glass-input rounded-xl"><option value="대기" ${tg&&tg.status==='대기'?'selected':''}>대기</option><option value="진행중" ${tg&&tg.status==='진행중'?'selected':''}>진행중</option><option value="완료" ${tg&&tg.status==='완료'?'selected':''}>조치 완료</option></select></div>
+                    <div class="p-3 bg-black/20 rounded-xl"><label class="block text-xs text-slate-500">등록일시 (자동)</label><input type="text" value="${tg?tg.regDate:d}" class="w-full bg-transparent text-slate-300 text-xs focus:ring-0" readonly></div>
+                    <div class="pt-2 flex justify-end gap-2"><button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium text-white shadow-lg"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> 저장 및 시트 동기화</button></div>
                 </form>
-            `;
-            window.openModal(isEdit ? '이슈 정보 수정' : '신규 이슈 등록', html);
+            `);
         };
 
-        window.saveIssue = async function(e, id) {
+        window.saveIssue = async (e, id) => {
             e.preventDefault();
-            if(!auth.currentUser) return;
-            showLoader(true);
-
             const siteVal = currentUser.role >= 3 ? currentUser.site : document.getElementById('issSite').value;
-            const isNew = !id;
-            const issueId = isNew ? 'iss_' + Date.now() : id;
-            
             const newDate = new Date().toLocaleString('ko-KR');
             let data = {
-                id: issueId,
+                id: id || 'iss_' + Date.now(),
                 site: siteVal,
                 category: document.getElementById('issCat').value,
                 content: document.getElementById('issContent').value,
                 status: document.getElementById('issStatus').value,
+                regDate: id ? issues.find(i=>i.id===id).regDate : newDate,
+                completeDate: document.getElementById('issStatus').value === '완료' ? newDate : '',
+                duration: '-'
             };
 
-            if (isNew) {
-                data.regDate = newDate;
-                data.completeDate = data.status === '완료' ? newDate : '';
-                data.duration = '-';
-            } else {
-                const target = issues.find(i => i.id === id);
-                data.regDate = target.regDate;
-                if (target.status !== '완료' && data.status === '완료') {
-                    data.completeDate = newDate;
-                } else if (data.status !== '완료') {
-                    data.completeDate = '';
-                } else {
-                    data.completeDate = target.completeDate;
-                }
-                data.duration = target.duration;
-            }
-
+            showLoader(true, "구글 스프레드시트 구조 렌더링 및 자동 저장 중...");
             try {
-                await setDoc(getDocRef('issues', issueId), data);
-                window.showToast(isNew ? '신규 이슈가 클라우드에 등록되었습니다.' : '수정 내역이 클라우드에 반영되었습니다.');
+                // 1. Firebase 실시간 DB 저장
+                await setDoc(getDocRef('issues', data.id), data);
+                
+                // 2. 구글 스프레드시트 실시간 전송 (이슈 전용 다리 통과)
+                // 사업장별 시트에 카테고리, 이슈내용 등을 직접 쏴줍니다.
+                if (GAS_ISSUE_WEB_APP_URL) {
+                    fetch(GAS_ISSUE_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ type: 'issue', ...data }) // type: 'issue' 로 이슈 구분
+                    }).catch(err => console.warn('구글 시트 전송 실패:', err));
+                }
+
+                window.showToast('데이터베이스 및 구글 스프레드시트에 자동 동기화 완료!');
                 window.closeModal();
-            } catch (err) {
-                window.showToast('저장 실패', 'error');
-            } finally {
-                showLoader(false);
-            }
+            } catch(e) { window.showToast('저장 실패', 'error'); } finally { showLoader(false); }
         };
 
-        window.deleteIssue = async function(id) {
-            if (currentUser.role !== 1) return;
-            if (confirm("정말 이 데이터를 삭제하시겠습니까? (복구 불가)")) {
-                try {
-                    await deleteDoc(getDocRef('issues', id));
-                    window.showToast('데이터가 클라우드에서 영구 삭제되었습니다.', 'info');
-                } catch(e) { window.showToast('삭제 실패', 'error'); }
+        window.deleteIssue = async (id) => {
+            if(currentUser.role === 1 && confirm("이슈 데이터를 완전히 삭제할까요? (복구 불가)")) {
+                await deleteDoc(getDocRef('issues', id));
+                window.showToast('영구 삭제되었습니다.', 'info');
             }
         };
 
         // 1단계 전용 사용자 관리 로직
-        function renderUsers() {
-            if (currentUser.role !== 1) return;
-            const container = document.getElementById('mainContent');
-            let html = `
-                <div class="mb-4">
-                    <h3 class="text-lg font-bold text-white">가입자 및 권한 제어 DB</h3>
-                    <p class="text-xs text-slate-400">신규 가입자의 사업장을 배정하거나 정보를 수정할 수 있습니다.</p>
-                </div>
-                <div class="glass-panel rounded-xl overflow-hidden border border-white/10">
-                    <div class="overflow-x-auto"><table class="w-full text-left whitespace-nowrap">
-                    <thead class="bg-white/5 border-b border-white/10 text-xs font-semibold text-slate-400">
-                        <tr><th class="px-4 py-3">아이디</th><th class="px-4 py-3">이름</th><th class="px-4 py-3">권한</th><th class="px-4 py-3">사업장</th><th class="px-4 py-3 text-center">관리</th></tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5 text-sm">
-            `;
+        function renderUsers(container) {
+            let html = `<div class="glass-panel rounded-xl overflow-hidden"><table class="w-full text-left text-sm whitespace-nowrap"><thead class="bg-white/5 border-b border-white/10 text-xs text-slate-400"><tr><th class="p-3">ID</th><th class="p-3">이름</th><th class="p-3">권한</th><th class="p-3">담당사업장</th><th class="p-3">관리</th></tr></thead><tbody class="divide-y divide-white/5">`;
             users.forEach(u => {
-                let roleColor = u.role === 1 ? 'text-fuchsia-400 bg-fuchsia-500/10' : u.role === 4 ? 'text-slate-300 bg-slate-500/10' : 'text-blue-400 bg-blue-500/10';
-                let siteDisp = u.site === '미지정' ? `<span class="text-amber-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> 미지정</span>` : u.site;
-                html += `
-                    <tr class="hover:bg-white/5 transition-colors">
-                        <td class="px-4 py-3 font-mono text-indigo-300">${u.id}</td>
-                        <td class="px-4 py-3 font-medium text-white">${u.name}</td>
-                        <td class="px-4 py-3"><span class="px-2 py-1 rounded border text-[10px] font-bold ${roleColor}">${u.role}단계</span></td>
-                        <td class="px-4 py-3 text-xs">${siteDisp}</td>
-                        <td class="px-4 py-3 text-center">
-                            <button onclick="window.openUserModal('${u.id}')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs transition border border-white/10">수정 / 배정</button>
-                        </td>
-                    </tr>
-                `;
+                html += `<tr class="hover:bg-white/5"><td class="p-3 font-mono text-indigo-300">${u.id}</td><td class="p-3">${u.name}</td><td class="p-3 text-xs">${u.role}단계</td><td class="p-3 text-xs ${u.site==='미지정'?'text-amber-400':''}">${u.site}</td><td class="p-3"><button onclick="window.openUserModal('${u.id}')" class="bg-white/10 px-3 py-1 rounded text-xs">수정</button></td></tr>`;
             });
-            html += `</tbody></table></div></div>`;
-            container.innerHTML = html;
+            container.innerHTML = html + `</tbody></table></div>`;
         }
 
-        window.openUserModal = function(userId) {
-            const target = users.find(u => u.id === userId);
-            if (!target) return;
-            let siteOpts = `<option value="전체">전체 (마스터/뷰어용)</option>`;
-            sites.forEach(s => siteOpts += `<option value="${s.name}" ${target.site === s.name ? 'selected' : ''}>${s.name}</option>`);
-
-            const html = `
-                <form onsubmit="window.saveUser(event, '${userId}')" class="space-y-4 text-sm">
+        window.openUserModal = (uid) => {
+            let u = users.find(x => x.id === uid);
+            let sOpts = `<option value="전체">전체 (마스터/뷰어용)</option>` + sites.map(s => `<option value="${s.name}" ${u.site===s.name?'selected':''}>${s.name}</option>`).join('');
+            window.openModal('사용자 및 권한 수정', `
+                <form onsubmit="window.saveUser(event, '${uid}')" class="space-y-4 text-sm">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-xs text-slate-400 mb-1">아이디 변경</label><input type="text" id="editUid" value="${target.id}" class="w-full px-3 py-2 rounded-xl glass-input" required></div>
-                        <div><label class="block text-xs text-slate-400 mb-1">비번 재설정</label><input type="text" id="editUpwd" placeholder="비워두면 기존 유지" class="w-full px-3 py-2 rounded-xl glass-input"></div>
+                        <div><label class="block text-xs mb-1 text-slate-400">아이디</label><input type="text" id="eUid" value="${u.id}" class="w-full p-2 glass-input rounded-xl" required></div>
+                        <div><label class="block text-xs mb-1 text-slate-400">비밀번호 변경</label><input type="text" id="eUpwd" placeholder="변경 시 입력" class="w-full p-2 glass-input rounded-xl"></div>
                     </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">이름 및 연락처</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="editUname" value="${target.name}" class="w-1/3 px-3 py-2 rounded-xl glass-input" readonly>
-                            <input type="text" id="editUphone" value="${target.phone}" class="w-2/3 px-3 py-2 rounded-xl glass-input">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">권한 등급</label>
-                        <select id="editUrole" class="w-full px-3 py-2 rounded-xl glass-input">
-                            <option value="1" ${target.role === 1 ? 'selected' : ''}>1단계: 최고관리자</option>
-                            <option value="2" ${target.role === 2 ? 'selected' : ''}>2단계: 전체 뷰어</option>
-                            <option value="3" ${target.role === 3 ? 'selected' : ''}>3단계: 사업장 관리</option>
-                            <option value="4" ${target.role === 4 ? 'selected' : ''}>4단계: 일반 사용자</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-amber-400 mb-1 font-bold">담당 사업장 배정</label>
-                        <select id="editUsite" class="w-full px-3 py-2 rounded-xl glass-input border-amber-500/30 bg-amber-500/5">${siteOpts}</select>
-                    </div>
-                    <div class="pt-4 flex justify-end gap-2">
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg font-medium transition"><i class="fa-solid fa-check mr-1"></i> 클라우드 적용</button>
-                    </div>
+                    <div><label class="block text-xs mb-1 text-slate-400">이름 및 연락처</label><div class="flex gap-2"><input type="text" value="${u.name}" class="w-1/3 p-2 glass-input rounded-xl" readonly><input type="text" id="eUphone" value="${u.phone}" class="w-2/3 p-2 glass-input rounded-xl"></div></div>
+                    <div><label class="block text-xs mb-1 text-slate-400">권한 등급</label><select id="eUrole" class="w-full p-2 glass-input rounded-xl"><option value="1" ${u.role===1?'selected':''}>1단계 (최고)</option><option value="2" ${u.role===2?'selected':''}>2단계</option><option value="3" ${u.role===3?'selected':''}>3단계 (사업장)</option><option value="4" ${u.role===4?'selected':''}>4단계 (일반)</option></select></div>
+                    <div><label class="block text-xs mb-1 text-amber-400 font-bold">담당 사업장</label><select id="eUsite" class="w-full p-2 glass-input rounded-xl border-amber-500/30">${sOpts}</select></div>
+                    <div class="pt-2 flex justify-end"><button type="submit" class="px-4 py-2 bg-indigo-600 rounded-xl text-white font-medium shadow-lg">구글 사용자 DB 적용</button></div>
                 </form>
-            `;
-            window.openModal('계정 및 권한 설정', html);
+            `);
         };
 
-        window.saveUser = async function(e, oldId) {
+        window.saveUser = async (e, oldId) => {
             e.preventDefault();
-            const target = users.find(u => u.id === oldId);
-            if (!target) return;
+            const u = users.find(x => x.id === oldId);
+            const newId = document.getElementById('eUid').value.trim();
+            if (newId !== oldId && users.some(x => x.id === newId)) return window.showToast('존재하는 아이디', 'error');
 
-            const newId = document.getElementById('editUid').value.trim();
-            if (newId !== oldId && users.some(u => u.id === newId)) return window.showToast('이미 존재하는 아이디입니다.', 'error');
-
-            const updatedData = {
-                id: newId,
-                name: target.name,
-                pwd: document.getElementById('editUpwd').value.trim() || target.pwd,
-                phone: document.getElementById('editUphone').value,
-                role: parseInt(document.getElementById('editUrole').value),
-                site: document.getElementById('editUsite').value
-            };
-
-            showLoader(true);
+            const dat = { id: newId, name: u.name, pwd: document.getElementById('eUpwd').value || u.pwd, phone: document.getElementById('eUphone').value, role: parseInt(document.getElementById('eUrole').value), site: document.getElementById('eUsite').value };
+            
+            showLoader(true, "구글 사용자 DB 업데이트 중...");
             try {
-                if (newId !== oldId) await deleteDoc(getDocRef('users', oldId)); // 아이디가 바뀌면 기존 문서 삭제
-                await setDoc(getDocRef('users', newId), updatedData);
-                window.showToast(`사용자 [${target.name}] 정보가 클라우드에 업데이트 되었습니다.`);
+                if (newId !== oldId) await deleteDoc(getDocRef('users', oldId));
+                
+                // 1. Firebase 실시간 DB 갱신
+                await setDoc(getDocRef('users', newId), dat);
+                
+                // 2. 구글 스프레드시트 실시간 전송 (사용자 DB 전용 다리)
+                if (GAS_USER_WEB_APP_URL) {
+                    fetch(GAS_USER_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ type: 'user', ...dat })
+                    }).catch(err => console.warn('구글 시트 전송 실패:', err));
+                }
+
+                window.showToast('가입자 DB 시트 실시간 동기화 완료');
                 window.closeModal();
-            } catch(err) { window.showToast('저장 실패', 'error'); }
-            finally { showLoader(false); }
+            } catch(err) { window.showToast('저장 실패', 'error'); } finally { showLoader(false); }
         };
 
-        // --- 외부 링크 오픈 (기존 백업용) ---
-        window.openGoogleSpreadsheet = function() {
-            window.open("https://docs.google.com/spreadsheets/d/1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0/edit?usp=sharing", '_blank');
-        };
-        window.openGoogleDriveFolder = function() {
-            window.open("https://drive.google.com/drive/folders/1Ac8NUrAhZdb3lVJ_EGaZS9Ary3pLhHJc?usp=sharing", '_blank');
-        };
-
-        // 부팅 시 실행
         initFirebase();
-
     </script>
 </body>
 </html>
