@@ -1105,10 +1105,14 @@
             if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
             if (document.getElementById('stat-month-label')) document.getElementById('stat-month-label').innerText = monthLabel;
             if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = monthTotal;
-            if (document.getElementById('stat-month-rate')) document.getElementById('stat-month-rate').innerText = `당월 조치율: ${monthRate}%`;
+            if (document.getElementById('stat-month-rate')) {
+                document.getElementById('stat-month-rate').innerHTML = `<i class="fa-solid fa-chart-pie mr-1 text-[11px]"></i>당월 조치율: ${monthRate}% (${monthCompleted}/${monthTotal}건)`;
+            }
             if (document.getElementById('stat-progress')) document.getElementById('stat-progress').innerText = progress;
             if (document.getElementById('stat-completed')) document.getElementById('stat-completed').innerText = completed;
-            if (document.getElementById('stat-cum-rate')) document.getElementById('stat-cum-rate').innerText = `누적 조치율: ${cumRate}%`;
+            if (document.getElementById('stat-cum-rate')) {
+                document.getElementById('stat-cum-rate').innerHTML = `<i class="fa-solid fa-circle-check mr-1 text-[11px]"></i>누적 조치율: ${cumRate}% (${completed}/${total}건)`;
+            }
 
             // Monthly breakdown grid
             const monthlyGrid = document.getElementById('dashboard-monthly-grid');
