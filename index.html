@@ -1096,11 +1096,19 @@
                 return dateStr.startsWith(currentYearMonth) || dateStr.startsWith(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
             });
 
+            // 조치율 및 누적 조치율 계산
+            const cumRate = total > 0 ? ((completed / total) * 100).toFixed(1) : '0.0';
+            const monthTotal = currentMonthIssues.length;
+            const monthCompleted = currentMonthIssues.filter(i => i.status === '완료').length;
+            const monthRate = monthTotal > 0 ? ((monthCompleted / monthTotal) * 100).toFixed(1) : '0.0';
+
             if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
             if (document.getElementById('stat-month-label')) document.getElementById('stat-month-label').innerText = monthLabel;
-            if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = currentMonthIssues.length;
+            if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = monthTotal;
+            if (document.getElementById('stat-month-rate')) document.getElementById('stat-month-rate').innerText = `당월 조치율: ${monthRate}%`;
             if (document.getElementById('stat-progress')) document.getElementById('stat-progress').innerText = progress;
             if (document.getElementById('stat-completed')) document.getElementById('stat-completed').innerText = completed;
+            if (document.getElementById('stat-cum-rate')) document.getElementById('stat-cum-rate').innerText = `누적 조치율: ${cumRate}%`;
 
             // Monthly breakdown grid
             const monthlyGrid = document.getElementById('dashboard-monthly-grid');
@@ -1456,11 +1464,58 @@
                         <td class="py-3.5 px-4 font-bold text-indigo-600">${u.region}</td>
                         <td class="py-3.5 px-4 font-medium text-xs">${u.site}</td>
                         <td class="py-3.5 px-4 text-center">
-                            ${u.id === 'admin' ? '<span class="text-[11px] text-slate-400 font-bold">마스터</span>' : `<button onclick="openUserPermModal('${u.id}')" class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow">수정</button>`}
+                            ${u.id === 'admin' ? '<button onclick="openAdminPwdModal()" class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow transition"><i class="fa-solid fa-key mr-1 text-[10px]"></i>비번 변경</button>' : `<button onclick="openUserPermModal('${u.id}')" class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow">수정</button>`}
                         </td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        // Admin Password Change Handlers
+        function openAdminPwdModal() {
+            document.getElementById('admin-new-pwd').value = '';
+            document.getElementById('admin-confirm-pwd').value = '';
+            document.getElementById('modal-admin-pwd').classList.remove('hidden');
+        }
+        function closeAdminPwdModal() {
+            document.getElementById('modal-admin-pwd').classList.add('hidden');
+        }
+        function saveAdminPassword(e) {
+            e.preventDefault();
+            const newPwd = document.getElementById('admin-new-pwd').value.trim();
+            const confirmPwd = document.getElementById('admin-confirm-pwd').value.trim();
+            if (!newPwd) return showToast('비밀번호를 입력해주세요.', 'error');
+            if (newPwd !== confirmPwd) return showToast('비밀번호가 일치하지 않습니다.', 'error');
+
+            let adminUser = users.find(u => u.id === 'admin');
+            if (!adminUser) {
+                adminUser = { id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: newPwd, role: 1, region: '전체', site: '전체' };
+                users.unshift(adminUser);
+            } else {
+                adminUser.pwd = newPwd;
+            }
+
+            if (currentUser && currentUser.id === 'admin') {
+                currentUser.pwd = newPwd;
+                localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
+            }
+            saveLocalState();
+
+            // 구글 시트 사용자 DB에도 새 비밀번호 동기화 전송
+            postDataToGAS(GAS_USER_URL, {
+                type: 'user',
+                action: 'update',
+                id: adminUser.id,
+                name: adminUser.name,
+                phone: adminUser.phone,
+                pwd: newPwd,
+                role: 1,
+                region: adminUser.region || '전체',
+                site: adminUser.site || '전체'
+            });
+
+            closeAdminPwdModal();
+            showToast('관리자 비밀번호가 변경 및 동기화되었습니다.');
         }
 
         function openUserPermModal(uid) {
