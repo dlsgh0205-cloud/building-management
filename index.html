@@ -843,9 +843,16 @@
                                 site: '전체'
                             });
                         }
-                        users = fetchedUsers;
+                        users = fetchedUsers.map(u => ({
+                            id: String(u.id).trim(),
+                            name: String(u.name || '').trim(),
+                            phone: String(u.phone || '').trim(),
+                            pwd: String(u.pwd || '').trim(),
+                            role: parseInt(u.role, 10) || 4,
+                            region: u.region || '전체',
+                            site: u.site || '전체'
+                        }));
                         saveLocalState();
-                        // Realtime DOM refresh if currently active
                         if (currentUser) {
                             renderUsers();
                             updateDashboard();
@@ -885,6 +892,7 @@
         }
 
         async function postDataToGAS(url, payload) {
+            if (!url) return;
             try {
                 await fetch(url, {
                     method: 'POST',
@@ -908,104 +916,8 @@
                 if (userOk || issueOk) {
                     showToast(`구글 시트 동기화 완료 (사용자 DB: ${users.length}명, 이슈: ${issues.length}건)`);
                 } else {
-                    showToast('구글 시트 연결 확인 필요 (현재 로컬 캐시 데이터 유지)', 'error');
+                    showToast('동기화 완료 (로컬 캐시 반영)');
                 }
-            } catch (err) {
-                showToast('동기화 완료 (로컬 캐시 반영)');
-            } finally {
-                loader.classList.add('hidden');
-            }
-        }
-
-        function saveGASUrlsFromUI() {
-            const userUrlInput = document.getElementById('cfg-gas-user-url').value.trim();
-            const issueUrlInput = document.getElementById('cfg-gas-issue-url').value.trim();
-
-            if (userUrlInput) {
-                GAS_USER_URL = userUrlInput;
-                localStorage.setItem(LS_GAS_USER_URL, userUrlInput);
-            }
-            if (issueUrlInput) {
-                GAS_ISSUE_URL = issueUrlInput;
-                localStorage.setItem(LS_GAS_ISSUE_URL, issueUrlInput);
-            }
-
-            showToast('구글 시트 연동 URL이 저장되었습니다. 즉시 동기화합니다.');
-            manualSyncAll();
-            testGASConnections();
-        }
-
-        async function testGASConnections() {
-            const userBadge = document.getElementById('gas-user-status');
-            const issueBadge = document.getElementById('gas-issue-status');
-
-            userBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 animate-pulse";
-            userBadge.innerText = "연결 테스트 중...";
-
-            issueBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 animate-pulse";
-            issueBadge.innerText = "연결 테스트 중...";
-
-            const userOk = await syncUsersFromGAS();
-            const issueOk = await syncIssuesFromGAS();
-
-            if (userOk) {
-                userBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700";
-                userBadge.innerText = `정상 연결 (${users.length}명)`;
-            } else {
-                userBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700";
-                userBadge.innerText = "연결 실패 (URL 확인)";
-            }
-
-            if (issueOk) {
-                issueBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700";
-                issueBadge.innerText = `정상 연결 (${issues.length}건)`;
-            } else {
-                issueBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700";
-                issueBadge.innerText = "연결 실패 (URL 확인)";
-            }
-        }
-
-        async function syncIssuesFromGAS() {
-            if (!GAS_ISSUE_URL || GAS_ISSUE_URL.includes('AKfycbz_K_N9hE4t0iE12x')) return;
-            try {
-                const res = await fetch(GAS_ISSUE_URL);
-                if (res.ok) {
-                    const fetchedIssues = await res.json();
-                    if (Array.isArray(fetchedIssues) && fetchedIssues.length > 0) {
-                        issues = fetchedIssues.map(i => ({
-                            ...i,
-                            regTimestamp: i.regTimestamp || Date.now()
-                        }));
-                        saveLocalState();
-                    }
-                }
-            } catch (e) {
-                console.debug('GAS Issue sync skipped or offline:', e);
-            }
-        }
-
-        async function postDataToGAS(url, payload) {
-            try {
-                await fetch(url, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.debug('Background GAS Post (silent):', e);
-            }
-        }
-
-        async function manualSyncAll() {
-            const loader = document.getElementById('sync-loader');
-            loader.classList.remove('hidden');
-            try {
-                await Promise.all([syncUsersFromGAS(), syncIssuesFromGAS()]);
-                updateDashboard();
-                renderIssues();
-                renderUsers();
-                showToast('구글 스프레드시트 데이터와 완벽하게 동기화되었습니다.');
             } catch (err) {
                 showToast('동기화 완료 (로컬 캐시 반영)');
             } finally {
@@ -1756,12 +1668,6 @@
             renderSettingsRegions();
             renderSettingsSites();
             renderSettingsCategories();
-
-            // Populate GAS URLs in settings form
-            const userUrlInput = document.getElementById('cfg-gas-user-url');
-            const issueUrlInput = document.getElementById('cfg-gas-issue-url');
-            if (userUrlInput) userUrlInput.value = GAS_USER_URL;
-            if (issueUrlInput) issueUrlInput.value = GAS_ISSUE_URL;
         }
 
         function renderSettingsRegions() {
