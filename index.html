@@ -90,7 +90,7 @@
                 <p class="text-xs text-slate-500 mt-1 font-medium">안전하고 신속한 권역·사업장별 실시간 이슈 관제 포털</p>
                 <!-- Realtime Sync Status Indicator -->
                 <div id="login-sync-status" class="mt-2 text-[11px] font-semibold text-indigo-600 bg-indigo-50 py-1 px-3 rounded-full inline-flex items-center">
-                    <i class="fa-solid fa-arrows-rotate fa-spin mr-1.5"></i>구글 시트 사용자 DB 연결 확인 중...
+                    <i class="fa-solid fa-arrows-rotate fa-spin mr-1.5"></i>구글 시트 동기화 상태 확인 중...
                 </div>
             </div>
 
@@ -153,14 +153,19 @@
                     <input type="text" id="cfg-user-url" class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl font-mono text-[11px] focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">이슈 관리 DB 웹앱 URL</label>
+                    <label class="block font-bold text-slate-700 mb-1">건물관리 이슈 DB 웹앱 URL</label>
                     <input type="text" id="cfg-issue-url" class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl font-mono text-[11px] focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div id="cfg-test-result" class="hidden p-2.5 rounded-xl text-[11px] font-bold"></div>
-                <div class="pt-2 flex justify-between items-center">
-                    <button type="button" onclick="testGasUserUrl()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition flex items-center">
-                        <i class="fa-solid fa-plug mr-1.5"></i>연결 테스트
-                    </button>
+                <div class="pt-2 flex justify-between items-center flex-wrap gap-2">
+                    <div class="space-x-1.5">
+                        <button type="button" onclick="testGasUserUrl()" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition text-[11px]">
+                            <i class="fa-solid fa-user-check mr-1"></i>사용자DB 테스트
+                        </button>
+                        <button type="button" onclick="testGasIssueUrl()" class="px-2.5 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold rounded-xl transition text-[11px]">
+                            <i class="fa-solid fa-list-check mr-1"></i>이슈DB 테스트
+                        </button>
+                    </div>
                     <div class="space-x-2">
                         <button type="button" onclick="closeGasConfigModal()" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold">닫기</button>
                         <button type="button" onclick="saveGasConfig()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow transition">저장 및 적용</button>
@@ -610,7 +615,7 @@
         </div>
     </div>
 
-    <!-- 3. Issue Action & Status Detail Modal (No '관리' column, opened by clicking status badge) -->
+    <!-- 3. Issue Action & Status Detail Modal -->
     <div id="modal-issue-status" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-md w-full glass-panel text-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/40">
             <div class="flex items-center justify-between mb-4 border-b pb-3">
@@ -740,20 +745,28 @@
         // GLOBAL STATE & STORAGE CONFIG
         // =================================================================
         const DEFAULT_GAS_USER_URL = 'https://script.google.com/macros/s/AKfycbytpkNDE_6H6d5sPfiXIp3LIMtHaFh8vvk5WcwannXQe-aCnwrAPieB7481vXsqlgkgFA/exec'; 
-        const DEFAULT_GAS_ISSUE_URL = 'https://script.google.com/macros/s/AKfycbz_K_N9hE4t0iE12x6r8V9z4G6y8P1q9w0e2r4t6y8u0i/exec'; 
+        // 사장님께서 배포하신 최신 건물관리 이슈 DB 웹앱 URL 반영
+        const DEFAULT_GAS_ISSUE_URL = 'https://script.google.com/macros/s/AKfycbwSq5ZfU4DsThclp66W4qqTySyHgQNWNrvKD8FmZpVn11i4bk2jcyBdO0yoyz6uCKFN/exec'; 
 
         const LS_GAS_USER_URL = 'erp_cfg_gas_user_url';
         const LS_GAS_ISSUE_URL = 'erp_cfg_gas_issue_url';
 
-        // 기존 브라우저에 구버전 테스트 URL이 남아있는 경우 최신 URL로 자동 갱신
+        // 사용자 DB URL 캐시 자동 갱신
         let savedUserUrl = localStorage.getItem(LS_GAS_USER_URL);
         if (!savedUserUrl || savedUserUrl.includes('AKfycby7g63Y4Vp52iAad03y5PmsqfU_m3j2_iFw-gXhT6-eNqM5O4Z2mHqG_1')) {
             savedUserUrl = DEFAULT_GAS_USER_URL;
             localStorage.setItem(LS_GAS_USER_URL, DEFAULT_GAS_USER_URL);
         }
 
+        // 이슈 DB URL 캐시 자동 갱신 (예전 임시 URL이 남아있는 경우 최신 URL로 강제 갱신)
+        let savedIssueUrl = localStorage.getItem(LS_GAS_ISSUE_URL);
+        if (!savedIssueUrl || savedIssueUrl.includes('AKfycbz_K_N9hE4t0iE12x6r8V9z4G6y8P1q9w0e2r4t6y8u0i')) {
+            savedIssueUrl = DEFAULT_GAS_ISSUE_URL;
+            localStorage.setItem(LS_GAS_ISSUE_URL, DEFAULT_GAS_ISSUE_URL);
+        }
+
         let GAS_USER_URL = savedUserUrl;
-        let GAS_ISSUE_URL = localStorage.getItem(LS_GAS_ISSUE_URL) || DEFAULT_GAS_ISSUE_URL;
+        let GAS_ISSUE_URL = savedIssueUrl;
 
         const LS_USERS = 'erp_system_users_v3';
         const LS_ISSUES = 'erp_system_issues_v3';
@@ -831,8 +844,8 @@
         ];
 
         let currentUser = null;
-        let selectedDashboardRegion = null; // 1, 2단계 드릴다운용 선택된 지역
-        let isAllSitesMode = false;         // 전체 사업장 보기 토글 플래그
+        let selectedDashboardRegion = null;
+        let isAllSitesMode = false;
 
         // Helper Functions for Data Access
         function saveLocalState() {
@@ -917,10 +930,9 @@
                         }));
                         saveLocalState();
                         
-                        // 로그인 화면 상태 업데이트
                         const statusEl = document.getElementById('login-sync-status');
                         if (statusEl) {
-                            statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mr-1.5"></i>구글 시트 사용자 DB 연결됨 (${users.length}명)`;
+                            statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mr-1.5"></i>구글 시트 연동 정상 (사용자 ${users.length}명)`;
                             statusEl.className = "mt-2 text-[11px] font-semibold text-emerald-700 bg-emerald-50 py-1 px-3 rounded-full inline-flex items-center border border-emerald-200";
                         }
                         
@@ -934,18 +946,14 @@
             } catch (e) {
                 console.debug('GAS User sync error:', e);
             }
-            const statusEl = document.getElementById('login-sync-status');
-            if (statusEl) {
-                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1.5"></i>구글 시트 연결 대기 (로컬 캐시 사용 중)`;
-                statusEl.className = "mt-2 text-[11px] font-semibold text-amber-700 bg-amber-50 py-1 px-3 rounded-full inline-flex items-center border border-amber-200";
-            }
             return false;
         }
 
         async function syncIssuesFromGAS() {
             if (!GAS_ISSUE_URL) return false;
             try {
-                const res = await fetch(GAS_ISSUE_URL);
+                const cacheBuster = (GAS_ISSUE_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+                const res = await fetch(GAS_ISSUE_URL + cacheBuster);
                 if (res.ok) {
                     const fetchedIssues = await res.json();
                     if (Array.isArray(fetchedIssues)) {
@@ -962,7 +970,7 @@
                     }
                 }
             } catch (e) {
-                console.debug('GAS Issue sync error or offline:', e);
+                console.debug('GAS Issue sync error:', e);
             }
             return false;
         }
@@ -970,11 +978,12 @@
         async function postDataToGAS(url, payload) {
             if (!url) return;
             try {
+                const bodyStr = 'payload=' + encodeURIComponent(JSON.stringify(payload));
                 await fetch(url, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(payload)
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: bodyStr
                 });
             } catch (e) {
                 console.debug('Background GAS Post (silent):', e);
@@ -989,8 +998,12 @@
                 updateDashboard();
                 renderIssues();
                 renderUsers();
-                if (userOk || issueOk) {
-                    showToast(`구글 시트 동기화 완료 (사용자 DB: ${users.length}명, 이슈: ${issues.length}건)`);
+                if (userOk && issueOk) {
+                    showToast(`구글 시트 전체 동기화 완료 (사용자 ${users.length}명, 이슈 ${issues.length}건)`);
+                } else if (userOk) {
+                    showToast(`사용자 DB 동기화 완료 (${users.length}명), 이슈 DB는 URL 설정을 확인하세요.`);
+                } else if (issueOk) {
+                    showToast(`이슈 DB 동기화 완료 (${issues.length}건), 사용자 DB는 URL 설정을 확인하세요.`);
                 } else {
                     showToast('동기화 완료 (로컬 캐시 반영)');
                 }
@@ -1003,7 +1016,6 @@
 
         // Initialization & Authentication Lifecycle
         window.addEventListener('load', async () => {
-            // Restore Session
             const session = localStorage.getItem(LS_SESSION);
             if (session) {
                 try {
@@ -1030,7 +1042,6 @@
             const pwd = document.getElementById('login-pwd').value.trim();
 
             try {
-                // 1. 구글 스프레드시트에서 최신 사용자 DB를 즉시 강제 갱신
                 await syncUsersFromGAS();
 
                 const isMasterAdmin = (id.toLowerCase() === 'admin');
@@ -1086,6 +1097,30 @@
             document.getElementById('modal-gas-config').classList.add('hidden');
         }
 
+        async function testGasIssueUrl() {
+            const testUrl = document.getElementById('cfg-issue-url').value.trim();
+            const resultBox = document.getElementById('cfg-test-result');
+            resultBox.classList.remove('hidden');
+            resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-slate-100 text-slate-700 flex items-center";
+            resultBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>이슈 DB 연결 시도 중...`;
+
+            try {
+                const res = await fetch(testUrl + (testUrl.includes('?') ? '&' : '?') + '_t=' + Date.now());
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center";
+                        resultBox.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i>이슈 DB 정상 연결 완료! 총 ${data.length}건 확인됨`;
+                        return;
+                    }
+                }
+                throw new Error('응답 형식 오류');
+            } catch (err) {
+                resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center";
+                resultBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i>이슈 DB 연결 실패: 웹앱 배포 URL 또는 권한(모든 사용자) 설정을 확인하세요.`;
+            }
+        }
+
         async function testGasUserUrl() {
             const testUrl = document.getElementById('cfg-user-url').value.trim();
             const resultBox = document.getElementById('cfg-test-result');
@@ -1123,6 +1158,7 @@
             }
             closeGasConfigModal();
             syncUsersFromGAS();
+            syncIssuesFromGAS();
             showToast('구글 시트 연동 URL이 저장되었습니다.');
         }
 
@@ -1139,7 +1175,6 @@
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('view-app').classList.remove('hidden');
 
-            // Header User Info
             document.getElementById('header-user-name').innerText = currentUser.name;
             const roleLabels = { 1: '1단계', 2: '2단계', 3: '3단계', 4: '4단계' };
             document.getElementById('header-user-role-badge').innerText = roleLabels[currentUser.role] || '사용자';
@@ -1149,7 +1184,6 @@
             else if (currentUser.role === 4) scopeText = `[사업장: ${currentUser.site || '미지정'}]`;
             document.getElementById('header-user-scope').innerText = scopeText;
 
-            // Manage Permissions Visibility for Tab Menus (Only 1단계 최고 관리자에게만 노출)
             const usersTab = document.getElementById('nav-tab-users');
             const settingsTab = document.getElementById('nav-tab-settings');
             const isRole1 = parseInt(String(currentUser?.role || '').replace(/[^0-9]/g, ''), 10) === 1;
@@ -1168,7 +1202,6 @@
         function switchTab(tabKey) {
             const isRole1 = parseInt(String(currentUser?.role || '').replace(/[^0-9]/g, ''), 10) === 1;
 
-            // 1단계 최고 관리자가 아닐 경우 관리 탭 접근을 원천 차단
             if ((tabKey === 'users' || tabKey === 'settings') && !isRole1) {
                 tabKey = 'dashboard';
             }
@@ -1179,7 +1212,6 @@
                 if (el) el.classList.add('hidden');
                 if (btn) {
                     btn.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition text-slate-400 hover:text-white hover:bg-slate-800/60";
-                    // 1단계가 아닌 경우 버튼 숨김 상태를 반드시 유지
                     if ((k === 'users' || k === 'settings') && !isRole1) {
                         btn.classList.add('hidden');
                     }
@@ -1211,13 +1243,11 @@
             const noticeText = document.getElementById('site-restriction-text');
 
             if (currentUser.role === 3) {
-                // 3단계: 관할 지역 내 소속된 여러 사업장 목록 필터링
                 const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
                 filteredIssues = issues.filter(i => mySites.includes(i.site));
                 noticeEl.classList.remove('hidden');
                 noticeText.innerText = `지역 책임자 권한 적용: [지역: ${currentUser.region || '미지정'}] - 관할 사업장: [${mySites.join(', ')}] 데이터만 집계됩니다.`;
             } else if (currentUser.role === 4) {
-                // 4단계: 본인 단일 사업장 필터링
                 filteredIssues = issues.filter(i => i.site === currentUser.site);
                 noticeEl.classList.remove('hidden');
                 noticeText.innerText = `사업장 관리자 보안 격리: [사업장: ${currentUser.site || '미지정'}] 전용 데이터만 표시됩니다.`;
@@ -1225,12 +1255,10 @@
                 noticeEl.classList.add('hidden');
             }
 
-            // Top Counters
             const total = filteredIssues.length;
             const completed = filteredIssues.filter(i => i.status === '완료').length;
-            const progress = total - completed; // 완료 외 모든 건은 처리중
+            const progress = total - completed;
 
-            // Monthly Calculation
             const now = new Date();
             const currentYearMonth = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`;
             const monthLabel = `${now.getMonth() + 1}월 누적 이슈`;
@@ -1251,7 +1279,6 @@
             if (statProgressEl) statProgressEl.innerText = progress;
             if (statCompletedEl) statCompletedEl.innerText = completed;
 
-            // Render Recent 6 Months Breakdown
             const monthlyGrid = document.getElementById('dashboard-monthly-grid');
             if (monthlyGrid) {
                 const months = [];
@@ -1295,7 +1322,6 @@
             const regSub = document.getElementById('dashboard-regions-sub');
             const regActions = document.getElementById('dashboard-regions-actions');
 
-            // 1단계(최고 관리자) & 2단계(중간 관리자)
             if (currentUser.role <= 2) {
                 regionWrap.classList.remove('hidden');
                 regTitle.innerHTML = `<i class="fa-solid fa-map-location-dot text-indigo-300 mr-2"></i>지역(권역)별 현황 보드`;
@@ -1335,7 +1361,6 @@
                     `;
                 }).join('');
 
-                // 사업장 드릴다운 뷰 렌더링
                 if (selectedDashboardRegion || isAllSitesMode) {
                     siteGridWrap.classList.remove('hidden');
                     const siteGrid = document.getElementById('dashboard-sites-grid');
@@ -1385,7 +1410,6 @@
                 }
 
             } else if (currentUser.role === 3) {
-                // 3단계(지역 책임자): 지역 전체 요약 + 관할 사업장별 그리드 동시 표기
                 const myRegion = currentUser.region || '미지정';
                 const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
                 const role3Completed = filteredIssues.filter(i => i.status === '완료').length;
@@ -1422,7 +1446,6 @@
                     </div>
                 `;
 
-                // 관할 사업장 그리드
                 siteGridWrap.classList.remove('hidden');
                 btnBack.classList.add('hidden');
                 const siteGrid = document.getElementById('dashboard-sites-grid');
@@ -1457,7 +1480,6 @@
                     }).join('');
                 }
             } else {
-                // 4단계(사업장 관리자): 하위 지역/사업장 드릴다운 숨김
                 regionWrap.classList.add('hidden');
                 siteGridWrap.classList.add('hidden');
             }
@@ -1491,7 +1513,6 @@
             const tbody = document.getElementById('issues-table-body');
             let filtered = [...issues];
 
-            // Filter by Role
             if (currentUser.role === 3) {
                 const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
                 filtered = filtered.filter(i => mySites.includes(i.site));
@@ -1499,7 +1520,6 @@
                 filtered = filtered.filter(i => i.site === currentUser.site);
             }
 
-            // Sort: Newest First
             filtered.sort((a, b) => (b.regTimestamp || 0) - (a.regTimestamp || 0));
 
             if (filtered.length === 0) {
@@ -1508,7 +1528,6 @@
             }
 
             tbody.innerHTML = filtered.map(item => {
-                // Status Badge Colors & Labels ('처리중'과 '완료' 2가지만 표기)
                 let statusBadge = '';
                 if (item.status === '완료') {
                     statusBadge = `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300 transition shadow-sm flex items-center justify-center mx-auto space-x-1"><i class="fa-solid fa-circle-check text-[10px]"></i><span>완료</span></button>`;
@@ -1546,7 +1565,6 @@
             const siteSelect = document.getElementById('issue-site-select');
             const catSelect = document.getElementById('issue-cat-select');
 
-            // Set allowed sites based on role
             let allowedSites = [];
             if (currentUser.role <= 2) {
                 allowedSites = getAllSiteNames();
@@ -1636,7 +1654,6 @@
             document.getElementById('modal-complete-date').value = item.completeDate || '';
             document.getElementById('modal-duration').value = item.duration || '';
 
-            // Delete button for Role 1
             const btnDelete = document.getElementById('btn-delete-issue');
             if (currentUser.role === 1) btnDelete.classList.remove('hidden');
             else btnDelete.classList.add('hidden');
@@ -1675,7 +1692,6 @@
 
             saveLocalState();
 
-            // Post Update to GAS
             postDataToGAS(GAS_ISSUE_URL, {
                 type: 'issue',
                 action: 'update',
@@ -1705,7 +1721,6 @@
             issues = issues.filter(i => i.id !== id);
             saveLocalState();
 
-            // Post Delete to GAS
             postDataToGAS(GAS_ISSUE_URL, {
                 type: 'issue',
                 action: 'delete',
@@ -1763,7 +1778,6 @@
             document.getElementById('perm-user-label').innerText = `${target.name} (${target.id})`;
             document.getElementById('perm-role-select').value = target.role;
 
-            // Render Region select options
             const regSelect = document.getElementById('perm-region-select');
             regSelect.innerHTML = regions.map(r => `<option value="${r}" ${target.region === r ? 'selected' : ''}>${r}</option>`).join('');
 
@@ -1806,7 +1820,6 @@
             }
 
             if (role === 3) {
-                // 3단계: 다중 체크박스
                 document.getElementById('perm-sites-label').innerText = `관할 사업장 복수 선택 (3단계 지역책임자용)`;
                 container.innerHTML = regionSites.map(s => `
                     <label class="flex items-center space-x-2 p-1.5 hover:bg-slate-200/60 rounded cursor-pointer text-xs">
@@ -1816,7 +1829,6 @@
                     </label>
                 `).join('');
             } else {
-                // 4단계: 단일 라디오 선택
                 document.getElementById('perm-sites-label').innerText = `담당 단일 사업장 지정 (4단계 사업장관리자용)`;
                 container.innerHTML = regionSites.map((s, idx) => `
                     <label class="flex items-center space-x-2 p-1.5 hover:bg-slate-200/60 rounded cursor-pointer text-xs">
@@ -1856,7 +1868,6 @@
 
             saveLocalState();
 
-            // Post to GAS
             postDataToGAS(GAS_USER_URL, {
                 type: 'user',
                 action: 'update',
@@ -1903,11 +1914,9 @@
                 `;
             }).join('');
 
-            // Target Region Select for Site Addition
             const targetSelect = document.getElementById('input-site-target-region');
             targetSelect.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
 
-            // Region Filter
             const filterSelect = document.getElementById('settings-site-region-filter');
             filterSelect.innerHTML = `<option value="ALL">전체 지역 보기</option>` + regions.map(r => `<option value="${r}">${r}</option>`).join('');
         }
@@ -1933,7 +1942,6 @@
                 return;
             }
             regions = regions.filter(r => r !== name);
-            // Move orphan sites to first region
             sites.forEach(s => {
                 if (s.region === name) s.region = regions[0];
             });
@@ -2095,7 +2103,7 @@
                 name: name,
                 phone: phone,
                 pwd: pwd,
-                role: 4, // 4단계 사업장 관리자로 초기 등록
+                role: 4,
                 region: region,
                 site: site
             };
@@ -2103,7 +2111,6 @@
             users.push(newUser);
             saveLocalState();
 
-            // Send to GAS (F열: 지역, G열: 사업장)
             postDataToGAS(GAS_USER_URL, {
                 type: 'user',
                 action: 'add',
