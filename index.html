@@ -267,13 +267,13 @@
                         </div>
                     </div>
 
-                    <div class="glass-panel text-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex items-center justify-between border-l-4 border-l-amber-500">
+                    <div class="glass-panel text-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex items-center justify-between border-l-4 border-l-purple-500">
                         <div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">접수 대기중</p>
-                            <h3 id="stat-pending" class="text-3xl font-extrabold text-amber-600">0</h3>
+                            <p id="stat-month-label" class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">당월 누적 이슈</p>
+                            <h3 id="stat-month" class="text-3xl font-extrabold text-purple-600">0</h3>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shadow-inner">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl shadow-inner">
+                            <i class="fa-solid fa-calendar-check"></i>
                         </div>
                     </div>
 
@@ -295,6 +295,18 @@
                         <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shadow-inner">
                             <i class="fa-solid fa-circle-check"></i>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Recent Monthly Breakdown Section -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-chart-line text-indigo-400 mr-2"></i>최근 6개월 월별 누적 현황
+                        </h4>
+                    </div>
+                    <div id="dashboard-monthly-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        <!-- Dynamic Monthly Breakdown Injected via JS -->
                     </div>
                 </div>
 
@@ -634,8 +646,7 @@
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">진행 상태 변경</label>
                     <select id="modal-select-status" onchange="toggleActionInputsByStatus()" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <option value="대기">대기 (미접수)</option>
-                        <option value="진행중">진행중 (조치 착수)</option>
+                        <option value="처리중">처리중 (조치 착수)</option>
                         <option value="완료">완료 (조치 완료)</option>
                     </select>
                 </div>
@@ -790,7 +801,7 @@
                 completeDate: '',
                 duration: '',
                 actionTaken: '',
-                status: '대기',
+                status: '처리중',
                 regTimestamp: Date.now() - 3600000 * 24
             },
             {
@@ -814,7 +825,7 @@
                 completeDate: '',
                 duration: '',
                 actionTaken: '점검 업체 긴급 출동 요청함',
-                status: '진행중',
+                status: '처리중',
                 regTimestamp: Date.now() - 3600000 * 2
             }
         ];
@@ -1141,8 +1152,9 @@
             // Manage Permissions Visibility for Tab Menus (Only 1단계 최고 관리자에게만 노출)
             const usersTab = document.getElementById('nav-tab-users');
             const settingsTab = document.getElementById('nav-tab-settings');
+            const isRole1 = parseInt(String(currentUser?.role || '').replace(/[^0-9]/g, ''), 10) === 1;
 
-            if (currentUser.role === 1) {
+            if (isRole1) {
                 usersTab.classList.remove('hidden');
                 settingsTab.classList.remove('hidden');
             } else {
@@ -1154,12 +1166,23 @@
         }
 
         function switchTab(tabKey) {
+            const isRole1 = parseInt(String(currentUser?.role || '').replace(/[^0-9]/g, ''), 10) === 1;
+
+            // 1단계 최고 관리자가 아닐 경우 관리 탭 접근을 원천 차단
+            if ((tabKey === 'users' || tabKey === 'settings') && !isRole1) {
+                tabKey = 'dashboard';
+            }
+
             ['dashboard', 'issues', 'users', 'settings'].forEach(k => {
                 const el = document.getElementById(`view-${k}`);
                 const btn = document.getElementById(`nav-tab-${k}`);
                 if (el) el.classList.add('hidden');
                 if (btn) {
                     btn.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition text-slate-400 hover:text-white hover:bg-slate-800/60";
+                    // 1단계가 아닌 경우 버튼 숨김 상태를 반드시 유지
+                    if ((k === 'users' || k === 'settings') && !isRole1) {
+                        btn.classList.add('hidden');
+                    }
                 }
             });
 
@@ -1168,6 +1191,9 @@
             if (targetView) targetView.classList.remove('hidden');
             if (targetBtn) {
                 targetBtn.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition bg-indigo-600 text-white shadow-md shadow-indigo-600/30";
+                if ((tabKey === 'users' || tabKey === 'settings') && !isRole1) {
+                    targetBtn.classList.add('hidden');
+                }
             }
 
             if (tabKey === 'dashboard') updateDashboard();
@@ -1201,14 +1227,66 @@
 
             // Top Counters
             const total = filteredIssues.length;
-            const pending = filteredIssues.filter(i => i.status === '대기').length;
-            const progress = filteredIssues.filter(i => i.status === '진행중').length;
             const completed = filteredIssues.filter(i => i.status === '완료').length;
+            const progress = total - completed; // 완료 외 모든 건은 처리중
 
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-pending').innerText = pending;
-            document.getElementById('stat-progress').innerText = progress;
-            document.getElementById('stat-completed').innerText = completed;
+            // Monthly Calculation
+            const now = new Date();
+            const currentYearMonth = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const monthLabel = `${now.getMonth() + 1}월 누적 이슈`;
+            const currentMonthIssues = filteredIssues.filter(i => {
+                const dateStr = String(i.regDate || '');
+                return dateStr.startsWith(currentYearMonth) || dateStr.startsWith(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+            });
+
+            const statTotalEl = document.getElementById('stat-total');
+            const statMonthLabelEl = document.getElementById('stat-month-label');
+            const statMonthEl = document.getElementById('stat-month');
+            const statProgressEl = document.getElementById('stat-progress');
+            const statCompletedEl = document.getElementById('stat-completed');
+
+            if (statTotalEl) statTotalEl.innerText = total;
+            if (statMonthLabelEl) statMonthLabelEl.innerText = monthLabel;
+            if (statMonthEl) statMonthEl.innerText = currentMonthIssues.length;
+            if (statProgressEl) statProgressEl.innerText = progress;
+            if (statCompletedEl) statCompletedEl.innerText = completed;
+
+            // Render Recent 6 Months Breakdown
+            const monthlyGrid = document.getElementById('dashboard-monthly-grid');
+            if (monthlyGrid) {
+                const months = [];
+                for (let k = 5; k >= 0; k--) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - k, 1);
+                    const ym = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    const label = `${d.getMonth() + 1}월`;
+                    months.push({ ym, label, isCurrent: k === 0 });
+                }
+
+                monthlyGrid.innerHTML = months.map(m => {
+                    const mIssues = filteredIssues.filter(i => {
+                        const str = String(i.regDate || '');
+                        return str.startsWith(m.ym) || str.startsWith(m.ym.replace('.', '-'));
+                    });
+                    const mCompleted = mIssues.filter(i => i.status === '완료').length;
+                    const mProcessing = mIssues.length - mCompleted;
+
+                    return `
+                        <div class="glass-panel text-slate-800 rounded-xl p-3 border ${m.isCurrent ? 'border-purple-500 bg-purple-50/90 ring-2 ring-purple-400/40' : 'border-white/30'} flex flex-col justify-between shadow-md">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-extrabold text-xs ${m.isCurrent ? 'text-purple-700' : 'text-slate-700'}">${m.label}</span>
+                                <span class="text-[9px] font-mono text-slate-400">${m.ym}</span>
+                            </div>
+                            <div class="text-xl font-black ${m.isCurrent ? 'text-purple-700' : 'text-slate-900'} mb-1.5">
+                                ${mIssues.length}<span class="text-[10px] font-normal text-slate-500 ml-0.5">건</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1 text-[10px] pt-1.5 border-t border-slate-200">
+                                <div><span class="text-slate-400 block text-[9px]">처리</span><span class="font-bold text-blue-600">${mProcessing}</span></div>
+                                <div><span class="text-slate-400 block text-[9px]">완료</span><span class="font-bold text-emerald-600">${mCompleted}</span></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
 
             const regionWrap = document.getElementById('dashboard-regions-wrap');
             const siteGridWrap = document.getElementById('dashboard-sites-wrap');
@@ -1229,6 +1307,8 @@
                     const regSites = getSitesByRegion(reg);
                     const regIssues = issues.filter(i => regSites.includes(i.site));
                     const isSelected = selectedDashboardRegion === reg;
+                    const regCompleted = regIssues.filter(i => i.status === '완료').length;
+                    const regProcessing = regIssues.length - regCompleted;
 
                     return `
                         <div onclick="selectDashboardRegion('${reg}')"
@@ -1244,10 +1324,9 @@
                             <div class="text-2xl font-black text-slate-900 mb-2">
                                 ${regIssues.length}<span class="text-xs font-normal text-slate-500 ml-1">건</span>
                             </div>
-                            <div class="grid grid-cols-3 gap-1 text-[11px] text-center pt-2 border-t border-slate-200">
-                                <div><span class="block text-slate-400">대기</span><span class="font-bold text-amber-600">${regIssues.filter(i => i.status === '대기').length}</span></div>
-                                <div><span class="block text-slate-400">진행</span><span class="font-bold text-blue-600">${regIssues.filter(i => i.status === '진행중').length}</span></div>
-                                <div><span class="block text-slate-400">완료</span><span class="font-bold text-emerald-600">${regIssues.filter(i => i.status === '완료').length}</span></div>
+                            <div class="grid grid-cols-2 gap-2 text-[11px] text-center pt-2 border-t border-slate-200">
+                                <div><span class="block text-slate-400">처리중</span><span class="font-bold text-blue-600">${regProcessing}</span></div>
+                                <div><span class="block text-slate-400">완료</span><span class="font-bold text-emerald-600">${regCompleted}</span></div>
                             </div>
                             <div class="mt-2 text-center text-[10px] text-indigo-600 font-bold flex items-center justify-center">
                                 <span>사업장 보기</span> <i class="fa-solid fa-chevron-right ml-1 text-[8px]"></i>
@@ -1279,6 +1358,9 @@
                         siteGrid.innerHTML = displaySites.map(siteName => {
                             const sIssues = issues.filter(i => i.site === siteName);
                             const siteRegion = getSiteRegion(siteName);
+                            const sCompleted = sIssues.filter(i => i.status === '완료').length;
+                            const sProcessing = sIssues.length - sCompleted;
+
                             return `
                                 <div class="glass-panel text-slate-800 rounded-2xl p-5 shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1 border border-white/40">
                                     <div class="flex items-center justify-between mb-3 border-b pb-2">
@@ -1290,10 +1372,9 @@
                                             총 ${sIssues.length}건
                                         </span>
                                     </div>
-                                    <div class="space-y-1.5 text-xs">
-                                        <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">대기</span><span class="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">${sIssues.filter(i => i.status === '대기').length}건</span></div>
-                                        <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">진행중</span><span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">${sIssues.filter(i => i.status === '진행중').length}건</span></div>
-                                        <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">조치완료</span><span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">${sIssues.filter(i => i.status === '완료').length}건</span></div>
+                                    <div class="space-y-2 text-xs">
+                                        <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">처리중</span><span class="font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-md">${sProcessing}건</span></div>
+                                        <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">조치완료</span><span class="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md">${sCompleted}건</span></div>
                                     </div>
                                 </div>
                             `;
@@ -1307,6 +1388,8 @@
                 // 3단계(지역 책임자): 지역 전체 요약 + 관할 사업장별 그리드 동시 표기
                 const myRegion = currentUser.region || '미지정';
                 const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
+                const role3Completed = filteredIssues.filter(i => i.status === '완료').length;
+                const role3Processing = filteredIssues.length - role3Completed;
 
                 regionWrap.classList.remove('hidden');
                 regTitle.innerHTML = `<i class="fa-solid fa-map-location-dot text-indigo-300 mr-2"></i>내 관할 지역 전체 요약 현황 [${myRegion}]`;
@@ -1326,18 +1409,14 @@
                                 ${filteredIssues.length}<span class="text-xs font-normal text-slate-500 ml-1">건 (관할 합산)</span>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-3 text-center pt-3 border-t border-slate-200">
-                            <div class="bg-amber-50/90 p-3 rounded-xl border border-amber-200">
-                                <span class="block text-xs font-bold text-amber-700">접수 대기</span>
-                                <span class="text-xl font-black text-amber-600">${filteredIssues.filter(i => i.status === '대기').length}건</span>
+                        <div class="grid grid-cols-2 gap-3 text-center pt-3 border-t border-slate-200">
+                            <div class="bg-blue-50/90 p-3.5 rounded-xl border border-blue-200">
+                                <span class="block text-xs font-bold text-blue-700">처리중</span>
+                                <span class="text-2xl font-black text-blue-600">${role3Processing}건</span>
                             </div>
-                            <div class="bg-blue-50/90 p-3 rounded-xl border border-blue-200">
-                                <span class="block text-xs font-bold text-blue-700">조치 진행</span>
-                                <span class="text-xl font-black text-blue-600">${filteredIssues.filter(i => i.status === '진행중').length}건</span>
-                            </div>
-                            <div class="bg-emerald-50/90 p-3 rounded-xl border border-emerald-200">
+                            <div class="bg-emerald-50/90 p-3.5 rounded-xl border border-emerald-200">
                                 <span class="block text-xs font-bold text-emerald-700">조치 완료</span>
-                                <span class="text-xl font-black text-emerald-600">${filteredIssues.filter(i => i.status === '완료').length}건</span>
+                                <span class="text-2xl font-black text-emerald-600">${role3Completed}건</span>
                             </div>
                         </div>
                     </div>
@@ -1355,6 +1434,9 @@
                 } else {
                     siteGrid.innerHTML = mySites.map(siteName => {
                         const sIssues = issues.filter(i => i.site === siteName);
+                        const sCompleted = sIssues.filter(i => i.status === '완료').length;
+                        const sProcessing = sIssues.length - sCompleted;
+
                         return `
                             <div class="glass-panel text-slate-800 rounded-2xl p-5 shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1 border border-white/40">
                                 <div class="flex items-center justify-between mb-3 border-b pb-2">
@@ -1366,10 +1448,9 @@
                                         총 ${sIssues.length}건
                                     </span>
                                 </div>
-                                <div class="space-y-1.5 text-xs">
-                                    <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">대기</span><span class="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">${sIssues.filter(i => i.status === '대기').length}건</span></div>
-                                    <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">진행중</span><span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">${sIssues.filter(i => i.status === '진행중').length}건</span></div>
-                                    <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">조치완료</span><span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">${sIssues.filter(i => i.status === '완료').length}건</span></div>
+                                <div class="space-y-2 text-xs">
+                                    <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">처리중</span><span class="font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-md">${sProcessing}건</span></div>
+                                    <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">조치완료</span><span class="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md">${sCompleted}건</span></div>
                                 </div>
                             </div>
                         `;
@@ -1427,14 +1508,12 @@
             }
 
             tbody.innerHTML = filtered.map(item => {
-                // Status Badge Colors & Labels
+                // Status Badge Colors & Labels ('처리중'과 '완료' 2가지만 표기)
                 let statusBadge = '';
                 if (item.status === '완료') {
                     statusBadge = `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300 transition shadow-sm flex items-center justify-center mx-auto space-x-1"><i class="fa-solid fa-circle-check text-[10px]"></i><span>완료</span></button>`;
-                } else if (item.status === '진행중') {
-                    statusBadge = `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 transition shadow-sm flex items-center justify-center mx-auto space-x-1"><i class="fa-solid fa-spinner fa-spin text-[10px]"></i><span>진행중</span></button>`;
                 } else {
-                    statusBadge = `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300 transition shadow-sm flex items-center justify-center mx-auto space-x-1"><i class="fa-solid fa-clock text-[10px]"></i><span>대기</span></button>`;
+                    statusBadge = `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 transition shadow-sm flex items-center justify-center mx-auto space-x-1"><i class="fa-solid fa-spinner fa-spin text-[10px]"></i><span>처리중</span></button>`;
                 }
 
                 const sRegion = getSiteRegion(item.site);
@@ -1514,7 +1593,7 @@
                 completeDate: '',
                 duration: '',
                 actionTaken: '',
-                status: '진행중',
+                status: '처리중',
                 regTimestamp: now.getTime()
             };
 
@@ -1532,7 +1611,7 @@
                 completeDate: '',
                 duration: '',
                 actionTaken: '',
-                status: '진행중'
+                status: '처리중'
             });
 
             closeIssueModal();
@@ -1552,7 +1631,7 @@
             document.getElementById('modal-issue-regdate').innerText = item.regDate;
             document.getElementById('modal-issue-content').innerText = item.content;
 
-            document.getElementById('modal-select-status').value = item.status;
+            document.getElementById('modal-select-status').value = (item.status === '완료') ? '완료' : '처리중';
             document.getElementById('modal-action-taken').value = item.actionTaken || '';
             document.getElementById('modal-complete-date').value = item.completeDate || '';
             document.getElementById('modal-duration').value = item.duration || '';
