@@ -1362,19 +1362,53 @@
             document.getElementById('modal-duration').value = item.duration || '';
             
             if(currentUser.role === 1) document.getElementById('btn-delete-issue').classList.remove('hidden');
-            else document.getElementById('btn-delete-issue').classList.add('hidden');
+        else document.getElementById('btn-delete-issue').classList.add('hidden');
 
-            toggleActionInputsByStatus();
-            document.getElementById('modal-issue-status').classList.remove('hidden');
-        }
-        function closeStatusModal() { document.getElementById('modal-issue-status').classList.add('hidden'); }
-        function toggleActionInputsByStatus() {
-            if(document.getElementById('modal-select-status').value === '완료' && !document.getElementById('modal-complete-date').value) {
-                const now = new Date();
-                document.getElementById('modal-complete-date').value = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+        toggleActionInputsByStatus();
+        document.getElementById('modal-issue-status').classList.remove('hidden');
+    }
+    function closeStatusModal() { document.getElementById('modal-issue-status').classList.add('hidden'); }
+    function toggleActionInputsByStatus() {
+        const statusSelect = document.getElementById('modal-select-status').value;
+        const completeDateInput = document.getElementById('modal-complete-date');
+        const durationInput = document.getElementById('modal-duration');
+        
+        if (statusSelect === '완료') {
+            const now = new Date();
+            
+            // 1. 완료 날짜 및 시간 자동 기입 (입력칸이 비어있을 때만 작동하여 기존 데이터 덮어쓰기 방지)
+            if (!completeDateInput.value) {
+                completeDateInput.value = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            }
+            
+            // 2. 등록일시 기준 소요 시간 자동 계산
+            if (!durationInput.value) {
+                const regDateText = document.getElementById('modal-issue-regdate').innerText;
+                if (regDateText) {
+                    const parts = regDateText.split(/[\s.:]+/);
+                    if (parts.length >= 5) {
+                        const regDateObj = new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4]);
+                        const diffMs = now.getTime() - regDateObj.getTime();
+                        
+                        if (diffMs > 0) {
+                            const diffMins = Math.floor(diffMs / 60000);
+                            const days = Math.floor(diffMins / 1440);
+                            const hours = Math.floor((diffMins % 1440) / 60);
+                            const mins = diffMins % 60;
+                            
+                            let durStr = "";
+                            if (days > 0) durStr += `${days}일 `;
+                            if (hours > 0) durStr += `${hours}시간 `;
+                            if (mins > 0 || durStr === "") durStr += `${mins}분`;
+                            
+                            durationInput.value = durStr.trim();
+                        }
+                    }
+                }
             }
         }
-        function saveIssueStatusAction(e) {
+    }
+    function saveIssueStatusAction(e) {
             e.preventDefault();
             const item = issues.find(i => i.id === document.getElementById('modal-issue-id').value);
             if(!item) return;
