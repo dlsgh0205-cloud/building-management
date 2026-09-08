@@ -9,7 +9,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .glass-panel { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.35); }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .spinner { border: 4px solid rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 50%; border-left-color: #ffffff; animation: spin 1s linear infinite; }
@@ -25,13 +25,15 @@
         let currentUser = null;
         let users = [];
         let issues = [];
-        let sites = ['서울본사', '부산지사', '대전센터'];
+        let regions = ['수도권', '영남권', '충청권', '호남권', '강원/제주권'];
+        let sites = ['서울본사', '부산지사', '대전센터', '인천물류센터', '광주지점'];
         let categories = ['네트워크', '하드웨어', '소프트웨어', '기타', '시설물'];
         
-        const LS_USERS = 'erp_users';
-        const LS_ISSUES = 'erp_issues';
-        const LS_SITES = 'erp_sites';
-        const LS_CATEGORIES = 'erp_categories';
+        const LS_USERS = 'erp_users_v2';
+        const LS_ISSUES = 'erp_issues_v2';
+        const LS_REGIONS = 'erp_regions_v2';
+        const LS_SITES = 'erp_sites_v2';
+        const LS_CATEGORIES = 'erp_categories_v2';
     </script>
 
     <div id="globalLoading" class="fixed inset-0 bg-slate-950/80 z-[100] flex flex-col items-center justify-center text-white transition-opacity duration-300 hidden">
@@ -53,11 +55,11 @@
             <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">아이디</label>
-                    <input type="text" id="loginId" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white" required>
+                    <input type="text" id="loginId" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white" required>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">비밀번호</label>
-                    <input type="password" id="loginPwd" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white" required>
+                    <input type="password" id="loginPwd" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white" required>
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200">
                     로그인
@@ -72,6 +74,7 @@
     </div>
 
     <div id="mainApp" class="hidden flex h-full w-full">
+        <!-- Sidebar Navigation -->
         <aside class="w-64 bg-slate-950/80 backdrop-blur-xl text-white flex flex-col transition-all duration-300 z-20 shadow-2xl border-r border-white/10">
             <div class="h-16 flex items-center px-6 border-b border-white/10 bg-slate-950/50">
                 <i class="fa-solid fa-cube text-indigo-400 mr-3 text-lg"></i>
@@ -83,9 +86,9 @@
                     <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-lg font-bold shadow-inner">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <div>
-                        <p id="navUserName" class="font-semibold text-sm">사용자명</p>
-                        <p id="navUserRole" class="text-xs text-indigo-300 font-medium">권한레벨</p>
+                    <div class="overflow-hidden">
+                        <p id="navUserName" class="font-semibold text-sm truncate">사용자명</p>
+                        <p id="navUserRole" class="text-xs text-indigo-300 font-medium truncate">권한레벨</p>
                     </div>
                 </div>
                 <button onclick="handleLogout()" class="w-full mt-3 py-2 px-4 bg-slate-800/80 hover:bg-red-500/20 hover:text-red-400 text-slate-300 text-xs rounded-lg transition duration-200 flex items-center justify-center border border-slate-700 hover:border-red-500/30">
@@ -94,7 +97,7 @@
             </div>
 
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1 hide-scroll" id="sidebarMenu">
-                <!-- Dynamic navigation -->
+                <!-- Dynamic navigation items -->
             </nav>
         </aside>
 
@@ -104,7 +107,7 @@
                 
                 <div id="adminDBLinks" class="hidden flex space-x-3">
                     <a href="https://docs.google.com/spreadsheets/d/1Ww7ymGa-rYxCtXFNz8SgEPb55uqz2GVsnGGb6l7Vf-4/edit" target="_blank" class="flex items-center text-xs font-medium text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30 px-3 py-1.5 rounded-lg border border-emerald-500/30 transition backdrop-blur-md shadow-sm">
-                        <i class="fa-solid fa-file-excel mr-1.5"></i> 사용자 DB
+                        <i class="fa-solid fa-file-excel mr-1.5"></i> 사용자 DB (F:지역 / G:사업장)
                     </a>
                     <a href="https://docs.google.com/spreadsheets/d/1sKPXRGUPDjxM_t-7-I8E_NgSflaw5sE3NjPk2LjEL_0/edit" target="_blank" class="flex items-center text-xs font-medium text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30 px-3 py-1.5 rounded-lg border border-emerald-500/30 transition backdrop-blur-md shadow-sm">
                         <i class="fa-solid fa-file-excel mr-1.5"></i> 이슈 DB
@@ -114,7 +117,6 @@
 
             <div class="flex-1 overflow-y-auto p-8 hide-scroll relative">
                 
-                <!-- DASHBOARD VIEW -->
                 <div id="view-dashboard" class="view-section hidden space-y-6">
                     <div id="site-restriction-notice" class="hidden bg-indigo-600/20 border border-indigo-400/30 rounded-xl p-4 flex items-center text-indigo-100 text-sm font-bold shadow-lg backdrop-blur-md">
                         <i class="fa-solid fa-shield-halved mr-3 text-lg text-indigo-300"></i> 
@@ -123,7 +125,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="glass-panel text-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-center">
-                            <p class="text-sm font-medium text-slate-500 mb-1">전체 누적 이슈</p>
+                            <p class="text-sm font-medium text-slate-500 mb-1">관할 전체 누적 이슈</p>
                             <h3 id="stat-total" class="text-3xl font-bold text-slate-900">0</h3>
                         </div>
                         <div class="glass-panel text-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-center border-l-4 border-l-amber-500">
@@ -142,7 +144,7 @@
 
                     <div id="dashboard-sites-wrap" class="hidden mt-8 space-y-4">
                         <h3 class="text-lg font-bold text-white mb-2 flex items-center tracking-wide drop-shadow-md">
-                            <i class="fa-solid fa-sitemap text-indigo-300 mr-2"></i>그룹별 관할 사업장 세부 현황
+                            <i class="fa-solid fa-sitemap text-indigo-300 mr-2"></i>관할 사업장별 세부 현황 카운트
                         </h3>
                         <div id="dashboard-sites-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <!-- Dynamic Site Grid -->
@@ -150,7 +152,6 @@
                     </div>
                 </div>
 
-                <!-- ISSUES VIEW -->
                 <div id="view-issues" class="view-section hidden space-y-6">
                     <div class="flex justify-between items-end mb-4">
                         <div>
@@ -166,7 +167,7 @@
                             <table class="w-full text-left border-collapse min-w-[950px] text-slate-800">
                                 <thead>
                                     <tr class="bg-slate-100/80 text-slate-600 text-xs uppercase font-bold border-b border-slate-200">
-                                        <th class="p-4 w-32">사업장 명</th>
+                                        <th class="p-4 w-36">사업장 명</th>
                                         <th class="p-4 w-32">카테고리</th>
                                         <th class="p-4">이슈 내용</th>
                                         <th class="p-4 w-44">등록일시</th>
@@ -183,21 +184,22 @@
                     </div>
                 </div>
 
-                <!-- USERS VIEW -->
                 <div id="view-users" class="view-section hidden space-y-6">
                     <div class="glass-panel rounded-2xl shadow-2xl overflow-hidden text-slate-800">
-                        <div class="p-5 border-b border-slate-200 bg-slate-100/80">
-                            <h3 class="font-bold text-slate-800">등록된 사용자 목록</h3>
+                        <div class="p-5 border-b border-slate-200 bg-slate-100/80 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800">등록된 사용자 및 권한 관리 (지역 및 사업장 분리)</h3>
+                            <span class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-md border border-indigo-200">F열: 지역 / G열: 사업장</span>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse min-w-[800px]">
+                            <table class="w-full text-left border-collapse min-w-[880px]">
                                 <thead>
                                     <tr class="text-slate-500 text-xs uppercase font-bold border-b border-slate-200 bg-white/50">
                                         <th class="p-4">아이디</th>
                                         <th class="p-4">이름</th>
                                         <th class="p-4">연락처</th>
                                         <th class="p-4">권한 레벨</th>
-                                        <th class="p-4">담당 지역/사업장 명</th>
+                                        <th class="p-4 text-indigo-700 font-bold">지역 (F열)</th>
+                                        <th class="p-4 text-emerald-700 font-bold">사업장 명 (G열)</th>
                                         <th class="p-4 text-center">관리</th>
                                     </tr>
                                 </thead>
@@ -209,17 +211,28 @@
                     </div>
                 </div>
 
-                <!-- SETTINGS VIEW -->
                 <div id="view-settings" class="view-section hidden space-y-8">
+                    <!-- 지역 목록 관리 -->
                     <div class="glass-panel rounded-2xl shadow-2xl p-6 text-slate-800">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-building mr-2 text-indigo-600"></i>사업장 목록 관리</h3>
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-map-location-dot mr-2 text-indigo-600"></i>권역(지역) 목록 관리 (F열)</h3>
                         <div class="flex space-x-2 mb-4">
-                            <input type="text" id="newSiteInput" class="flex-1 border rounded-lg px-4 py-2 text-sm outline-none focus:border-indigo-500 bg-white" placeholder="새 사업장 이름 입력">
+                            <input type="text" id="newRegionInput" class="flex-1 border rounded-lg px-4 py-2 text-sm outline-none focus:border-indigo-500 bg-white" placeholder="새 지역(권역) 이름 입력 (예: 영남권)">
+                            <button onclick="addRegion()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-md">추가</button>
+                        </div>
+                        <ul id="region-list" class="space-y-2 max-h-48 overflow-y-auto"></ul>
+                    </div>
+
+                    <!-- 사업장 목록 관리 -->
+                    <div class="glass-panel rounded-2xl shadow-2xl p-6 text-slate-800">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-building mr-2 text-indigo-600"></i>사업장 목록 관리 (G열)</h3>
+                        <div class="flex space-x-2 mb-4">
+                            <input type="text" id="newSiteInput" class="flex-1 border rounded-lg px-4 py-2 text-sm outline-none focus:border-indigo-500 bg-white" placeholder="새 사업장 이름 입력 (예: 해운대점)">
                             <button onclick="addSite()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-md">추가</button>
                         </div>
                         <ul id="site-list" class="space-y-2 max-h-60 overflow-y-auto"></ul>
                     </div>
                     
+                    <!-- 카테고리 관리 -->
                     <div class="glass-panel rounded-2xl shadow-2xl p-6 text-slate-800">
                         <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-tags mr-2 text-indigo-600"></i>이슈 카테고리 관리</h3>
                         <div class="flex space-x-2 mb-4">
@@ -234,24 +247,38 @@
         </main>
     </div>
 
-    <!-- SIGNUP MODAL -->
     <div id="signupModal" class="fixed inset-0 bg-slate-950/70 z-[60] flex items-center justify-center hidden">
         <div class="bg-white text-slate-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
-            <h2 class="text-xl font-bold text-slate-800 mb-4">신규 사용자 가입</h2>
+            <h2 class="text-xl font-bold text-slate-800 mb-4">신규 사용자 가입 (4단계 사업장 관리자)</h2>
             <form onsubmit="handleSignup(event)" class="space-y-4">
                 <input type="text" id="regId" placeholder="사용할 아이디" required class="w-full border rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500">
                 <input type="password" id="regPwd" placeholder="비밀번호" required class="w-full border rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500">
                 <input type="text" id="regName" placeholder="실명" required class="w-full border rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500">
                 <input type="text" id="regPhone" placeholder="연락처 (010-0000-0000)" required class="w-full border rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">소속 지역 (F열)</label>
+                        <select id="regRegion" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 bg-white">
+                            <!-- Dynamic regions -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">담당 사업장 (G열)</label>
+                        <select id="regSite" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 bg-white">
+                            <!-- Dynamic sites -->
+                        </select>
+                    </div>
+                </div>
+
                 <div class="flex justify-end space-x-2 pt-4">
                     <button type="button" onclick="closeModal('signupModal')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">가입하기 (4단계 사업장 관리자)</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">가입 신청</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ISSUE MODAL -->
     <div id="issueModal" class="fixed inset-0 bg-slate-950/70 z-[60] flex items-center justify-center hidden">
         <div class="bg-white text-slate-800 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl">
             <h2 id="issueModalTitle" class="text-xl font-bold text-slate-800 mb-4">이슈 등록</h2>
@@ -305,10 +332,9 @@
         </div>
     </div>
 
-    <!-- USER EDIT MODAL -->
     <div id="userModal" class="fixed inset-0 bg-slate-950/70 z-[60] flex items-center justify-center hidden">
-        <div class="bg-white text-slate-800 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
-            <h2 class="text-xl font-bold text-slate-800 mb-4">사용자 정보 수정</h2>
+        <div class="bg-white text-slate-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <h2 class="text-xl font-bold text-slate-800 mb-4">사용자 정보 및 권한 수정</h2>
             <form onsubmit="saveUserEdit(event)" class="space-y-4">
                 <input type="hidden" id="editUserId">
                 <div>
@@ -317,19 +343,38 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">권한 레벨</label>
-                    <select id="editUserRole" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50">
+                    <select id="editUserRole" onchange="toggleEditRoleFields()" class="w-full border rounded-lg px-3 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50">
                         <option value="1">1단계 (최고 관리자)</option>
                         <option value="2">2단계 (중간 관리자)</option>
                         <option value="3">3단계 (지역 책임자)</option>
                         <option value="4">4단계 (사업장 관리자)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">담당 그룹 및 사업장 명 (다중 선택)</label>
-                    <div id="editUserSiteCheckboxes" class="max-h-32 overflow-y-auto border rounded-lg p-2 bg-slate-50 space-y-1">
+
+                <!-- 담당 지역 선택 (F열) -->
+                <div id="editRegionArea">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">담당 지역 (F열)</label>
+                    <select id="editUserRegion" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                        <!-- Dynamic regions -->
+                    </select>
+                </div>
+
+                <!-- 4단계 전용 단일 사업장 선택 (G열) -->
+                <div id="editSingleSiteArea">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">담당 사업장 명 (4단계용 - G열)</label>
+                    <select id="editUserSingleSite" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                        <!-- Dynamic sites -->
+                    </select>
+                </div>
+
+                <!-- 3단계 전용 다중 사업장 체크박스 (G열) -->
+                <div id="editMultiSiteArea" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">관할 사업장 복수 지정 (3단계 지역책임자용 - G열)</label>
+                    <div id="editUserSiteCheckboxes" class="max-h-36 overflow-y-auto border rounded-lg p-2 bg-slate-50 space-y-1">
                         <!-- Dynamic checkboxes -->
                     </div>
                 </div>
+
                 <div class="flex justify-between pt-4">
                     <button type="button" onclick="deleteUser()" class="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium">계정 삭제</button>
                     <div class="flex space-x-2">
@@ -345,11 +390,21 @@
         async function initApp() {
             users = JSON.parse(localStorage.getItem(LS_USERS)) || [];
             issues = JSON.parse(localStorage.getItem(LS_ISSUES)) || [];
+            regions = JSON.parse(localStorage.getItem(LS_REGIONS)) || regions;
             sites = JSON.parse(localStorage.getItem(LS_SITES)) || sites;
             categories = JSON.parse(localStorage.getItem(LS_CATEGORIES)) || categories;
 
+            // 최고관리자 초기 설정 (F열: 지역='전체', G열: 사업장='전체')
             if (!users.find(u => u.id === 'admin')) {
-                users.push({ id: 'admin', pwd: 'admin1234', name: '최고관리자', phone: '000-0000-0000', role: 1, site: '전체' });
+                users.push({ 
+                    id: 'admin', 
+                    pwd: 'admin1234', 
+                    name: '최고관리자', 
+                    phone: '000-0000-0000', 
+                    role: 1, 
+                    region: '전체', 
+                    site: '전체' 
+                });
                 saveLocal();
             }
 
@@ -359,6 +414,7 @@
         function saveLocal() {
             localStorage.setItem(LS_USERS, JSON.stringify(users));
             localStorage.setItem(LS_ISSUES, JSON.stringify(issues));
+            localStorage.setItem(LS_REGIONS, JSON.stringify(regions));
             localStorage.setItem(LS_SITES, JSON.stringify(sites));
             localStorage.setItem(LS_CATEGORIES, JSON.stringify(categories));
         }
@@ -466,12 +522,8 @@
                     <button onclick="switchView('users', '사용자 및 권한 관리')" class="w-full flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-white/10 hover:text-white rounded-xl transition text-left mt-1">
                         <i class="fa-solid fa-users w-6 text-center"></i> <span>사용자 권한 관리</span>
                     </button>
-                `;
-            }
-            if (currentUser.role === 1) {
-                html += `
                     <button onclick="switchView('settings', '시스템 기본 설정')" class="w-full flex items-center px-4 py-3 text-sm text-slate-300 hover:bg-white/10 hover:text-white rounded-xl transition text-left mt-1">
-                        <i class="fa-solid fa-gear w-6 text-center"></i> <span>시스템 기본 설정</span>
+                        <i class="fa-solid fa-gear w-6 text-center"></i> <span>지역/사업장/카테고리 관리</span>
                     </button>
                 `;
             }
@@ -494,12 +546,13 @@
             const noticeEl = document.getElementById('site-restriction-notice');
 
             if (currentUser.role > 2) {
-                const mySites = currentUser.site.split(',').map(s => s.trim());
+                const mySites = (currentUser.site || '').split(',').map(s => s.trim());
                 filteredIssues = issues.filter(i => mySites.includes(i.site));
                 
                 if(noticeEl) {
                     noticeEl.classList.remove('hidden');
-                    document.getElementById('site-restriction-text').innerText = `보안 적용 완료 : 배정된 [${mySites.join(', ')}] 사업장 명의 데이터만 표시됩니다.`;
+                    const regionLabel = currentUser.region ? `[지역: ${currentUser.region}] ` : '';
+                    document.getElementById('site-restriction-text').innerText = `관할 구역 보안 적용 : ${regionLabel}[사업장: ${mySites.join(', ')}] 데이터만 표시됩니다.`;
                 }
             } else {
                 if(noticeEl) noticeEl.classList.add('hidden');
@@ -521,11 +574,11 @@
                 const siteGrid = document.getElementById('dashboard-sites-grid');
                 
                 let displaySites = sites;
-                let gridTitle = '전체 그룹 및 사업장 명별 요약 현황';
+                let gridTitle = '전체 사업장 명별 세부 현황 카운트';
                 
                 if (currentUser.role === 3) {
-                    displaySites = currentUser.site.split(',').map(s => s.trim());
-                    gridTitle = '내 관할 그룹 (사업장 카운트 현황)';
+                    displaySites = (currentUser.site || '').split(',').map(s => s.trim());
+                    gridTitle = `내 관할 지역 (${currentUser.region || '지역'} - 사업장별 카운트 현황)`;
                 }
                 
                 siteGridWrap.querySelector('h3').innerHTML = `<i class="fa-solid fa-sitemap text-indigo-300 mr-2 drop-shadow-md"></i>${gridTitle}`;
@@ -536,7 +589,7 @@
                         <div class="glass-panel text-slate-800 border border-white/20 rounded-2xl p-5 shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1">
                             <div class="flex items-center justify-between mb-3 border-b pb-2">
                                 <h4 class="font-bold text-slate-900">${site}</h4>
-                                <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-semibold">사업장 명</span>
+                                <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-semibold">사업장 현장</span>
                             </div>
                             <div class="flex justify-between text-sm mb-2"><span class="text-slate-500">대기</span><span class="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">${sIssues.filter(i => i.status === '대기').length}건</span></div>
                             <div class="flex justify-between text-sm mb-2"><span class="text-slate-500">진행중</span><span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">${sIssues.filter(i => i.status === '진행중').length}건</span></div>
@@ -551,10 +604,10 @@
 
         function renderIssues() {
             const tbody = document.getElementById('issue-table-body');
-            let displayIssues = [...issues].sort((a, b) => b.regTimestamp - a.regTimestamp);
+            let displayIssues = [...issues].sort((a, b) => (b.regTimestamp || 0) - (a.regTimestamp || 0));
 
             if (currentUser.role > 2) {
-                const mySites = currentUser.site.split(',').map(s => s.trim());
+                const mySites = (currentUser.site || '').split(',').map(s => s.trim());
                 displayIssues = displayIssues.filter(i => mySites.includes(i.site));
             }
 
@@ -603,14 +656,13 @@
             document.getElementById('btnDeleteIssue').classList.add('hidden');
 
             const siteSel = document.getElementById('issueSite');
-            if(currentUser.role > 2) {
-                const mySites = currentUser.site.split(',').map(s => s.trim());
+            if(currentUser.role === 4) {
+                siteSel.innerHTML = `<option value="${currentUser.site}">${currentUser.site}</option>`;
+                siteSel.classList.add('bg-slate-100', 'opacity-90', 'pointer-events-none');
+            } else if(currentUser.role === 3) {
+                const mySites = (currentUser.site || '').split(',').map(s => s.trim());
                 siteSel.innerHTML = mySites.map(s => `<option value="${s}">${s}</option>`).join('');
-                if(mySites.length === 1) {
-                    siteSel.classList.add('bg-slate-100', 'opacity-90', 'pointer-events-none');
-                } else {
-                    siteSel.classList.remove('bg-slate-100', 'opacity-90', 'pointer-events-none');
-                }
+                siteSel.classList.remove('bg-slate-100', 'opacity-90', 'pointer-events-none');
             } else {
                 siteSel.innerHTML = sites.map(s => `<option value="${s}">${s}</option>`).join('');
                 siteSel.classList.remove('bg-slate-100', 'opacity-90', 'pointer-events-none');
@@ -738,10 +790,20 @@
             const pwd = document.getElementById('regPwd').value;
             const name = document.getElementById('regName').value;
             const phone = document.getElementById('regPhone').value;
+            const region = document.getElementById('regRegion').value;
+            const site = document.getElementById('regSite').value;
 
             if (users.find(u => u.id === id)) { alert('이미 존재하는 아이디입니다.'); return; }
 
-            const newUser = { id, pwd, name, phone, role: 4, site: sites[0] || '미지정' };
+            const newUser = { 
+                id, 
+                pwd, 
+                name, 
+                phone, 
+                role: 4, 
+                region: region, // F열: 지역
+                site: site      // G열: 사업장
+            };
             users.push(newUser);
             saveLocal();
             
@@ -764,13 +826,17 @@
                 else if(u.role === 3) { roleBadge = 'bg-blue-100 text-blue-700'; roleName = '지역책임자'; }
                 else { roleBadge = 'bg-slate-100 text-slate-700'; roleName = '사업장관리자'; }
 
+                const userRegion = u.region || (u.role <= 2 ? '전체' : '미지정');
+                const userSite = u.site || (u.role <= 2 ? '전체' : '미지정');
+
                 return `
                 <tr class="hover:bg-slate-50 transition">
                     <td class="p-4 text-slate-600 font-mono text-sm">${u.id}</td>
                     <td class="p-4 font-semibold text-slate-900">${u.name}</td>
                     <td class="p-4 text-slate-500">${u.phone}</td>
                     <td class="p-4"><span class="px-2.5 py-1 rounded-full font-bold text-xs ${roleBadge}">${u.role}단계 (${roleName})</span></td>
-                    <td class="p-4 text-slate-600 text-xs">${u.site}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 font-semibold rounded text-xs border border-indigo-200">${userRegion}</span></td>
+                    <td class="p-4 text-slate-700 text-xs font-medium">${userSite}</td>
                     <td class="p-4 text-center">
                         <button onclick="editUser('${u.id}')" class="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold transition">설정</button>
                     </td>
@@ -787,17 +853,48 @@
             document.getElementById('editUserName').value = user.name;
             document.getElementById('editUserRole').value = user.role;
             
+            // F열 지역 셀렉트박스 바인딩
+            const regSel = document.getElementById('editUserRegion');
+            regSel.innerHTML = regions.map(r => `<option value="${r}" ${user.region === r ? 'selected' : ''}>${r}</option>`).join('');
+
+            // G열 4단계 단일 사업장 셀렉트박스 바인딩
+            const singleSel = document.getElementById('editUserSingleSite');
+            singleSel.innerHTML = sites.map(s => `<option value="${s}" ${user.site === s ? 'selected' : ''}>${s}</option>`).join('');
+
+            // G열 3단계 다중 사업장 체크박스 바인딩
             const siteCheckboxes = document.getElementById('editUserSiteCheckboxes');
             const userSites = user.site ? user.site.split(',').map(s => s.trim()) : [];
             
             siteCheckboxes.innerHTML = sites.map(s => `
                 <label class="flex items-center space-x-2 text-sm cursor-pointer p-1.5 hover:bg-slate-100 rounded transition">
                     <input type="checkbox" value="${s}" class="user-site-cb rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" ${userSites.includes(s) || user.site === '전체' ? 'checked' : ''}>
-                    <span class="font-medium text-slate-700">${s} (사업장 명)</span>
+                    <span class="font-medium text-slate-700">${s}</span>
                 </label>
             `).join('');
 
+            toggleEditRoleFields();
             document.getElementById('userModal').classList.remove('hidden');
+        }
+
+        function toggleEditRoleFields() {
+            const role = parseInt(document.getElementById('editUserRole').value);
+            const regionArea = document.getElementById('editRegionArea');
+            const singleArea = document.getElementById('editSingleSiteArea');
+            const multiArea = document.getElementById('editMultiSiteArea');
+
+            if (role <= 2) {
+                regionArea.classList.add('hidden');
+                singleArea.classList.add('hidden');
+                multiArea.classList.add('hidden');
+            } else if (role === 3) {
+                regionArea.classList.remove('hidden');
+                singleArea.classList.add('hidden');
+                multiArea.classList.remove('hidden');
+            } else {
+                regionArea.classList.remove('hidden');
+                singleArea.classList.remove('hidden');
+                multiArea.classList.add('hidden');
+            }
         }
 
         function saveUserEdit(e) {
@@ -806,19 +903,29 @@
             const user = users.find(u => u.id === id);
             
             const role = parseInt(document.getElementById('editUserRole').value);
-            let selectedSites = [];
+            let selectedRegionStr = '전체';
+            let selectedSiteStr = '전체';
             
             if (role <= 2) {
-                selectedSites = ['전체'];
-            } else {
+                selectedRegionStr = '전체';
+                selectedSiteStr = '전체';
+            } else if (role === 3) {
+                selectedRegionStr = document.getElementById('editUserRegion').value;
+                let selectedSites = [];
                 document.querySelectorAll('.user-site-cb:checked').forEach(cb => {
                     selectedSites.push(cb.value);
                 });
                 if (selectedSites.length === 0) selectedSites = [sites[0] || '미지정'];
+                selectedSiteStr = selectedSites.join(', ');
+            } else {
+                selectedRegionStr = document.getElementById('editUserRegion').value;
+                const singleSel = document.getElementById('editUserSingleSite');
+                selectedSiteStr = singleSel ? singleSel.value : (sites[0] || '미지정');
             }
             
             user.role = role;
-            user.site = selectedSites.join(', ');
+            user.region = selectedRegionStr; // F열
+            user.site = selectedSiteStr;     // G열
             
             saveLocal();
             renderUsers();
@@ -841,13 +948,23 @@
         }
 
         function renderSettings() {
+            // 지역 목록
+            document.getElementById('region-list').innerHTML = regions.map((r, idx) => `
+                <li class="flex justify-between items-center p-3 bg-slate-50 border rounded-lg text-sm">
+                    <span class="font-medium text-slate-700">${r} <span class="text-xs text-indigo-600 font-semibold ml-2">(F열 지역)</span></span>
+                    <button onclick="removeRegion(${idx})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                </li>
+            `).join('');
+
+            // 사업장 목록
             document.getElementById('site-list').innerHTML = sites.map((s, idx) => `
                 <li class="flex justify-between items-center p-3 bg-slate-50 border rounded-lg text-sm">
-                    <span class="font-medium text-slate-700">${s} <span class="text-xs text-indigo-600 font-semibold ml-2">(사업장 명)</span></span>
+                    <span class="font-medium text-slate-700">${s} <span class="text-xs text-emerald-600 font-semibold ml-2">(G열 사업장)</span></span>
                     <button onclick="removeSite(${idx})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
                 </li>
             `).join('');
 
+            // 카테고리 목록
             document.getElementById('category-list').innerHTML = categories.map((c, idx) => `
                 <li class="flex justify-between items-center p-3 bg-slate-50 border rounded-lg text-sm">
                     <span class="font-medium text-slate-700">${c}</span>
@@ -855,6 +972,13 @@
                 </li>
             `).join('');
         }
+
+        function addRegion() {
+            const v = document.getElementById('newRegionInput').value.trim();
+            if (v && !regions.includes(v)) { regions.push(v); saveLocal(); renderSettings(); }
+            document.getElementById('newRegionInput').value = '';
+        }
+        function removeRegion(idx) { regions.splice(idx, 1); saveLocal(); renderSettings(); }
 
         function addSite() {
             const v = document.getElementById('newSiteInput').value.trim();
@@ -870,8 +994,18 @@
         }
         function removeCategory(idx) { categories.splice(idx, 1); saveLocal(); renderSettings(); }
 
-        function openSignupModal() { document.getElementById('signupModal').classList.remove('hidden'); }
+        function openSignupModal() {
+            const regRegionSel = document.getElementById('regRegion');
+            regRegionSel.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
+
+            const regSiteSel = document.getElementById('regSite');
+            regSiteSel.innerHTML = sites.map(s => `<option value="${s}">${s}</option>`).join('');
+            
+            document.getElementById('signupModal').classList.remove('hidden');
+        }
+
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        
         function showLoading(show) {
             const el = document.getElementById('globalLoading');
             if(show) { el.classList.remove('hidden'); } else { el.classList.add('hidden'); }
