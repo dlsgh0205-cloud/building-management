@@ -68,7 +68,15 @@
     <!-- ================================================================= -->
     <!-- 1. LOGIN VIEW -->
     <!-- ================================================================= -->
-    <div id="view-login" class="min-h-screen flex items-center justify-center p-4">
+    <div id="view-login" class="min-h-screen flex items-center justify-center p-4 relative">
+        <!-- GAS URL Diagnostic Quick Button (Top Right) -->
+        <div class="absolute top-4 right-4 z-20">
+            <button onclick="openGasConfigModal()" class="px-3 py-1.5 rounded-xl bg-slate-900/70 hover:bg-slate-800 text-indigo-300 border border-indigo-500/30 text-xs font-semibold backdrop-blur-md transition flex items-center space-x-1.5 shadow-lg">
+                <i class="fa-solid fa-link text-[11px]"></i>
+                <span>구글 시트 연동 설정</span>
+            </button>
+        </div>
+
         <div class="max-w-md w-full glass-panel text-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden border border-white/40">
             <!-- Ambient Glow Top -->
             <div class="absolute -top-16 -right-16 w-44 h-44 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -80,6 +88,10 @@
                 </div>
                 <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">전사 통합 시설·이슈 관리</h2>
                 <p class="text-xs text-slate-500 mt-1 font-medium">안전하고 신속한 권역·사업장별 실시간 이슈 관제 포털</p>
+                <!-- Realtime Sync Status Indicator -->
+                <div id="login-sync-status" class="mt-2 text-[11px] font-semibold text-indigo-600 bg-indigo-50 py-1 px-3 rounded-full inline-flex items-center">
+                    <i class="fa-solid fa-arrows-rotate fa-spin mr-1.5"></i>구글 시트 사용자 DB 연결 확인 중...
+                </div>
             </div>
 
             <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4 relative z-10">
@@ -108,7 +120,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit"
+                    <button type="submit" id="btn-login-submit"
                         class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transform active:scale-[0.99] transition duration-200 flex items-center justify-center space-x-2">
                         <span>로그인</span>
                         <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -121,6 +133,39 @@
                 <button type="button" onclick="openSignupModal()" class="font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center">
                     <i class="fa-solid fa-user-plus mr-1"></i>신규 계정 등록
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAS URL Quick Config Modal -->
+    <div id="modal-gas-config" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-md w-full glass-panel text-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl border border-white/40">
+            <div class="flex items-center justify-between mb-4 border-b pb-3">
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center">
+                    <i class="fa-solid fa-cloud-arrow-down text-indigo-600 mr-2"></i>구글 스프레드시트 연동 웹앱 URL
+                </h3>
+                <button onclick="closeGasConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3.5 text-xs">
+                <p class="text-slate-500 leading-relaxed">구글 시트의 [배포 ➔ 새 배포] 후 복사한 <strong>웹 앱 URL(/exec)</strong>을 확인하거나 새로 교체할 수 있습니다.</p>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">사용자 DB 웹앱 URL</label>
+                    <input type="text" id="cfg-user-url" class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl font-mono text-[11px] focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">이슈 관리 DB 웹앱 URL</label>
+                    <input type="text" id="cfg-issue-url" class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl font-mono text-[11px] focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div id="cfg-test-result" class="hidden p-2.5 rounded-xl text-[11px] font-bold"></div>
+                <div class="pt-2 flex justify-between items-center">
+                    <button type="button" onclick="testGasUserUrl()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition flex items-center">
+                        <i class="fa-solid fa-plug mr-1.5"></i>연결 테스트
+                    </button>
+                    <div class="space-x-2">
+                        <button type="button" onclick="closeGasConfigModal()" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold">닫기</button>
+                        <button type="button" onclick="saveGasConfig()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow transition">저장 및 적용</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -683,13 +728,20 @@
         // =================================================================
         // GLOBAL STATE & STORAGE CONFIG
         // =================================================================
-        const DEFAULT_GAS_USER_URL = 'https://script.google.com/macros/s/AKfycby7g63Y4Vp52iAad03y5PmsqfU_m3j2_iFw-gXhT6-eNqM5O4Z2mHqG_1/exec'; 
+        const DEFAULT_GAS_USER_URL = 'https://script.google.com/macros/s/AKfycbytpkNDE_6H6d5sPfiXIp3LIMtHaFh8vvk5WcwannXQe-aCnwrAPieB7481vXsqlgkgFA/exec'; 
         const DEFAULT_GAS_ISSUE_URL = 'https://script.google.com/macros/s/AKfycbz_K_N9hE4t0iE12x6r8V9z4G6y8P1q9w0e2r4t6y8u0i/exec'; 
 
         const LS_GAS_USER_URL = 'erp_cfg_gas_user_url';
         const LS_GAS_ISSUE_URL = 'erp_cfg_gas_issue_url';
 
-        let GAS_USER_URL = localStorage.getItem(LS_GAS_USER_URL) || DEFAULT_GAS_USER_URL;
+        // 기존 브라우저에 구버전 테스트 URL이 남아있는 경우 최신 URL로 자동 갱신
+        let savedUserUrl = localStorage.getItem(LS_GAS_USER_URL);
+        if (!savedUserUrl || savedUserUrl.includes('AKfycby7g63Y4Vp52iAad03y5PmsqfU_m3j2_iFw-gXhT6-eNqM5O4Z2mHqG_1')) {
+            savedUserUrl = DEFAULT_GAS_USER_URL;
+            localStorage.setItem(LS_GAS_USER_URL, DEFAULT_GAS_USER_URL);
+        }
+
+        let GAS_USER_URL = savedUserUrl;
         let GAS_ISSUE_URL = localStorage.getItem(LS_GAS_ISSUE_URL) || DEFAULT_GAS_ISSUE_URL;
 
         const LS_USERS = 'erp_system_users_v3';
@@ -826,13 +878,11 @@
         async function syncUsersFromGAS() {
             if (!GAS_USER_URL) return false;
             try {
-                // 캐시 방지 타임스탬프 추가
                 const cacheBuster = (GAS_USER_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
                 const res = await fetch(GAS_USER_URL + cacheBuster);
                 if (res.ok) {
                     const fetchedUsers = await res.json();
                     if (Array.isArray(fetchedUsers) && fetchedUsers.length > 0) {
-                        // Preserve master admin if absent in the cloud sheet
                         const hasAdmin = fetchedUsers.some(u => String(u.id).toLowerCase() === 'admin');
                         if (!hasAdmin) {
                             fetchedUsers.unshift({
@@ -855,6 +905,14 @@
                             site: String(u.site || '전체').trim()
                         }));
                         saveLocalState();
+                        
+                        // 로그인 화면 상태 업데이트
+                        const statusEl = document.getElementById('login-sync-status');
+                        if (statusEl) {
+                            statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mr-1.5"></i>구글 시트 사용자 DB 연결됨 (${users.length}명)`;
+                            statusEl.className = "mt-2 text-[11px] font-semibold text-emerald-700 bg-emerald-50 py-1 px-3 rounded-full inline-flex items-center border border-emerald-200";
+                        }
+                        
                         if (currentUser) {
                             renderUsers();
                             updateDashboard();
@@ -863,7 +921,12 @@
                     }
                 }
             } catch (e) {
-                console.debug('GAS User sync error or offline:', e);
+                console.debug('GAS User sync error:', e);
+            }
+            const statusEl = document.getElementById('login-sync-status');
+            if (statusEl) {
+                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1.5"></i>구글 시트 연결 대기 (로컬 캐시 사용 중)`;
+                statusEl.className = "mt-2 text-[11px] font-semibold text-amber-700 bg-amber-50 py-1 px-3 rounded-full inline-flex items-center border border-amber-200";
             }
             return false;
         }
@@ -947,48 +1010,109 @@
 
         async function handleLogin(e) {
             e.preventDefault();
+            const btn = document.getElementById('btn-login-submit');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>인증 확인 중...`;
+            btn.disabled = true;
+
             const id = document.getElementById('login-id').value.trim();
             const pwd = document.getElementById('login-pwd').value.trim();
 
-            const isMasterAdmin = (id.toLowerCase() === 'admin');
-            let foundUser = users.find(u => String(u.id).toLowerCase() === id.toLowerCase());
+            try {
+                // 1. 구글 스프레드시트에서 최신 사용자 DB를 즉시 강제 갱신
+                await syncUsersFromGAS();
 
-            // 1. 만약 로컬 목록에 없거나 비밀번호가 다르면, 구글 시트에서 최신 사용자 DB를 즉시 가져와 재확인
-            if (!foundUser || String(foundUser.pwd).trim() !== pwd) {
-                const syncSuccess = await syncUsersFromGAS();
-                if (syncSuccess) {
-                    foundUser = users.find(u => String(u.id).toLowerCase() === id.toLowerCase());
-                }
-            }
+                const isMasterAdmin = (id.toLowerCase() === 'admin');
+                let foundUser = users.find(u => String(u.id).toLowerCase() === id.toLowerCase());
 
-            // Master Admin Dual Bypass & Auto-recovery
-            if (isMasterAdmin) {
-                const validMasterPwds = ['admin', 'admin1234'];
-                if (foundUser && foundUser.pwd) validMasterPwds.push(String(foundUser.pwd).trim());
+                // Master Admin Dual Bypass & Auto-recovery
+                if (isMasterAdmin) {
+                    const validMasterPwds = ['admin', 'admin1234'];
+                    if (foundUser && foundUser.pwd) validMasterPwds.push(String(foundUser.pwd).trim());
 
-                if (validMasterPwds.includes(pwd)) {
-                    if (!foundUser) {
-                        foundUser = { id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: pwd, role: 1, region: '전체', site: '전체' };
-                        users.unshift(foundUser);
-                        saveLocalState();
+                    if (validMasterPwds.includes(pwd)) {
+                        if (!foundUser) {
+                            foundUser = { id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: pwd, role: 1, region: '전체', site: '전체' };
+                            users.unshift(foundUser);
+                            saveLocalState();
+                        }
+                        currentUser = foundUser;
+                        localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
+                        initAppView();
+                        showToast(`${currentUser.name} 님, 환영합니다!`);
+                        return;
                     }
+                }
+
+                // Normal User Authentication
+                if (foundUser && String(foundUser.pwd).trim() === pwd) {
                     currentUser = foundUser;
                     localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
                     initAppView();
                     showToast(`${currentUser.name} 님, 환영합니다!`);
-                    return;
+                } else {
+                    if (!foundUser) {
+                        showToast(`아이디 [${id}] 를 구글 시트에서 찾을 수 없습니다.`, 'error');
+                    } else {
+                        showToast('비밀번호가 일치하지 않습니다.', 'error');
+                    }
                 }
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
             }
+        }
 
-            // Normal User Authentication (공백 제거 후 엄격 대조)
-            if (foundUser && String(foundUser.pwd).trim() === pwd) {
-                currentUser = foundUser;
-                localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
-                initAppView();
-                showToast(`${currentUser.name} 님, 환영합니다!`);
-            } else {
-                showToast('아이디 또는 비밀번호가 일치하지 않습니다.', 'error');
+        // Quick GAS Config Modal Functions
+        function openGasConfigModal() {
+            document.getElementById('cfg-user-url').value = GAS_USER_URL;
+            document.getElementById('cfg-issue-url').value = GAS_ISSUE_URL;
+            document.getElementById('cfg-test-result').classList.add('hidden');
+            document.getElementById('modal-gas-config').classList.remove('hidden');
+        }
+
+        function closeGasConfigModal() {
+            document.getElementById('modal-gas-config').classList.add('hidden');
+        }
+
+        async function testGasUserUrl() {
+            const testUrl = document.getElementById('cfg-user-url').value.trim();
+            const resultBox = document.getElementById('cfg-test-result');
+            resultBox.classList.remove('hidden');
+            resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-slate-100 text-slate-700 flex items-center";
+            resultBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>연결 시도 중...`;
+
+            try {
+                const res = await fetch(testUrl + (testUrl.includes('?') ? '&' : '?') + '_t=' + Date.now());
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center";
+                        resultBox.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i>정상 연결 완료! 시트 사용자 DB ${data.length}명 확인됨`;
+                        return;
+                    }
+                }
+                throw new Error('응답 형식 오류');
+            } catch (err) {
+                resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center";
+                resultBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i>연결 실패: 웹앱 URL 또는 권한(모든 사용자) 설정을 확인하세요.`;
             }
+        }
+
+        function saveGasConfig() {
+            const uUrl = document.getElementById('cfg-user-url').value.trim();
+            const iUrl = document.getElementById('cfg-issue-url').value.trim();
+            if (uUrl) {
+                GAS_USER_URL = uUrl;
+                localStorage.setItem(LS_GAS_USER_URL, uUrl);
+            }
+            if (iUrl) {
+                GAS_ISSUE_URL = iUrl;
+                localStorage.setItem(LS_GAS_ISSUE_URL, iUrl);
+            }
+            closeGasConfigModal();
+            syncUsersFromGAS();
+            showToast('구글 시트 연동 URL이 저장되었습니다.');
         }
 
         function handleLogout() {
