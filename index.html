@@ -26,7 +26,13 @@
         let users = [];
         let issues = [];
         let regions = ['수도권', '영남권', '충청권', '호남권', '강원/제주권'];
-        let sites = ['서울본사', '부산지사', '대전센터', '인천물류센터', '광주지점'];
+        let sites = [
+            { name: '서울본사', region: '수도권' },
+            { name: '인천물류센터', region: '수도권' },
+            { name: '부산지사', region: '영남권' },
+            { name: '대전센터', region: '충청권' },
+            { name: '광주지점', region: '호남권' }
+        ];
         let categories = ['네트워크', '하드웨어', '소프트웨어', '기타', '시설물'];
         
         const LS_USERS = 'erp_users_v2';
@@ -34,6 +40,12 @@
         const LS_REGIONS = 'erp_regions_v2';
         const LS_SITES = 'erp_sites_v2';
         const LS_CATEGORIES = 'erp_categories_v2';
+
+        // 사업장 헬퍼 함수 (단순 문자열 및 객체 호환)
+        function getSiteName(s) { return typeof s === 'object' && s !== null ? s.name : s; }
+        function getSiteRegion(s) { return typeof s === 'object' && s !== null ? s.region : '미지정'; }
+        function getAllSiteNames() { return sites.map(getSiteName); }
+        function getSitesByRegion(r) { return sites.filter(s => getSiteRegion(s) === r).map(getSiteName); }
     </script>
 
     <div id="globalLoading" class="fixed inset-0 bg-slate-950/80 z-[100] flex flex-col items-center justify-center text-white transition-opacity duration-300 hidden">
@@ -224,12 +236,44 @@
 
                     <!-- 사업장 목록 관리 -->
                     <div class="glass-panel rounded-2xl shadow-2xl p-6 text-slate-800">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2"><i class="fa-solid fa-building mr-2 text-indigo-600"></i>사업장 목록 관리 (G열)</h3>
-                        <div class="flex space-x-2 mb-4">
-                            <input type="text" id="newSiteInput" class="flex-1 border rounded-lg px-4 py-2 text-sm outline-none focus:border-indigo-500 bg-white" placeholder="새 사업장 이름 입력 (예: 해운대점)">
-                            <button onclick="addSite()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-md">추가</button>
+                        <div class="flex flex-col md:flex-row md:items-center justify-between border-b pb-3 mb-4 gap-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-building-circle-check mr-2 text-emerald-600"></i>지역별 사업장 묶음 및 목록 관리 (G열)
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-1">지역(권역)을 먼저 지정하고 해당 지역에 속할 사업장을 추가하여 매핑합니다.</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-xs font-semibold text-slate-600">지역별 필터:</label>
+                                <select id="filterSiteRegion" onchange="renderSettings()" class="border rounded-lg px-2.5 py-1.5 text-xs bg-white outline-none focus:border-indigo-500">
+                                    <!-- Dynamic filter options -->
+                                </select>
+                            </div>
                         </div>
-                        <ul id="site-list" class="space-y-2 max-h-60 overflow-y-auto"></ul>
+
+                        <!-- 사업장 추가 폼 (지역 선택 포함) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                            <div class="sm:col-span-4">
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">소속 지역 선택 (F열)</label>
+                                <select id="newSiteRegionSelect" class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 bg-white font-medium">
+                                    <!-- Dynamic regions for new site -->
+                                </select>
+                            </div>
+                            <div class="sm:col-span-6">
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">사업장 명칭 (G열)</label>
+                                <input type="text" id="newSiteInput" class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 bg-white" placeholder="새 사업장 이름 입력 (예: 강남지점)">
+                            </div>
+                            <div class="sm:col-span-2 flex items-end">
+                                <button onclick="addSite()" class="w-full bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 shadow-md transition flex items-center justify-center">
+                                    <i class="fa-solid fa-plus mr-1.5"></i>추가
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 지역별 그룹화된 사업장 목록 뷰 -->
+                        <div id="site-grouped-container" class="space-y-4 max-h-96 overflow-y-auto pr-1">
+                            <!-- Dynamic grouped site cards -->
+                        </div>
                     </div>
                     
                     <!-- 카테고리 관리 -->
@@ -259,14 +303,14 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">소속 지역 (F열)</label>
-                        <select id="regRegion" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 bg-white">
+                        <select id="regRegion" onchange="handleSignupRegionChange()" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 bg-white">
                             <!-- Dynamic regions -->
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">담당 사업장 (G열)</label>
                         <select id="regSite" class="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-500 bg-white">
-                            <!-- Dynamic sites -->
+                            <!-- Dynamic sites filtered by selected region -->
                         </select>
                     </div>
                 </div>
@@ -354,14 +398,17 @@
                 <!-- 담당 지역 선택 (F열) -->
                 <div id="editRegionArea">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">담당 지역 (F열)</label>
-                    <select id="editUserRegion" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                    <select id="editUserRegion" onchange="handleUserEditRegionChange()" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
                         <!-- Dynamic regions -->
                     </select>
                 </div>
 
                 <!-- 4단계 전용 단일 사업장 선택 (G열) -->
                 <div id="editSingleSiteArea">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">담당 사업장 명 (4단계용 - G열)</label>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-slate-600">담당 사업장 명 (4단계용 - G열)</label>
+                        <span id="singleSiteRegionNotice" class="text-[10px] text-indigo-600 font-semibold"></span>
+                    </div>
                     <select id="editUserSingleSite" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
                         <!-- Dynamic sites -->
                     </select>
@@ -369,9 +416,12 @@
 
                 <!-- 3단계 전용 다중 사업장 체크박스 (G열) -->
                 <div id="editMultiSiteArea" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">관할 사업장 복수 지정 (3단계 지역책임자용 - G열)</label>
-                    <div id="editUserSiteCheckboxes" class="max-h-36 overflow-y-auto border rounded-lg p-2 bg-slate-50 space-y-1">
-                        <!-- Dynamic checkboxes -->
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-slate-600">관할 사업장 복수 지정 (3단계 지역책임자용 - G열)</label>
+                        <span class="text-[10px] text-indigo-600 font-semibold">선택 지역 우선 정렬</span>
+                    </div>
+                    <div id="editUserSiteCheckboxes" class="max-h-40 overflow-y-auto border rounded-lg p-2 bg-slate-50 space-y-1">
+                        <!-- Dynamic checkboxes with region tags -->
                     </div>
                 </div>
 
@@ -391,7 +441,18 @@
             users = JSON.parse(localStorage.getItem(LS_USERS)) || [];
             issues = JSON.parse(localStorage.getItem(LS_ISSUES)) || [];
             regions = JSON.parse(localStorage.getItem(LS_REGIONS)) || regions;
-            sites = JSON.parse(localStorage.getItem(LS_SITES)) || sites;
+            
+            // 사업장 데이터 마이그레이션 (문자열 배열 -> 객체 배열 호환 지원)
+            const loadedSites = JSON.parse(localStorage.getItem(LS_SITES));
+            if (loadedSites && loadedSites.length > 0) {
+                sites = loadedSites.map(s => {
+                    if (typeof s === 'string') {
+                        return { name: s, region: regions[0] || '기타' };
+                    }
+                    return s;
+                });
+            }
+
             categories = JSON.parse(localStorage.getItem(LS_CATEGORIES)) || categories;
 
             // 최고관리자 초기 설정 (F열: 지역='전체', G열: 사업장='전체')
@@ -573,7 +634,7 @@
                 siteGridWrap.classList.remove('hidden');
                 const siteGrid = document.getElementById('dashboard-sites-grid');
                 
-                let displaySites = sites;
+                let displaySites = getAllSiteNames();
                 let gridTitle = '전체 사업장 명별 세부 현황 카운트';
                 
                 if (currentUser.role === 3) {
@@ -583,12 +644,12 @@
                 
                 siteGridWrap.querySelector('h3').innerHTML = `<i class="fa-solid fa-sitemap text-indigo-300 mr-2 drop-shadow-md"></i>${gridTitle}`;
                 
-                siteGrid.innerHTML = displaySites.map(site => {
-                    const sIssues = issues.filter(i => i.site === site);
+                siteGrid.innerHTML = displaySites.map(siteName => {
+                    const sIssues = issues.filter(i => i.site === siteName);
                     return `
                         <div class="glass-panel text-slate-800 border border-white/20 rounded-2xl p-5 shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1">
                             <div class="flex items-center justify-between mb-3 border-b pb-2">
-                                <h4 class="font-bold text-slate-900">${site}</h4>
+                                <h4 class="font-bold text-slate-900">${siteName}</h4>
                                 <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-semibold">사업장 현장</span>
                             </div>
                             <div class="flex justify-between text-sm mb-2"><span class="text-slate-500">대기</span><span class="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">${sIssues.filter(i => i.status === '대기').length}건</span></div>
@@ -664,7 +725,7 @@
                 siteSel.innerHTML = mySites.map(s => `<option value="${s}">${s}</option>`).join('');
                 siteSel.classList.remove('bg-slate-100', 'opacity-90', 'pointer-events-none');
             } else {
-                siteSel.innerHTML = sites.map(s => `<option value="${s}">${s}</option>`).join('');
+                siteSel.innerHTML = getAllSiteNames().map(s => `<option value="${s}">${s}</option>`).join('');
                 siteSel.classList.remove('bg-slate-100', 'opacity-90', 'pointer-events-none');
             }
 
@@ -857,23 +918,62 @@
             const regSel = document.getElementById('editUserRegion');
             regSel.innerHTML = regions.map(r => `<option value="${r}" ${user.region === r ? 'selected' : ''}>${r}</option>`).join('');
 
-            // G열 4단계 단일 사업장 셀렉트박스 바인딩
-            const singleSel = document.getElementById('editUserSingleSite');
-            singleSel.innerHTML = sites.map(s => `<option value="${s}" ${user.site === s ? 'selected' : ''}>${s}</option>`).join('');
-
-            // G열 3단계 다중 사업장 체크박스 바인딩
-            const siteCheckboxes = document.getElementById('editUserSiteCheckboxes');
-            const userSites = user.site ? user.site.split(',').map(s => s.trim()) : [];
-            
-            siteCheckboxes.innerHTML = sites.map(s => `
-                <label class="flex items-center space-x-2 text-sm cursor-pointer p-1.5 hover:bg-slate-100 rounded transition">
-                    <input type="checkbox" value="${s}" class="user-site-cb rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" ${userSites.includes(s) || user.site === '전체' ? 'checked' : ''}>
-                    <span class="font-medium text-slate-700">${s}</span>
-                </label>
-            `).join('');
+            updateEditUserSiteOptions(user.region || regions[0], user.site);
 
             toggleEditRoleFields();
             document.getElementById('userModal').classList.remove('hidden');
+        }
+
+        function handleUserEditRegionChange() {
+            const selectedRegion = document.getElementById('editUserRegion').value;
+            const singleSel = document.getElementById('editUserSingleSite');
+            const currentSiteVal = singleSel ? singleSel.value : '';
+            updateEditUserSiteOptions(selectedRegion, currentSiteVal);
+        }
+
+        function updateEditUserSiteOptions(selectedRegion, preselectedSiteStr) {
+            const allSiteList = getAllSiteNames();
+            const regionSites = getSitesByRegion(selectedRegion);
+            const userSites = (preselectedSiteStr || '').split(',').map(s => s.trim());
+
+            // 4단계용 단일 사업장 목록 (선택된 지역의 사업장을 상단에 배치)
+            const singleSel = document.getElementById('editUserSingleSite');
+            let singleOptions = '';
+            if (regionSites.length > 0) {
+                singleOptions += `<optgroup label="[${selectedRegion}] 소속 사업장">` + 
+                    regionSites.map(s => `<option value="${s}" ${userSites.includes(s) ? 'selected' : ''}>${s}</option>`).join('') +
+                    `</optgroup>`;
+            }
+            const otherSites = sites.filter(s => getSiteRegion(s) !== selectedRegion);
+            if (otherSites.length > 0) {
+                singleOptions += `<optgroup label="기타 지역 사업장">` + 
+                    otherSites.map(s => `<option value="${s.name}" ${userSites.includes(s.name) ? 'selected' : ''}>${s.name} (${s.region})</option>`).join('') +
+                    `</optgroup>`;
+            }
+            if (!singleOptions) {
+                singleOptions = allSiteList.map(s => `<option value="${s}">${s}</option>`).join('');
+            }
+            singleSel.innerHTML = singleOptions;
+
+            // 3단계용 복수 사업장 체크박스 목록 (선택된 지역의 사업장은 눈에 띄게 강조)
+            const siteCheckboxes = document.getElementById('editUserSiteCheckboxes');
+            siteCheckboxes.innerHTML = sites.map(s => {
+                const sName = getSiteName(s);
+                const sReg = getSiteRegion(s);
+                const isMyRegion = sReg === selectedRegion;
+                const isChecked = userSites.includes(sName) || preselectedSiteStr === '전체';
+                return `
+                    <label class="flex items-center justify-between text-sm cursor-pointer p-2 hover:bg-slate-100 rounded transition border border-transparent hover:border-slate-200">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" value="${sName}" class="user-site-cb rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" ${isChecked ? 'checked' : ''}>
+                            <span class="font-medium text-slate-700">${sName}</span>
+                        </div>
+                        <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold ${isMyRegion ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-500'}">
+                            ${sReg}
+                        </span>
+                    </label>
+                `;
+            }).join('');
         }
 
         function toggleEditRoleFields() {
@@ -915,12 +1015,12 @@
                 document.querySelectorAll('.user-site-cb:checked').forEach(cb => {
                     selectedSites.push(cb.value);
                 });
-                if (selectedSites.length === 0) selectedSites = [sites[0] || '미지정'];
+                if (selectedSites.length === 0) selectedSites = [getAllSiteNames()[0] || '미지정'];
                 selectedSiteStr = selectedSites.join(', ');
             } else {
                 selectedRegionStr = document.getElementById('editUserRegion').value;
                 const singleSel = document.getElementById('editUserSingleSite');
-                selectedSiteStr = singleSel ? singleSel.value : (sites[0] || '미지정');
+                selectedSiteStr = singleSel ? singleSel.value : (getAllSiteNames()[0] || '미지정');
             }
             
             user.role = role;
@@ -948,23 +1048,75 @@
         }
 
         function renderSettings() {
-            // 지역 목록
+            // 1. 지역(권역) 목록
             document.getElementById('region-list').innerHTML = regions.map((r, idx) => `
                 <li class="flex justify-between items-center p-3 bg-slate-50 border rounded-lg text-sm">
                     <span class="font-medium text-slate-700">${r} <span class="text-xs text-indigo-600 font-semibold ml-2">(F열 지역)</span></span>
-                    <button onclick="removeRegion(${idx})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="removeRegion(${idx})" class="text-red-400 hover:text-red-600" title="지역 삭제"><i class="fa-solid fa-trash"></i></button>
                 </li>
             `).join('');
 
-            // 사업장 목록
-            document.getElementById('site-list').innerHTML = sites.map((s, idx) => `
-                <li class="flex justify-between items-center p-3 bg-slate-50 border rounded-lg text-sm">
-                    <span class="font-medium text-slate-700">${s} <span class="text-xs text-emerald-600 font-semibold ml-2">(G열 사업장)</span></span>
-                    <button onclick="removeSite(${idx})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
-                </li>
-            `).join('');
+            // 사업장 추가 폼의 지역 셀렉트 옵션 바인딩
+            const newSiteRegSel = document.getElementById('newSiteRegionSelect');
+            if (newSiteRegSel) {
+                newSiteRegSel.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
+            }
 
-            // 카테고리 목록
+            // 필터 셀렉트 바인딩
+            const filterEl = document.getElementById('filterSiteRegion');
+            const currentFilter = filterEl ? filterEl.value : 'ALL';
+            if (filterEl) {
+                let filterHtml = '<option value="ALL">전체 지역 보기</option>';
+                filterHtml += regions.map(r => `<option value="${r}" ${currentFilter === r ? 'selected' : ''}>${r}</option>`).join('');
+                filterEl.innerHTML = filterHtml;
+            }
+
+            // 2. 지역별 묶음 사업장 목록 렌더링
+            const groupContainer = document.getElementById('site-grouped-container');
+            const targetRegions = (!currentFilter || currentFilter === 'ALL') ? regions : [currentFilter];
+
+            if (targetRegions.length === 0 || sites.length === 0) {
+                groupContainer.innerHTML = `<div class="p-6 text-center text-slate-400 text-sm bg-slate-50 rounded-xl">등록된 사업장이 없습니다. 상단에서 지역과 사업장을 추가해주세요.</div>`;
+            } else {
+                groupContainer.innerHTML = targetRegions.map(reg => {
+                    const matchedSites = sites.filter(s => getSiteRegion(s) === reg);
+                    return `
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 transition shadow-sm">
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-600 text-white shadow-sm">
+                                        <i class="fa-solid fa-map-pin mr-1.5 text-[10px]"></i>${reg}
+                                    </span>
+                                    <span class="text-xs font-semibold text-slate-500">소속 사업장 ${matchedSites.length}개</span>
+                                </div>
+                            </div>
+                            ${matchedSites.length === 0 ? `
+                                <p class="text-xs text-slate-400 py-2 italic text-center">이 지역에 지정된 사업장이 없습니다.</p>
+                            ` : `
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    ${matchedSites.map(s => {
+                                        const siteName = getSiteName(s);
+                                        const globalIndex = sites.findIndex(item => getSiteName(item) === siteName);
+                                        return `
+                                            <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg shadow-xs hover:border-indigo-300 transition">
+                                                <div class="flex items-center space-x-2">
+                                                    <i class="fa-solid fa-building text-slate-400 text-xs"></i>
+                                                    <span class="font-semibold text-slate-800 text-sm">${siteName}</span>
+                                                </div>
+                                                <button onclick="removeSite(${globalIndex})" class="text-slate-400 hover:text-red-500 text-xs transition p-1" title="사업장 삭제">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            `}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // 3. 카테고리 목록
             document.getElementById('category-list').innerHTML = categories.map((c, idx) => `
                 <li class="flex justify-between items-center p-3 bg-slate-50 border rounded-lg text-sm">
                     <span class="font-medium text-slate-700">${c}</span>
@@ -975,17 +1127,57 @@
 
         function addRegion() {
             const v = document.getElementById('newRegionInput').value.trim();
-            if (v && !regions.includes(v)) { regions.push(v); saveLocal(); renderSettings(); }
+            if (v && !regions.includes(v)) { 
+                regions.push(v); 
+                saveLocal(); 
+                renderSettings(); 
+            }
             document.getElementById('newRegionInput').value = '';
         }
-        function removeRegion(idx) { regions.splice(idx, 1); saveLocal(); renderSettings(); }
+
+        function removeRegion(idx) { 
+            const targetRegion = regions[idx];
+            if (confirm(`'${targetRegion}' 지역을 삭제하시겠습니까? 해당 지역 소속 사업장들은 '미지정'으로 변경됩니다.`)) {
+                regions.splice(idx, 1);
+                sites.forEach(s => {
+                    if (getSiteRegion(s) === targetRegion) {
+                        s.region = '미지정';
+                    }
+                });
+                saveLocal(); 
+                renderSettings(); 
+            }
+        }
 
         function addSite() {
-            const v = document.getElementById('newSiteInput').value.trim();
-            if (v && !sites.includes(v)) { sites.push(v); saveLocal(); renderSettings(); }
+            const name = document.getElementById('newSiteInput').value.trim();
+            const region = document.getElementById('newSiteRegionSelect').value;
+            
+            if (!name) {
+                alert('사업장 이름을 입력해주세요.');
+                return;
+            }
+            if (sites.some(s => getSiteName(s) === name)) {
+                alert('이미 등록된 사업장 이름입니다.');
+                return;
+            }
+
+            sites.push({ name: name, region: region });
+            saveLocal();
+            renderSettings();
             document.getElementById('newSiteInput').value = '';
         }
-        function removeSite(idx) { sites.splice(idx, 1); saveLocal(); renderSettings(); }
+
+        function removeSite(idx) { 
+            if (idx >= 0 && idx < sites.length) {
+                const siteName = getSiteName(sites[idx]);
+                if (confirm(`'${siteName}' 사업장을 목록에서 삭제하시겠습니까?`)) {
+                    sites.splice(idx, 1); 
+                    saveLocal(); 
+                    renderSettings(); 
+                }
+            }
+        }
         
         function addCategory() {
             const v = document.getElementById('newCatInput').value.trim();
@@ -997,11 +1189,22 @@
         function openSignupModal() {
             const regRegionSel = document.getElementById('regRegion');
             regRegionSel.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
-
-            const regSiteSel = document.getElementById('regSite');
-            regSiteSel.innerHTML = sites.map(s => `<option value="${s}">${s}</option>`).join('');
             
+            handleSignupRegionChange();
             document.getElementById('signupModal').classList.remove('hidden');
+        }
+
+        function handleSignupRegionChange() {
+            const selectedRegion = document.getElementById('regRegion').value;
+            const regSiteSel = document.getElementById('regSite');
+            const matchedSites = getSitesByRegion(selectedRegion);
+
+            if (matchedSites.length > 0) {
+                regSiteSel.innerHTML = matchedSites.map(s => `<option value="${s}">${s}</option>`).join('');
+            } else {
+                // 해당 지역에 등록된 사업장이 없는 경우 전체 사업장 표시
+                regSiteSel.innerHTML = getAllSiteNames().map(s => `<option value="${s}">${s} (${getSiteRegion(sites.find(item => getSiteName(item) === s))})</option>`).join('');
+            }
         }
 
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
