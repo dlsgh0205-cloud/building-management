@@ -1602,15 +1602,26 @@
             
             const sObj = sites.find(s => s.name === oldN);
             if(sObj) { sObj.name = newN; sObj.region = newR; }
+            
             issues.forEach(i => { if(i.site === oldN) i.site = newN; });
             users.forEach(u => {
                 if(u.site) {
                     const l = u.site.split(',').map(x=>x.trim());
-                    u.site = l.map(x => x === oldN ? newN : x).join(', ');
+                    const updatedSite = l.map(x => x === oldN ? newN : x).join(', ');
+                    if (u.site !== updatedSite) {
+                        u.site = updatedSite;
+                        postDataToGAS(GAS_USER_URL, { type: 'user', action: 'update', id: u.id, name: u.name, phone: u.phone, pwd: u.pwd, role: u.role, region: u.region, site: u.site });
+                    }
                 }
             });
-            saveLocalState(); closeEditSiteModal(); renderSettings(); updateDashboard(); renderIssues();
-            showToast('사업장 수정/재매핑 완료');
+            saveLocalState();
+            
+            if (oldN !== newN) {
+                postDataToGAS(GAS_ISSUE_URL, { type: 'issue', action: 'renameSite', oldSite: oldN, newSite: newN });
+            }
+            
+            closeEditSiteModal(); renderSettings(); updateDashboard(); renderIssues();
+            showToast('사업장 및 연동 데이터(이슈/유저) 수정 완료');
         }
 
         function renderSettingsCategories() {
