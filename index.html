@@ -1138,11 +1138,11 @@
             else if (currentUser.role === 4) scopeText = `[사업장: ${currentUser.site || '미지정'}]`;
             document.getElementById('header-user-scope').innerText = scopeText;
 
-            // Manage Permissions Visibility for Tab Menus
+            // Manage Permissions Visibility for Tab Menus (Only 1단계 최고 관리자에게만 노출)
             const usersTab = document.getElementById('nav-tab-users');
             const settingsTab = document.getElementById('nav-tab-settings');
 
-            if (currentUser.role <= 2) {
+            if (currentUser.role === 1) {
                 usersTab.classList.remove('hidden');
                 settingsTab.classList.remove('hidden');
             } else {
@@ -1514,7 +1514,7 @@
                 completeDate: '',
                 duration: '',
                 actionTaken: '',
-                status: '대기',
+                status: '진행중',
                 regTimestamp: now.getTime()
             };
 
@@ -1532,7 +1532,7 @@
                 completeDate: '',
                 duration: '',
                 actionTaken: '',
-                status: '대기'
+                status: '진행중'
             });
 
             closeIssueModal();
