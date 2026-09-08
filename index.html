@@ -826,7 +826,9 @@
         async function syncUsersFromGAS() {
             if (!GAS_USER_URL) return false;
             try {
-                const res = await fetch(GAS_USER_URL);
+                // 캐시 방지 타임스탬프 추가
+                const cacheBuster = (GAS_USER_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+                const res = await fetch(GAS_USER_URL + cacheBuster);
                 if (res.ok) {
                     const fetchedUsers = await res.json();
                     if (Array.isArray(fetchedUsers) && fetchedUsers.length > 0) {
@@ -844,13 +846,13 @@
                             });
                         }
                         users = fetchedUsers.map(u => ({
-                            id: String(u.id).trim(),
+                            id: String(u.id || '').trim(),
                             name: String(u.name || '').trim(),
                             phone: String(u.phone || '').trim(),
                             pwd: String(u.pwd || '').trim(),
                             role: parseInt(u.role, 10) || 4,
-                            region: u.region || '전체',
-                            site: u.site || '전체'
+                            region: String(u.region || '전체').trim(),
+                            site: String(u.site || '전체').trim()
                         }));
                         saveLocalState();
                         if (currentUser) {
@@ -943,7 +945,7 @@
             syncIssuesFromGAS();
         });
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const id = document.getElementById('login-id').value.trim();
             const pwd = document.getElementById('login-pwd').value.trim();
@@ -951,10 +953,18 @@
             const isMasterAdmin = (id.toLowerCase() === 'admin');
             let foundUser = users.find(u => String(u.id).toLowerCase() === id.toLowerCase());
 
+            // 1. 만약 로컬 목록에 없거나 비밀번호가 다르면, 구글 시트에서 최신 사용자 DB를 즉시 가져와 재확인
+            if (!foundUser || String(foundUser.pwd).trim() !== pwd) {
+                const syncSuccess = await syncUsersFromGAS();
+                if (syncSuccess) {
+                    foundUser = users.find(u => String(u.id).toLowerCase() === id.toLowerCase());
+                }
+            }
+
             // Master Admin Dual Bypass & Auto-recovery
             if (isMasterAdmin) {
                 const validMasterPwds = ['admin', 'admin1234'];
-                if (foundUser && foundUser.pwd) validMasterPwds.push(String(foundUser.pwd));
+                if (foundUser && foundUser.pwd) validMasterPwds.push(String(foundUser.pwd).trim());
 
                 if (validMasterPwds.includes(pwd)) {
                     if (!foundUser) {
@@ -970,8 +980,8 @@
                 }
             }
 
-            // Normal User Authentication
-            if (foundUser && String(foundUser.pwd) === pwd) {
+            // Normal User Authentication (공백 제거 후 엄격 대조)
+            if (foundUser && String(foundUser.pwd).trim() === pwd) {
                 currentUser = foundUser;
                 localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
                 initAppView();
