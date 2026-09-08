@@ -142,12 +142,12 @@
         <div class="max-w-md w-full glass-panel text-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl border border-white/40">
             <div class="flex items-center justify-between mb-4 border-b pb-3">
                 <h3 class="text-base font-extrabold text-slate-900 flex items-center">
-                    <i class="fa-solid fa-cloud-arrow-down text-indigo-600 mr-2"></i>구글 스프레드시트 연동 웹앱 URL
+                    <i class="fa-solid fa-cloud-arrow-down text-indigo-600 mr-2"></i>구글 스프레드시트 연동 설정
                 </h3>
                 <button onclick="closeGasConfigModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="space-y-3.5 text-xs">
-                <p class="text-slate-500 leading-relaxed">구글 시트의 [배포 ➔ 새 배포] 후 복사한 <strong>웹 앱 URL(/exec)</strong>을 확인하거나 새로 교체할 수 있습니다.</p>
+                <p class="text-slate-500 leading-relaxed">구글 시트의 [배포 ➔ 새 배포] 후 복사한 <strong>웹 앱 URL(/exec)</strong>을 입력하세요.</p>
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">사용자 DB 웹앱 URL</label>
                     <input type="text" id="cfg-user-url" class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl font-mono text-[11px] focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -232,12 +232,12 @@
                     <i class="fa-solid fa-triangle-exclamation"></i><span>문제 / 이슈 관리</span>
                 </button>
                 <button onclick="switchTab('users')" id="nav-tab-users"
-                    class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+                    class="tab-btn hidden px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition text-slate-400 hover:text-white hover:bg-slate-800/60">
                     <i class="fa-solid fa-users-gear"></i><span>사용자 권한 관리</span>
                 </button>
                 <button onclick="switchTab('settings')" id="nav-tab-settings"
-                    class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition text-slate-400 hover:text-white hover:bg-slate-800/60">
-                    <i class="fa-solid fa-sitemap"></i><span>지역 / 사업장 / 카테고리 관리</span>
+                    class="tab-btn hidden px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition text-slate-400 hover:text-white hover:bg-slate-800/60">
+                    <i class="fa-solid fa-sitemap"></i><span>지역 / 사업장 관리</span>
                 </button>
             </div>
         </header>
@@ -249,7 +249,7 @@
             <!-- TAB 1: DASHBOARD -->
             <!-- ------------------------------------------------------------- -->
             <div id="view-dashboard" class="space-y-6">
-                <!-- Security Scope Alert (For Role 3 and 4) -->
+                <!-- Security Scope Alert -->
                 <div id="site-restriction-notice" class="hidden glass-card-dark rounded-2xl p-4 border-l-4 border-l-amber-500 flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <i class="fa-solid fa-shield-cat text-amber-400 text-xl"></i>
@@ -322,7 +322,7 @@
                             <h3 id="dashboard-regions-title" class="text-lg font-bold text-white flex items-center tracking-wide drop-shadow-md">
                                 <i class="fa-solid fa-map-location-dot text-indigo-300 mr-2"></i>지역(권역)별 현황 보드
                             </h3>
-                            <p id="dashboard-regions-sub" class="text-xs text-indigo-200 mt-1">지역 카드를 클릭하면 해당 지역에 소속된 사업장별 세부 현황으로 드릴다운합니다.</p>
+                            <p id="dashboard-regions-sub" class="text-xs text-indigo-200 mt-1">지역 카드를 클릭하면 해당 지역에 소속된 사업장별 세부 현황으로 이동합니다.</p>
                         </div>
                         <div id="dashboard-regions-actions" class="flex items-center space-x-2">
                             <button onclick="showAllSitesView()" class="text-xs font-semibold px-3.5 py-2 rounded-xl bg-indigo-600/70 hover:bg-indigo-600 text-white border border-indigo-400/40 transition shadow-md flex items-center">
@@ -335,7 +335,7 @@
                     </div>
                 </div>
 
-                <!-- 사업장별 세부 보드 (1/2단계 지역 클릭 시 또는 3단계 관할) -->
+                <!-- 사업장별 세부 보드 -->
                 <div id="dashboard-sites-wrap" class="hidden mt-8 space-y-4">
                     <div class="flex items-center justify-between border-b border-white/10 pb-3">
                         <h3 id="dashboard-sites-title" class="text-lg font-bold text-white flex items-center tracking-wide drop-shadow-md">
@@ -394,7 +394,7 @@
             </div>
 
             <!-- ------------------------------------------------------------- -->
-            <!-- TAB 3: USER MANAGEMENT -->
+            <!-- TAB 3: USER MANAGEMENT (Role 1 Only) -->
             <!-- ------------------------------------------------------------- -->
             <div id="view-users" class="hidden space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -432,14 +432,14 @@
             </div>
 
             <!-- ------------------------------------------------------------- -->
-            <!-- TAB 4: SETTINGS (REGION / SITE / CATEGORY) -->
+            <!-- TAB 4: SETTINGS (Role 1 Only) -->
             <!-- ------------------------------------------------------------- -->
             <div id="view-settings" class="hidden space-y-8">
                 <div>
                     <h3 class="text-xl font-extrabold text-white flex items-center">
                         <i class="fa-solid fa-sitemap text-indigo-400 mr-2.5"></i>지역(권역) 및 사업장·카테고리 통합 체계
                     </h3>
-                    <p class="text-xs text-slate-400 mt-1">지역 밑에 사업장을 묶어서 등록하고, 이슈 유형 카테고리를 체계적으로 정비합니다.</p>
+                    <p class="text-xs text-slate-400 mt-1">지역 밑에 사업장을 묶어서 등록하고 수정/재매핑을 자유롭게 구성합니다.</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -465,7 +465,7 @@
                         </div>
                     </div>
 
-                    <!-- 2. Site Mapping Management (Under Region) -->
+                    <!-- 2. Site Mapping Management -->
                     <div class="glass-panel text-slate-800 rounded-2xl p-6 shadow-xl border border-white/40 lg:col-span-2 flex flex-col justify-between">
                         <div>
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b pb-3">
@@ -473,7 +473,7 @@
                                     <h4 class="font-extrabold text-base text-slate-900 flex items-center">
                                         <i class="fa-solid fa-building-circle-check text-indigo-600 mr-2"></i>지역별 사업장 등록 및 매핑
                                     </h4>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">사업장을 추가할 때 어느 지역에 소속되는지 함께 지정합니다.</p>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">사업장을 추가하거나 연필 아이콘을 눌러 소속 지역을 변경합니다.</p>
                                 </div>
                                 <select id="settings-site-region-filter" onchange="renderSettingsSites()"
                                     class="text-xs px-2.5 py-1.5 bg-slate-100 border border-slate-300 rounded-xl font-bold text-slate-700 focus:outline-none">
@@ -481,7 +481,6 @@
                                 </select>
                             </div>
 
-                            <!-- Add Site Row -->
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
                                 <select id="input-site-target-region"
                                     class="px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
@@ -495,7 +494,6 @@
                                 </button>
                             </div>
 
-                            <!-- Regional Sites Grid Cards -->
                             <div id="settings-sites-grouped-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
                                 <!-- Dynamic Sites Grouped Cards -->
                             </div>
@@ -556,18 +554,15 @@
                     <label class="block text-xs font-bold text-slate-600 mb-1">비밀번호</label>
                     <input type="password" id="su-pwd" required class="w-full px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
-                <!-- Region & Site Select with Dynamic Filter -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">소속 지역 (F열)</label>
                         <select id="su-region" onchange="updateSignupSiteOptions()" required class="w-full px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <!-- Regions dynamically injected -->
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">담당 사업장 (G열)</label>
                         <select id="su-site" required class="w-full px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <!-- Sites filtered dynamically -->
                         </select>
                     </div>
                 </div>
@@ -580,7 +575,7 @@
         </div>
     </div>
 
-    <!-- 2. New Issue Modal -->
+    <!-- 2. New Issue Modal (No Pending) -->
     <div id="modal-issue" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="max-w-lg w-full glass-panel text-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/40">
             <div class="flex items-center justify-between mb-5 border-b pb-3">
@@ -593,13 +588,11 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">해당 사업장</label>
                     <select id="issue-site-select" required class="w-full px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <!-- Dynamic Allowed Sites -->
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">카테고리</label>
                     <select id="issue-cat-select" required class="w-full px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <!-- Dynamic Categories -->
                     </select>
                 </div>
                 <div>
@@ -609,7 +602,7 @@
                 </div>
                 <div class="pt-2 flex justify-end space-x-2">
                     <button type="button" onclick="closeIssueModal()" class="px-4 py-2.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-300 transition">취소</button>
-                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">이슈 접수 등록</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">이슈 접수 등록 (처리중)</button>
                 </div>
             </form>
         </div>
@@ -627,7 +620,6 @@
                 </div>
                 <button onclick="closeStatusModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-
             <!-- Issue Summary Card -->
             <div class="bg-slate-100/90 rounded-xl p-3.5 mb-4 text-xs space-y-1.5 border border-slate-200">
                 <div class="flex justify-between">
@@ -643,11 +635,9 @@
                     <p id="modal-issue-content" class="text-slate-800 font-medium bg-white p-2 rounded-lg border border-slate-200 break-all"></p>
                 </div>
             </div>
-
-            <!-- Status & Action Form -->
+            <!-- Status Form -->
             <form id="form-issue-status" onsubmit="saveIssueStatusAction(event)" class="space-y-3.5 text-xs">
                 <input type="hidden" id="modal-issue-id">
-
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">진행 상태 변경</label>
                     <select id="modal-select-status" onchange="toggleActionInputsByStatus()" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -655,7 +645,6 @@
                         <option value="완료">완료 (조치 완료)</option>
                     </select>
                 </div>
-
                 <div id="wrap-action-taken" class="space-y-3">
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">조치 방법 및 해결 내용</label>
@@ -675,7 +664,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="pt-2 flex items-center justify-between">
                     <button type="button" id="btn-delete-issue" onclick="deleteCurrentIssue()"
                         class="hidden px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-xl transition text-xs flex items-center">
@@ -699,15 +687,12 @@
                 </h3>
                 <button onclick="closeUserPermModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-
             <form id="form-user-perm" onsubmit="saveUserPermission(event)" class="space-y-3.5 text-xs">
                 <input type="hidden" id="perm-user-id">
-
                 <div class="bg-slate-100 p-3 rounded-xl">
                     <span class="text-slate-500 block">대상 사용자:</span>
                     <span id="perm-user-label" class="font-bold text-slate-900 text-sm"></span>
                 </div>
-
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">권한 등급 선택</label>
                     <select id="perm-role-select" onchange="handleRoleSelectChange()" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -717,21 +702,16 @@
                         <option value="4">4단계 : 사업장 관리자 (단일 사업장)</option>
                     </select>
                 </div>
-
                 <div id="perm-region-wrap">
                     <label class="block font-bold text-slate-700 mb-1">소속 지역 지정 (F열)</label>
                     <select id="perm-region-select" onchange="renderPermSitesSelector()" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <!-- Dynamic Region List -->
                     </select>
                 </div>
-
                 <div id="perm-sites-wrap">
                     <label id="perm-sites-label" class="block font-bold text-slate-700 mb-1">관할 사업장 지정 (G열)</label>
                     <div id="perm-sites-checkbox-list" class="space-y-1.5 max-h-44 overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                        <!-- Dynamic Site Checkboxes or Single select -->
                     </div>
                 </div>
-
                 <div class="pt-2 flex justify-end space-x-2">
                     <button type="button" onclick="closeUserPermModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition">취소</button>
                     <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition">권한 저장</button>
@@ -740,33 +720,71 @@
         </div>
     </div>
 
+    <!-- 5. Edit Region Modal -->
+    <div id="modal-edit-region" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-sm w-full glass-panel text-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/40">
+            <div class="flex items-center justify-between mb-4 border-b pb-3">
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center">
+                    <i class="fa-solid fa-pen-to-square text-indigo-600 mr-2"></i>지역(권역) 명칭 수정
+                </h3>
+                <button onclick="closeEditRegionModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveEditRegion(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-region-old-name">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">새로운 지역(권역)명</label>
+                    <input type="text" id="edit-region-new-name" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closeEditRegionModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition">변경 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. Edit Site Modal -->
+    <div id="modal-edit-site" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="max-w-sm w-full glass-panel text-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/40">
+            <div class="flex items-center justify-between mb-4 border-b pb-3">
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center">
+                    <i class="fa-solid fa-building-user text-indigo-600 mr-2"></i>사업장 수정 및 재매핑
+                </h3>
+                <button onclick="closeEditSiteModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveEditSite(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-site-old-name">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">소속 지역 (권역) 변경</label>
+                    <select id="edit-site-target-region" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <!-- Dynamic Region Options -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">사업장 명칭 수정</label>
+                    <input type="text" id="edit-site-new-name" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closeEditSiteModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-300 transition">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition">저장 및 반영</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script>
         // =================================================================
         // GLOBAL STATE & STORAGE CONFIG
         // =================================================================
         const DEFAULT_GAS_USER_URL = 'https://script.google.com/macros/s/AKfycbytpkNDE_6H6d5sPfiXIp3LIMtHaFh8vvk5WcwannXQe-aCnwrAPieB7481vXsqlgkgFA/exec'; 
-        // 사장님께서 배포하신 최신 건물관리 이슈 DB 웹앱 URL 반영
         const DEFAULT_GAS_ISSUE_URL = 'https://script.google.com/macros/s/AKfycbwSq5ZfU4DsThclp66W4qqTySyHgQNWNrvKD8FmZpVn11i4bk2jcyBdO0yoyz6uCKFN/exec'; 
 
         const LS_GAS_USER_URL = 'erp_cfg_gas_user_url';
         const LS_GAS_ISSUE_URL = 'erp_cfg_gas_issue_url';
 
-        // 사용자 DB URL 캐시 자동 갱신
-        let savedUserUrl = localStorage.getItem(LS_GAS_USER_URL);
-        if (!savedUserUrl || savedUserUrl.includes('AKfycby7g63Y4Vp52iAad03y5PmsqfU_m3j2_iFw-gXhT6-eNqM5O4Z2mHqG_1')) {
-            savedUserUrl = DEFAULT_GAS_USER_URL;
-            localStorage.setItem(LS_GAS_USER_URL, DEFAULT_GAS_USER_URL);
-        }
-
-        // 이슈 DB URL 캐시 자동 갱신 (예전 임시 URL이 남아있는 경우 최신 URL로 강제 갱신)
-        let savedIssueUrl = localStorage.getItem(LS_GAS_ISSUE_URL);
-        if (!savedIssueUrl || savedIssueUrl.includes('AKfycbz_K_N9hE4t0iE12x6r8V9z4G6y8P1q9w0e2r4t6y8u0i')) {
-            savedIssueUrl = DEFAULT_GAS_ISSUE_URL;
-            localStorage.setItem(LS_GAS_ISSUE_URL, DEFAULT_GAS_ISSUE_URL);
-        }
-
-        let GAS_USER_URL = savedUserUrl;
-        let GAS_ISSUE_URL = savedIssueUrl;
+        let GAS_USER_URL = localStorage.getItem(LS_GAS_USER_URL) || DEFAULT_GAS_USER_URL;
+        let GAS_ISSUE_URL = localStorage.getItem(LS_GAS_ISSUE_URL) || DEFAULT_GAS_ISSUE_URL;
 
         const LS_USERS = 'erp_system_users_v3';
         const LS_ISSUES = 'erp_system_issues_v3';
@@ -775,79 +793,31 @@
         const LS_CATEGORIES = 'erp_system_categories_v3';
         const LS_SESSION = 'erp_system_session_v3';
 
-        // Initial Data Defaults
+        // Data Models
         let regions = JSON.parse(localStorage.getItem(LS_REGIONS)) || ['수도권', '영남권', '충청권', '호남권', '강원권'];
         
-        let sites = JSON.parse(localStorage.getItem(LS_SITES)) || [
-            { name: '서울본사', region: '수도권' },
-            { name: '인천물류센터', region: '수도권' },
-            { name: '부산지사', region: '영남권' },
-            { name: '대구센터', region: '영남권' },
-            { name: '대전센터', region: '충청권' },
-            { name: '광주지점', region: '호남권' },
-            { name: '원주센터', region: '강원권' }
+        let rawSites = JSON.parse(localStorage.getItem(LS_SITES)) || [
+            { name: '서울본사', region: '수도권' }, { name: '인천물류센터', region: '수도권' }, { name: '부산지사', region: '영남권' },
+            { name: '대구센터', region: '영남권' }, { name: '대전센터', region: '충청권' }, { name: '광주지점', region: '호남권' }, { name: '원주센터', region: '강원권' }
         ];
+        // Normalize Site Objects mapping
+        let sites = rawSites.map(s => (typeof s === 'string' ? { name: s, region: regions[0] || '수도권' } : s));
 
-        let categories = JSON.parse(localStorage.getItem(LS_CATEGORIES)) || [
-            '네트워크/전산', '하드웨어/기기', '소프트웨어/ERP', '시설/소방/안전', '공조/냉난방', '기타 민원'
-        ];
+        let categories = JSON.parse(localStorage.getItem(LS_CATEGORIES)) || ['네트워크/전산', '하드웨어/기기', '소프트웨어/ERP', '시설/소방/안전', '공조/냉난방', '기타 민원'];
 
         let users = JSON.parse(localStorage.getItem(LS_USERS)) || [
-            { id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: 'admin', role: 1, region: '전체', site: '전체' },
-            { id: 'manager', name: '중간관리자', phone: '010-1111-2222', pwd: '1234', role: 2, region: '전체', site: '전체' },
-            { id: 'region_boss', name: '수도권책임자', phone: '010-3333-4444', pwd: '1234', role: 3, region: '수도권', site: '서울본사, 인천물류센터' },
-            { id: 'site_worker', name: '서울본사담당', phone: '010-5555-6666', pwd: '1234', role: 4, region: '수도권', site: '서울본사' }
+            { id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: 'admin', role: 1, region: '전체', site: '전체' }
         ];
 
-        // Ensure Master Admin always exists in users array
-        if (!users.some(u => String(u.id).toLowerCase() === 'admin')) {
-            users.unshift({ id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: 'admin', role: 1, region: '전체', site: '전체' });
-        }
-
-        let issues = JSON.parse(localStorage.getItem(LS_ISSUES)) || [
-            {
-                id: 'iss_1',
-                regDate: '2026.09.07 09:30',
-                site: '서울본사',
-                category: '네트워크/전산',
-                content: '3층 회의실 메인 스위치 허브 전원 공급 불안정',
-                completeDate: '',
-                duration: '',
-                actionTaken: '',
-                status: '처리중',
-                regTimestamp: Date.now() - 3600000 * 24
-            },
-            {
-                id: 'iss_2',
-                regDate: '2026.09.07 14:15',
-                site: '인천물류센터',
-                category: '시설/소방/안전',
-                content: 'B동 하역장 셔터 도어 레일 윤활 부족 및 끼임 현상',
-                completeDate: '2026.09.07 16:40',
-                duration: '2시간 25분',
-                actionTaken: '전문 기사 방문 후 레일 교체 및 모터 구동축 그리스 주입 완료',
-                status: '완료',
-                regTimestamp: Date.now() - 3600000 * 18
-            },
-            {
-                id: 'iss_3',
-                regDate: '2026.09.08 08:50',
-                site: '부산지사',
-                category: '공조/냉난방',
-                content: '전산실 2호기 항온항습기 온도 에러 코드 경보',
-                completeDate: '',
-                duration: '',
-                actionTaken: '점검 업체 긴급 출동 요청함',
-                status: '처리중',
-                regTimestamp: Date.now() - 3600000 * 2
-            }
-        ];
+        let issues = JSON.parse(localStorage.getItem(LS_ISSUES)) || [];
 
         let currentUser = null;
         let selectedDashboardRegion = null;
         let isAllSitesMode = false;
 
-        // Helper Functions for Data Access
+        // =================================================================
+        // HELPERS
+        // =================================================================
         function saveLocalState() {
             localStorage.setItem(LS_REGIONS, JSON.stringify(regions));
             localStorage.setItem(LS_SITES, JSON.stringify(sites));
@@ -856,23 +826,14 @@
             localStorage.setItem(LS_ISSUES, JSON.stringify(issues));
         }
 
-        function getSiteName(s) {
-            return (typeof s === 'object' && s !== null) ? s.name : String(s);
-        }
-
+        function getSiteName(s) { return (typeof s === 'object' && s !== null) ? s.name : String(s); }
         function getSiteRegion(s) {
             if (typeof s === 'object' && s !== null) return s.region || '미지정';
             const found = sites.find(item => item.name === s);
             return found ? (found.region || '미지정') : '미지정';
         }
-
-        function getSitesByRegion(regionName) {
-            return sites.filter(s => getSiteRegion(s) === regionName).map(s => getSiteName(s));
-        }
-
-        function getAllSiteNames() {
-            return sites.map(s => getSiteName(s));
-        }
+        function getSitesByRegion(reg) { return sites.filter(s => getSiteRegion(s) === reg).map(s => getSiteName(s)); }
+        function getAllSiteNames() { return sites.map(s => getSiteName(s)); }
 
         function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
@@ -887,55 +848,39 @@
             } else if (type === 'error') {
                 toastBody.className = "flex items-center space-x-3 px-5 py-3.5 rounded-xl shadow-2xl text-white text-sm font-medium border border-rose-500/40 bg-rose-600/90 backdrop-blur-md";
                 toastIcon.className = "fa-solid fa-circle-xmark text-lg";
-            } else {
-                toastBody.className = "flex items-center space-x-3 px-5 py-3.5 rounded-xl shadow-2xl text-white text-sm font-medium border border-indigo-500/40 bg-indigo-600/90 backdrop-blur-md";
-                toastIcon.className = "fa-solid fa-circle-info text-lg";
             }
-
             toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3200);
+            setTimeout(() => { toast.classList.add('hidden'); }, 3200);
         }
 
-        // Google Apps Script Network Handlers
+        // =================================================================
+        // NETWORKING
+        // =================================================================
         async function syncUsersFromGAS() {
             if (!GAS_USER_URL) return false;
             try {
-                const cacheBuster = (GAS_USER_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
-                const res = await fetch(GAS_USER_URL + cacheBuster);
+                const res = await fetch(GAS_USER_URL + '?_t=' + Date.now());
                 if (res.ok) {
-                    const fetchedUsers = await res.json();
-                    if (Array.isArray(fetchedUsers) && fetchedUsers.length > 0) {
-                        const hasAdmin = fetchedUsers.some(u => String(u.id).toLowerCase() === 'admin');
-                        if (!hasAdmin) {
-                            fetchedUsers.unshift({
-                                id: 'admin',
-                                name: '최고관리자',
-                                phone: '010-0000-0000',
-                                pwd: 'admin',
-                                role: 1,
-                                region: '전체',
-                                site: '전체'
-                            });
-                        }
-                        users = fetchedUsers.map(u => ({
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        users = data.map(u => ({
                             id: String(u.id || '').trim(),
                             name: String(u.name || '').trim(),
                             phone: String(u.phone || '').trim(),
                             pwd: String(u.pwd || '').trim(),
-                            role: parseInt(u.role, 10) || 4,
+                            role: parseInt(String(u.role).replace(/[^0-9]/g, ''), 10) || 4,
                             region: String(u.region || '전체').trim(),
                             site: String(u.site || '전체').trim()
                         }));
-                        saveLocalState();
-                        
-                        const statusEl = document.getElementById('login-sync-status');
-                        if (statusEl) {
-                            statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mr-1.5"></i>구글 시트 연동 정상 (사용자 ${users.length}명)`;
-                            statusEl.className = "mt-2 text-[11px] font-semibold text-emerald-700 bg-emerald-50 py-1 px-3 rounded-full inline-flex items-center border border-emerald-200";
+                        if (!users.some(u => u.id.toLowerCase() === 'admin')) {
+                            users.unshift({ id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: 'admin', role: 1, region: '전체', site: '전체' });
                         }
-                        
+                        saveLocalState();
+                        const st = document.getElementById('login-sync-status');
+                        if (st) {
+                            st.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mr-1.5"></i>구글 시트 사용자 DB 연결됨 (${users.length}명)`;
+                            st.className = "mt-2 text-[11px] font-semibold text-emerald-700 bg-emerald-50 py-1 px-3 rounded-full inline-flex items-center border border-emerald-200";
+                        }
                         if (currentUser) {
                             renderUsers();
                             updateDashboard();
@@ -943,24 +888,18 @@
                         return true;
                     }
                 }
-            } catch (e) {
-                console.debug('GAS User sync error:', e);
-            }
+            } catch (e) { console.debug('Sync users error:', e); }
             return false;
         }
 
         async function syncIssuesFromGAS() {
             if (!GAS_ISSUE_URL) return false;
             try {
-                const cacheBuster = (GAS_ISSUE_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
-                const res = await fetch(GAS_ISSUE_URL + cacheBuster);
+                const res = await fetch(GAS_ISSUE_URL + '?_t=' + Date.now());
                 if (res.ok) {
-                    const fetchedIssues = await res.json();
-                    if (Array.isArray(fetchedIssues)) {
-                        issues = fetchedIssues.map(i => ({
-                            ...i,
-                            regTimestamp: i.regTimestamp || Date.now()
-                        }));
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        issues = data.map(i => ({ ...i, regTimestamp: i.regTimestamp || Date.now() }));
                         saveLocalState();
                         if (currentUser) {
                             renderIssues();
@@ -969,10 +908,22 @@
                         return true;
                     }
                 }
-            } catch (e) {
-                console.debug('GAS Issue sync error:', e);
-            }
+            } catch (e) { console.debug('Sync issues error:', e); }
             return false;
+        }
+
+        async function manualSyncAll() {
+            const loader = document.getElementById('sync-loader');
+            loader.classList.remove('hidden');
+            try {
+                await syncUsersFromGAS();
+                await syncIssuesFromGAS();
+                showToast(`전체 동기화 완료 (사용자 ${users.length}명, 이슈 ${issues.length}건)`);
+            } catch (err) {
+                showToast('동기화 실패 (로컬 데이터 유지)', 'error');
+            } finally {
+                loader.classList.add('hidden');
+            }
         }
 
         async function postDataToGAS(url, payload) {
@@ -985,48 +936,20 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: bodyStr
                 });
-            } catch (e) {
-                console.debug('Background GAS Post (silent):', e);
-            }
+            } catch (e) { console.debug('Post silent error:', e); }
         }
 
-        async function manualSyncAll() {
-            const loader = document.getElementById('sync-loader');
-            loader.classList.remove('hidden');
-            try {
-                const [userOk, issueOk] = await Promise.all([syncUsersFromGAS(), syncIssuesFromGAS()]);
-                updateDashboard();
-                renderIssues();
-                renderUsers();
-                if (userOk && issueOk) {
-                    showToast(`구글 시트 전체 동기화 완료 (사용자 ${users.length}명, 이슈 ${issues.length}건)`);
-                } else if (userOk) {
-                    showToast(`사용자 DB 동기화 완료 (${users.length}명), 이슈 DB는 URL 설정을 확인하세요.`);
-                } else if (issueOk) {
-                    showToast(`이슈 DB 동기화 완료 (${issues.length}건), 사용자 DB는 URL 설정을 확인하세요.`);
-                } else {
-                    showToast('동기화 완료 (로컬 캐시 반영)');
-                }
-            } catch (err) {
-                showToast('동기화 완료 (로컬 캐시 반영)');
-            } finally {
-                loader.classList.add('hidden');
-            }
-        }
-
-        // Initialization & Authentication Lifecycle
-        window.addEventListener('load', async () => {
+        // =================================================================
+        // AUTHENTICATION
+        // =================================================================
+        window.addEventListener('load', () => {
             const session = localStorage.getItem(LS_SESSION);
             if (session) {
                 try {
                     currentUser = JSON.parse(session);
                     initAppView();
-                } catch (e) {
-                    localStorage.removeItem(LS_SESSION);
-                }
+                } catch (e) { localStorage.removeItem(LS_SESSION); }
             }
-
-            // Sync in Background
             syncUsersFromGAS();
             syncIssuesFromGAS();
         });
@@ -1034,132 +957,46 @@
         async function handleLogin(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-login-submit');
-            const originalBtnText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>인증 확인 중...`;
             btn.disabled = true;
 
-            const id = document.getElementById('login-id').value.trim();
-            const pwd = document.getElementById('login-pwd').value.trim();
+            const idInput = document.getElementById('login-id').value.trim();
+            const pwdInput = document.getElementById('login-pwd').value.trim();
 
-            try {
-                await syncUsersFromGAS();
+            await syncUsersFromGAS();
+            
+            const isMaster = (idInput.toLowerCase() === 'admin');
+            let foundUser = users.find(u => String(u.id).trim().toLowerCase() === idInput.toLowerCase());
 
-                const isMasterAdmin = (id.toLowerCase() === 'admin');
-                let foundUser = users.find(u => String(u.id).toLowerCase() === id.toLowerCase());
-
-                // Master Admin Dual Bypass & Auto-recovery
-                if (isMasterAdmin) {
-                    const validMasterPwds = ['admin', 'admin1234'];
-                    if (foundUser && foundUser.pwd) validMasterPwds.push(String(foundUser.pwd).trim());
-
-                    if (validMasterPwds.includes(pwd)) {
-                        if (!foundUser) {
-                            foundUser = { id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: pwd, role: 1, region: '전체', site: '전체' };
-                            users.unshift(foundUser);
-                            saveLocalState();
-                        }
-                        currentUser = foundUser;
-                        localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
-                        initAppView();
-                        showToast(`${currentUser.name} 님, 환영합니다!`);
-                        return;
-                    }
+            // Master backdoor
+            if (isMaster && (pwdInput === 'admin' || pwdInput === 'admin1234' || (foundUser && String(foundUser.pwd) === pwdInput))) {
+                if (!foundUser) {
+                    foundUser = { id: 'admin', name: '최고관리자', phone: '010-0000-0000', pwd: pwdInput, role: 1, region: '전체', site: '전체' };
+                    users.unshift(foundUser);
+                    saveLocalState();
                 }
+                loginSuccess(foundUser);
+                return;
+            }
 
-                // Normal User Authentication
-                if (foundUser && String(foundUser.pwd).trim() === pwd) {
-                    currentUser = foundUser;
-                    localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
-                    initAppView();
-                    showToast(`${currentUser.name} 님, 환영합니다!`);
-                } else {
-                    if (!foundUser) {
-                        showToast(`아이디 [${id}] 를 구글 시트에서 찾을 수 없습니다.`, 'error');
-                    } else {
-                        showToast('비밀번호가 일치하지 않습니다.', 'error');
-                    }
-                }
-            } finally {
-                btn.innerHTML = originalBtnText;
+            // Normal login
+            if (foundUser && String(foundUser.pwd).trim() === pwdInput) {
+                loginSuccess(foundUser);
+            } else {
+                showToast('아이디 또는 비밀번호가 일치하지 않습니다.', 'error');
+                btn.innerHTML = `<span>로그인</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
                 btn.disabled = false;
             }
         }
 
-        // Quick GAS Config Modal Functions
-        function openGasConfigModal() {
-            document.getElementById('cfg-user-url').value = GAS_USER_URL;
-            document.getElementById('cfg-issue-url').value = GAS_ISSUE_URL;
-            document.getElementById('cfg-test-result').classList.add('hidden');
-            document.getElementById('modal-gas-config').classList.remove('hidden');
-        }
-
-        function closeGasConfigModal() {
-            document.getElementById('modal-gas-config').classList.add('hidden');
-        }
-
-        async function testGasIssueUrl() {
-            const testUrl = document.getElementById('cfg-issue-url').value.trim();
-            const resultBox = document.getElementById('cfg-test-result');
-            resultBox.classList.remove('hidden');
-            resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-slate-100 text-slate-700 flex items-center";
-            resultBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>이슈 DB 연결 시도 중...`;
-
-            try {
-                const res = await fetch(testUrl + (testUrl.includes('?') ? '&' : '?') + '_t=' + Date.now());
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data)) {
-                        resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center";
-                        resultBox.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i>이슈 DB 정상 연결 완료! 총 ${data.length}건 확인됨`;
-                        return;
-                    }
-                }
-                throw new Error('응답 형식 오류');
-            } catch (err) {
-                resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center";
-                resultBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i>이슈 DB 연결 실패: 웹앱 배포 URL 또는 권한(모든 사용자) 설정을 확인하세요.`;
-            }
-        }
-
-        async function testGasUserUrl() {
-            const testUrl = document.getElementById('cfg-user-url').value.trim();
-            const resultBox = document.getElementById('cfg-test-result');
-            resultBox.classList.remove('hidden');
-            resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-slate-100 text-slate-700 flex items-center";
-            resultBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>연결 시도 중...`;
-
-            try {
-                const res = await fetch(testUrl + (testUrl.includes('?') ? '&' : '?') + '_t=' + Date.now());
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data)) {
-                        resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center";
-                        resultBox.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i>정상 연결 완료! 시트 사용자 DB ${data.length}명 확인됨`;
-                        return;
-                    }
-                }
-                throw new Error('응답 형식 오류');
-            } catch (err) {
-                resultBox.className = "p-2.5 rounded-xl text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center";
-                resultBox.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i>연결 실패: 웹앱 URL 또는 권한(모든 사용자) 설정을 확인하세요.`;
-            }
-        }
-
-        function saveGasConfig() {
-            const uUrl = document.getElementById('cfg-user-url').value.trim();
-            const iUrl = document.getElementById('cfg-issue-url').value.trim();
-            if (uUrl) {
-                GAS_USER_URL = uUrl;
-                localStorage.setItem(LS_GAS_USER_URL, uUrl);
-            }
-            if (iUrl) {
-                GAS_ISSUE_URL = iUrl;
-                localStorage.setItem(LS_GAS_ISSUE_URL, iUrl);
-            }
-            closeGasConfigModal();
-            syncUsersFromGAS();
-            syncIssuesFromGAS();
-            showToast('구글 시트 연동 URL이 저장되었습니다.');
+        function loginSuccess(userObj) {
+            currentUser = userObj;
+            localStorage.setItem(LS_SESSION, JSON.stringify(currentUser));
+            initAppView();
+            showToast(`${currentUser.name} 님, 환영합니다!`);
+            const btn = document.getElementById('btn-login-submit');
+            btn.innerHTML = `<span>로그인</span><i class="fa-solid fa-arrow-right text-xs"></i>`;
+            btn.disabled = false;
         }
 
         function handleLogout() {
@@ -1168,7 +1005,7 @@
             document.getElementById('view-app').classList.add('hidden');
             document.getElementById('view-login').classList.remove('hidden');
             document.getElementById('form-login').reset();
-            showToast('안전하게 로그아웃되었습니다.');
+            showToast('로그아웃되었습니다.');
         }
 
         function initAppView() {
@@ -1176,31 +1013,19 @@
             document.getElementById('view-app').classList.remove('hidden');
 
             document.getElementById('header-user-name').innerText = currentUser.name;
-            const roleLabels = { 1: '1단계', 2: '2단계', 3: '3단계', 4: '4단계' };
-            document.getElementById('header-user-role-badge').innerText = roleLabels[currentUser.role] || '사용자';
+            const roles = {1:'1단계', 2:'2단계', 3:'3단계', 4:'4단계'};
+            document.getElementById('header-user-role-badge').innerText = roles[currentUser.role] || '사용자';
 
             let scopeText = '[전사 총괄]';
             if (currentUser.role === 3) scopeText = `[지역: ${currentUser.region || '미지정'}]`;
             else if (currentUser.role === 4) scopeText = `[사업장: ${currentUser.site || '미지정'}]`;
             document.getElementById('header-user-scope').innerText = scopeText;
 
-            const usersTab = document.getElementById('nav-tab-users');
-            const settingsTab = document.getElementById('nav-tab-settings');
-            const isRole1 = parseInt(String(currentUser?.role || '').replace(/[^0-9]/g, ''), 10) === 1;
-
-            if (isRole1) {
-                usersTab.classList.remove('hidden');
-                settingsTab.classList.remove('hidden');
-            } else {
-                usersTab.classList.add('hidden');
-                settingsTab.classList.add('hidden');
-            }
-
             switchTab('dashboard');
         }
 
         function switchTab(tabKey) {
-            const isRole1 = parseInt(String(currentUser?.role || '').replace(/[^0-9]/g, ''), 10) === 1;
+            const isRole1 = parseInt(String(currentUser?.role).replace(/[^0-9]/g, ''), 10) === 1;
 
             if ((tabKey === 'users' || tabKey === 'settings') && !isRole1) {
                 tabKey = 'dashboard';
@@ -1213,7 +1038,7 @@
                 if (btn) {
                     btn.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-2 transition text-slate-400 hover:text-white hover:bg-slate-800/60";
                     if ((k === 'users' || k === 'settings') && !isRole1) {
-                        btn.classList.add('hidden');
+                        btn.classList.add('hidden'); // Ensure strictly hidden for roles > 1
                     }
                 }
             });
@@ -1235,7 +1060,7 @@
         }
 
         // =================================================================
-        // TAB 1: DASHBOARD CONTROLLER
+        // DASHBOARD
         // =================================================================
         function updateDashboard() {
             let filteredIssues = [...issues];
@@ -1245,14 +1070,18 @@
             if (currentUser.role === 3) {
                 const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
                 filteredIssues = issues.filter(i => mySites.includes(i.site));
-                noticeEl.classList.remove('hidden');
-                noticeText.innerText = `지역 책임자 권한 적용: [지역: ${currentUser.region || '미지정'}] - 관할 사업장: [${mySites.join(', ')}] 데이터만 집계됩니다.`;
+                if (noticeEl) {
+                    noticeEl.classList.remove('hidden');
+                    noticeText.innerText = `지역 책임자 권한: [지역: ${currentUser.region}] - 사업장: [${mySites.join(', ')}] 집계됨.`;
+                }
             } else if (currentUser.role === 4) {
                 filteredIssues = issues.filter(i => i.site === currentUser.site);
-                noticeEl.classList.remove('hidden');
-                noticeText.innerText = `사업장 관리자 보안 격리: [사업장: ${currentUser.site || '미지정'}] 전용 데이터만 표시됩니다.`;
+                if (noticeEl) {
+                    noticeEl.classList.remove('hidden');
+                    noticeText.innerText = `사업장 관리자 보안: [사업장: ${currentUser.site}] 전용 데이터만 표시됨.`;
+                }
             } else {
-                noticeEl.classList.add('hidden');
+                if (noticeEl) noticeEl.classList.add('hidden');
             }
 
             const total = filteredIssues.length;
@@ -1267,18 +1096,13 @@
                 return dateStr.startsWith(currentYearMonth) || dateStr.startsWith(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
             });
 
-            const statTotalEl = document.getElementById('stat-total');
-            const statMonthLabelEl = document.getElementById('stat-month-label');
-            const statMonthEl = document.getElementById('stat-month');
-            const statProgressEl = document.getElementById('stat-progress');
-            const statCompletedEl = document.getElementById('stat-completed');
+            if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
+            if (document.getElementById('stat-month-label')) document.getElementById('stat-month-label').innerText = monthLabel;
+            if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = currentMonthIssues.length;
+            if (document.getElementById('stat-progress')) document.getElementById('stat-progress').innerText = progress;
+            if (document.getElementById('stat-completed')) document.getElementById('stat-completed').innerText = completed;
 
-            if (statTotalEl) statTotalEl.innerText = total;
-            if (statMonthLabelEl) statMonthLabelEl.innerText = monthLabel;
-            if (statMonthEl) statMonthEl.innerText = currentMonthIssues.length;
-            if (statProgressEl) statProgressEl.innerText = progress;
-            if (statCompletedEl) statCompletedEl.innerText = completed;
-
+            // Monthly breakdown grid
             const monthlyGrid = document.getElementById('dashboard-monthly-grid');
             if (monthlyGrid) {
                 const months = [];
@@ -1288,7 +1112,6 @@
                     const label = `${d.getMonth() + 1}월`;
                     months.push({ ym, label, isCurrent: k === 0 });
                 }
-
                 monthlyGrid.innerHTML = months.map(m => {
                     const mIssues = filteredIssues.filter(i => {
                         const str = String(i.regDate || '');
@@ -1296,7 +1119,6 @@
                     });
                     const mCompleted = mIssues.filter(i => i.status === '완료').length;
                     const mProcessing = mIssues.length - mCompleted;
-
                     return `
                         <div class="glass-panel text-slate-800 rounded-xl p-3 border ${m.isCurrent ? 'border-purple-500 bg-purple-50/90 ring-2 ring-purple-400/40' : 'border-white/30'} flex flex-col justify-between shadow-md">
                             <div class="flex items-center justify-between mb-1">
@@ -1307,7 +1129,7 @@
                                 ${mIssues.length}<span class="text-[10px] font-normal text-slate-500 ml-0.5">건</span>
                             </div>
                             <div class="grid grid-cols-2 gap-1 text-[10px] pt-1.5 border-t border-slate-200">
-                                <div><span class="text-slate-400 block text-[9px]">처리</span><span class="font-bold text-blue-600">${mProcessing}</span></div>
+                                <div><span class="text-slate-400 block text-[9px]">처리중</span><span class="font-bold text-blue-600">${mProcessing}</span></div>
                                 <div><span class="text-slate-400 block text-[9px]">완료</span><span class="font-bold text-emerald-600">${mCompleted}</span></div>
                             </div>
                         </div>
@@ -1317,19 +1139,13 @@
 
             const regionWrap = document.getElementById('dashboard-regions-wrap');
             const siteGridWrap = document.getElementById('dashboard-sites-wrap');
-            const btnBack = document.getElementById('btnBackToRegions');
-            const regTitle = document.getElementById('dashboard-regions-title');
-            const regSub = document.getElementById('dashboard-regions-sub');
-            const regActions = document.getElementById('dashboard-regions-actions');
 
             if (currentUser.role <= 2) {
-                regionWrap.classList.remove('hidden');
-                regTitle.innerHTML = `<i class="fa-solid fa-map-location-dot text-indigo-300 mr-2"></i>지역(권역)별 현황 보드`;
-                regSub.innerText = '지역 카드를 클릭하면 해당 지역에 소속된 사업장별 세부 현황으로 이동합니다.';
-                regActions.classList.remove('hidden');
-
-                const regionGrid = document.getElementById('dashboard-regions-grid');
-                regionGrid.innerHTML = regions.map(reg => {
+                if(regionWrap) regionWrap.classList.remove('hidden');
+                document.getElementById('dashboard-regions-title').innerHTML = `<i class="fa-solid fa-map-location-dot text-indigo-300 mr-2"></i>지역(권역)별 현황 보드`;
+                document.getElementById('dashboard-regions-actions').classList.remove('hidden');
+                
+                document.getElementById('dashboard-regions-grid').innerHTML = regions.map(reg => {
                     const regSites = getSitesByRegion(reg);
                     const regIssues = issues.filter(i => regSites.includes(i.site));
                     const isSelected = selectedDashboardRegion === reg;
@@ -1338,138 +1154,43 @@
 
                     return `
                         <div onclick="selectDashboardRegion('${reg}')"
-                            class="glass-panel cursor-pointer text-slate-800 rounded-2xl p-4 shadow-lg hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1 border-2 ${isSelected ? 'border-indigo-600 bg-indigo-50/95 ring-2 ring-indigo-400' : 'border-white/40'}">
+                            class="glass-panel cursor-pointer text-slate-800 rounded-2xl p-4 shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 border-2 ${isSelected ? 'border-indigo-600 bg-indigo-50/95 ring-2 ring-indigo-400' : 'border-white/40'}">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-extrabold text-sm text-slate-900 flex items-center">
-                                    <i class="fa-solid fa-map-pin text-indigo-500 mr-1.5 text-xs"></i>${reg}
-                                </span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}">
-                                    ${regSites.length}개 사업장
-                                </span>
+                                <span class="font-extrabold text-sm text-slate-900"><i class="fa-solid fa-map-pin text-indigo-500 mr-1.5 text-xs"></i>${reg}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}">${regSites.length}개소</span>
                             </div>
-                            <div class="text-2xl font-black text-slate-900 mb-2">
-                                ${regIssues.length}<span class="text-xs font-normal text-slate-500 ml-1">건</span>
-                            </div>
+                            <div class="text-2xl font-black text-slate-900 mb-2">${regIssues.length}<span class="text-xs font-normal text-slate-500 ml-1">건</span></div>
                             <div class="grid grid-cols-2 gap-2 text-[11px] text-center pt-2 border-t border-slate-200">
                                 <div><span class="block text-slate-400">처리중</span><span class="font-bold text-blue-600">${regProcessing}</span></div>
                                 <div><span class="block text-slate-400">완료</span><span class="font-bold text-emerald-600">${regCompleted}</span></div>
-                            </div>
-                            <div class="mt-2 text-center text-[10px] text-indigo-600 font-bold flex items-center justify-center">
-                                <span>사업장 보기</span> <i class="fa-solid fa-chevron-right ml-1 text-[8px]"></i>
                             </div>
                         </div>
                     `;
                 }).join('');
 
                 if (selectedDashboardRegion || isAllSitesMode) {
-                    siteGridWrap.classList.remove('hidden');
-                    const siteGrid = document.getElementById('dashboard-sites-grid');
-                    const titleEl = document.getElementById('dashboard-sites-title');
+                    if(siteGridWrap) siteGridWrap.classList.remove('hidden');
+                    let displaySites = selectedDashboardRegion ? getSitesByRegion(selectedDashboardRegion) : getAllSiteNames();
+                    
+                    document.getElementById('dashboard-sites-title').innerHTML = selectedDashboardRegion 
+                        ? `<i class="fa-solid fa-building-circle-check text-indigo-300 mr-2"></i>[${selectedDashboardRegion}] 사업장 세부 현황`
+                        : `<i class="fa-solid fa-sitemap text-indigo-300 mr-2"></i>전국 전체 사업장 현황`;
+                        
+                    if(selectedDashboardRegion) document.getElementById('btnBackToRegions').classList.remove('hidden');
+                    else document.getElementById('btnBackToRegions').classList.add('hidden');
 
-                    let displaySites = [];
-                    if (selectedDashboardRegion) {
-                        displaySites = getSitesByRegion(selectedDashboardRegion);
-                        titleEl.innerHTML = `<i class="fa-solid fa-building-circle-check text-indigo-300 mr-2"></i>[${selectedDashboardRegion}] 소속 사업장별 세부 현황 (${displaySites.length}개소)`;
-                        btnBack.classList.remove('hidden');
-                    } else {
-                        displaySites = getAllSiteNames();
-                        titleEl.innerHTML = `<i class="fa-solid fa-sitemap text-indigo-300 mr-2"></i>전국 전체 사업장 세부 현황 (${displaySites.length}개소)`;
-                        btnBack.classList.add('hidden');
-                    }
-
-                    if (displaySites.length === 0) {
-                        siteGrid.innerHTML = `<div class="col-span-3 text-center py-8 glass-panel text-slate-500 rounded-2xl text-xs font-semibold">해당 지역에 등록된 사업장이 없습니다.</div>`;
-                    } else {
-                        siteGrid.innerHTML = displaySites.map(siteName => {
-                            const sIssues = issues.filter(i => i.site === siteName);
-                            const siteRegion = getSiteRegion(siteName);
-                            const sCompleted = sIssues.filter(i => i.status === '완료').length;
-                            const sProcessing = sIssues.length - sCompleted;
-
-                            return `
-                                <div class="glass-panel text-slate-800 rounded-2xl p-5 shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1 border border-white/40">
-                                    <div class="flex items-center justify-between mb-3 border-b pb-2">
-                                        <div>
-                                            <h4 class="font-extrabold text-slate-900 text-sm">${siteName}</h4>
-                                            <span class="text-[10px] text-indigo-600 font-bold">${siteRegion}</span>
-                                        </div>
-                                        <span class="text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg font-bold border border-indigo-200">
-                                            총 ${sIssues.length}건
-                                        </span>
-                                    </div>
-                                    <div class="space-y-2 text-xs">
-                                        <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">처리중</span><span class="font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-md">${sProcessing}건</span></div>
-                                        <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">조치완료</span><span class="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md">${sCompleted}건</span></div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-                    }
-                } else {
-                    siteGridWrap.classList.add('hidden');
-                }
-
-            } else if (currentUser.role === 3) {
-                const myRegion = currentUser.region || '미지정';
-                const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
-                const role3Completed = filteredIssues.filter(i => i.status === '완료').length;
-                const role3Processing = filteredIssues.length - role3Completed;
-
-                regionWrap.classList.remove('hidden');
-                regTitle.innerHTML = `<i class="fa-solid fa-map-location-dot text-indigo-300 mr-2"></i>내 관할 지역 전체 요약 현황 [${myRegion}]`;
-                regSub.innerText = `관할 지역(${myRegion})에 소속된 전체 시설 이슈 현황입니다.`;
-                regActions.classList.add('hidden');
-
-                const regionGrid = document.getElementById('dashboard-regions-grid');
-                regionGrid.innerHTML = `
-                    <div class="glass-panel text-slate-800 rounded-2xl p-6 shadow-xl border-2 border-indigo-500 bg-indigo-50/95 col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-5">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                            <div>
-                                <span class="text-xs font-extrabold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full mr-2">지역 총괄 책임</span>
-                                <span class="font-black text-lg text-slate-900">${myRegion} 지역 전체 합산 현황</span>
-                                <span class="text-xs text-slate-500 ml-2">(${mySites.length}개 사업장 관할)</span>
-                            </div>
-                            <div class="text-2xl font-black text-indigo-700">
-                                ${filteredIssues.length}<span class="text-xs font-normal text-slate-500 ml-1">건 (관할 합산)</span>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 text-center pt-3 border-t border-slate-200">
-                            <div class="bg-blue-50/90 p-3.5 rounded-xl border border-blue-200">
-                                <span class="block text-xs font-bold text-blue-700">처리중</span>
-                                <span class="text-2xl font-black text-blue-600">${role3Processing}건</span>
-                            </div>
-                            <div class="bg-emerald-50/90 p-3.5 rounded-xl border border-emerald-200">
-                                <span class="block text-xs font-bold text-emerald-700">조치 완료</span>
-                                <span class="text-2xl font-black text-emerald-600">${role3Completed}건</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                siteGridWrap.classList.remove('hidden');
-                btnBack.classList.add('hidden');
-                const siteGrid = document.getElementById('dashboard-sites-grid');
-                const titleEl = document.getElementById('dashboard-sites-title');
-                titleEl.innerHTML = `<i class="fa-solid fa-sitemap text-indigo-300 mr-2"></i>[${myRegion}] 관할 사업장별 세부 현황 (${mySites.length}개소)`;
-
-                if (mySites.length === 0) {
-                    siteGrid.innerHTML = `<div class="col-span-3 text-center py-8 glass-panel text-slate-500 rounded-2xl text-xs">배정된 관할 사업장이 없습니다. 최고 관리자에게 문의하세요.</div>`;
-                } else {
-                    siteGrid.innerHTML = mySites.map(siteName => {
+                    document.getElementById('dashboard-sites-grid').innerHTML = displaySites.map(siteName => {
                         const sIssues = issues.filter(i => i.site === siteName);
                         const sCompleted = sIssues.filter(i => i.status === '완료').length;
                         const sProcessing = sIssues.length - sCompleted;
-
                         return `
-                            <div class="glass-panel text-slate-800 rounded-2xl p-5 shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1 border border-white/40">
+                            <div class="glass-panel text-slate-800 rounded-2xl p-5 shadow-xl border border-white/40">
                                 <div class="flex items-center justify-between mb-3 border-b pb-2">
                                     <div>
                                         <h4 class="font-extrabold text-slate-900 text-sm">${siteName}</h4>
-                                        <span class="text-[10px] text-indigo-600 font-bold">${myRegion} 소속</span>
+                                        <span class="text-[10px] text-indigo-600 font-bold">${getSiteRegion(siteName)}</span>
                                     </div>
-                                    <span class="text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg font-bold border border-indigo-200">
-                                        총 ${sIssues.length}건
-                                    </span>
+                                    <span class="text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg font-bold">총 ${sIssues.length}건</span>
                                 </div>
                                 <div class="space-y-2 text-xs">
                                     <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">처리중</span><span class="font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-md">${sProcessing}건</span></div>
@@ -1478,28 +1199,79 @@
                             </div>
                         `;
                     }).join('');
+                } else {
+                    if(siteGridWrap) siteGridWrap.classList.add('hidden');
                 }
+
+            } else if (currentUser.role === 3) {
+                const myRegion = currentUser.region || '미지정';
+                const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
+                const r3Completed = filteredIssues.filter(i => i.status === '완료').length;
+                const r3Processing = filteredIssues.length - r3Completed;
+
+                if(regionWrap) regionWrap.classList.remove('hidden');
+                document.getElementById('dashboard-regions-actions').classList.add('hidden');
+                document.getElementById('dashboard-regions-grid').innerHTML = `
+                    <div class="glass-panel text-slate-800 rounded-2xl p-6 shadow-xl border-2 border-indigo-500 bg-indigo-50/95 col-span-1 md:col-span-3 lg:col-span-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <span class="text-xs font-extrabold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full mr-2">지역 총괄 책임</span>
+                                <span class="font-black text-lg text-slate-900">${myRegion} 지역 현황</span>
+                            </div>
+                            <div class="text-2xl font-black text-indigo-700">${filteredIssues.length}<span class="text-xs font-normal text-slate-500 ml-1">건 합산</span></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 text-center pt-3 border-t border-slate-200">
+                            <div class="bg-blue-50/90 p-3.5 rounded-xl border border-blue-200">
+                                <span class="block text-xs font-bold text-blue-700">처리중</span>
+                                <span class="text-2xl font-black text-blue-600">${r3Processing}건</span>
+                            </div>
+                            <div class="bg-emerald-50/90 p-3.5 rounded-xl border border-emerald-200">
+                                <span class="block text-xs font-bold text-emerald-700">조치 완료</span>
+                                <span class="text-2xl font-black text-emerald-600">${r3Completed}건</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                if(siteGridWrap) siteGridWrap.classList.remove('hidden');
+                document.getElementById('btnBackToRegions').classList.add('hidden');
+                document.getElementById('dashboard-sites-title').innerHTML = `<i class="fa-solid fa-sitemap text-indigo-300 mr-2"></i>[${myRegion}] 관할 사업장별 현황`;
+                
+                document.getElementById('dashboard-sites-grid').innerHTML = mySites.map(siteName => {
+                    const sIssues = issues.filter(i => i.site === siteName);
+                    const sCompleted = sIssues.filter(i => i.status === '완료').length;
+                    const sProcessing = sIssues.length - sCompleted;
+                    return `
+                        <div class="glass-panel text-slate-800 rounded-2xl p-5 shadow-xl border border-white/40">
+                            <div class="flex items-center justify-between mb-3 border-b pb-2">
+                                <div>
+                                    <h4 class="font-extrabold text-slate-900 text-sm">${siteName}</h4>
+                                    <span class="text-[10px] text-indigo-600 font-bold">${myRegion} 소속</span>
+                                </div>
+                                <span class="text-[11px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg font-bold">총 ${sIssues.length}건</span>
+                            </div>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">처리중</span><span class="font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-md">${sProcessing}건</span></div>
+                                <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">조치완료</span><span class="font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md">${sCompleted}건</span></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             } else {
-                regionWrap.classList.add('hidden');
-                siteGridWrap.classList.add('hidden');
+                if(regionWrap) regionWrap.classList.add('hidden');
+                if(siteGridWrap) siteGridWrap.classList.add('hidden');
             }
         }
-
         function selectDashboardRegion(reg) {
-            if (selectedDashboardRegion === reg) selectedDashboardRegion = null;
-            else {
-                selectedDashboardRegion = reg;
-                isAllSitesMode = false;
-            }
+            selectedDashboardRegion = selectedDashboardRegion === reg ? null : reg;
+            isAllSitesMode = false;
             updateDashboard();
         }
-
         function clearSelectedRegion() {
             selectedDashboardRegion = null;
             isAllSitesMode = false;
             updateDashboard();
         }
-
         function showAllSitesView() {
             selectedDashboardRegion = null;
             isAllSitesMode = !isAllSitesMode;
@@ -1507,19 +1279,17 @@
         }
 
         // =================================================================
-        // TAB 2: ISSUES CONTROLLER
+        // ISSUES TAB
         // =================================================================
         function renderIssues() {
             const tbody = document.getElementById('issues-table-body');
             let filtered = [...issues];
-
             if (currentUser.role === 3) {
-                const mySites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
+                const mySites = (currentUser.site || '').split(',').map(s => s.trim());
                 filtered = filtered.filter(i => mySites.includes(i.site));
             } else if (currentUser.role === 4) {
                 filtered = filtered.filter(i => i.site === currentUser.site);
             }
-
             filtered.sort((a, b) => (b.regTimestamp || 0) - (a.regTimestamp || 0));
 
             if (filtered.length === 0) {
@@ -1528,451 +1298,270 @@
             }
 
             tbody.innerHTML = filtered.map(item => {
-                let statusBadge = '';
-                if (item.status === '완료') {
-                    statusBadge = `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300 transition shadow-sm flex items-center justify-center mx-auto space-x-1"><i class="fa-solid fa-circle-check text-[10px]"></i><span>완료</span></button>`;
-                } else {
-                    statusBadge = `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 transition shadow-sm flex items-center justify-center mx-auto space-x-1"><i class="fa-solid fa-spinner fa-spin text-[10px]"></i><span>처리중</span></button>`;
-                }
-
-                const sRegion = getSiteRegion(item.site);
-                const regDateText = (item.regDate && !item.regDate.startsWith('iss_') && !item.regDate.startsWith('sync_')) 
-                    ? item.regDate 
-                    : `<span class="text-rose-500 font-semibold">시트 데이터 오류</span>`;
-
-                const completeDateText = item.completeDate || '-';
-                const durationText = item.duration ? `<span class="font-bold text-emerald-700">${item.duration}</span>` : '-';
-
+                let badge = item.status === '완료' 
+                    ? `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-700 shadow-sm flex items-center space-x-1 mx-auto"><i class="fa-solid fa-circle-check"></i><span>완료</span></button>`
+                    : `<button onclick="openStatusModal('${item.id}')" class="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-700 shadow-sm flex items-center space-x-1 mx-auto"><i class="fa-solid fa-spinner fa-spin"></i><span>처리중</span></button>`;
+                
                 return `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-200/70">
-                        <td class="py-3.5 px-4 font-mono text-xs text-slate-600">${regDateText}</td>
-                        <td class="py-3.5 px-4">
-                            <span class="font-extrabold text-slate-900">${item.site}</span>
-                            <span class="block text-[10px] text-indigo-600 font-bold">${sRegion}</span>
-                        </td>
+                        <td class="py-3.5 px-4 font-mono text-xs text-slate-600">${item.regDate}</td>
+                        <td class="py-3.5 px-4"><span class="font-extrabold text-slate-900">${item.site}</span><span class="block text-[10px] text-indigo-600 font-bold">${getSiteRegion(item.site)}</span></td>
                         <td class="py-3.5 px-4 font-semibold text-slate-700">${item.category}</td>
-                        <td class="py-3.5 px-4 text-slate-900 font-medium leading-relaxed max-w-xs break-words">${item.content}</td>
-                        <td class="py-3.5 px-4 font-mono text-xs text-slate-600">${completeDateText}</td>
-                        <td class="py-3.5 px-4 text-center text-xs">${durationText}</td>
-                        <td class="py-3.5 px-4 text-center">${statusBadge}</td>
+                        <td class="py-3.5 px-4 text-slate-900 font-medium">${item.content}</td>
+                        <td class="py-3.5 px-4 font-mono text-xs text-slate-600">${item.completeDate || '-'}</td>
+                        <td class="py-3.5 px-4 text-center text-xs">${item.duration || '-'}</td>
+                        <td class="py-3.5 px-4 text-center">${badge}</td>
                     </tr>
                 `;
             }).join('');
         }
 
-        // New Issue Modal
         function openNewIssueModal() {
-            const siteSelect = document.getElementById('issue-site-select');
-            const catSelect = document.getElementById('issue-cat-select');
-
-            let allowedSites = [];
-            if (currentUser.role <= 2) {
-                allowedSites = getAllSiteNames();
-                siteSelect.disabled = false;
-            } else if (currentUser.role === 3) {
-                allowedSites = (currentUser.site || '').split(',').map(s => s.trim()).filter(Boolean);
-                siteSelect.disabled = false;
-            } else {
-                allowedSites = [currentUser.site || '미지정'];
-                siteSelect.disabled = true;
-            }
-
-            siteSelect.innerHTML = allowedSites.map(s => `<option value="${s}">${s} (${getSiteRegion(s)})</option>`).join('');
-            catSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
-
+            const siteSel = document.getElementById('issue-site-select');
+            let allowed = (currentUser.role <= 2) ? getAllSiteNames() : (currentUser.role === 3 ? (currentUser.site||'').split(',').map(s=>s.trim()) : [currentUser.site]);
+            siteSel.disabled = (currentUser.role === 4);
+            siteSel.innerHTML = allowed.map(s => `<option value="${s}">${s} (${getSiteRegion(s)})</option>`).join('');
+            document.getElementById('issue-cat-select').innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
             document.getElementById('issue-content-input').value = '';
             document.getElementById('modal-issue').classList.remove('hidden');
         }
-
-        function closeIssueModal() {
-            document.getElementById('modal-issue').classList.add('hidden');
-        }
+        function closeIssueModal() { document.getElementById('modal-issue').classList.add('hidden'); }
 
         function handleIssueSubmit(e) {
             e.preventDefault();
             const site = document.getElementById('issue-site-select').value;
-            const category = document.getElementById('issue-cat-select').value;
+            const cat = document.getElementById('issue-cat-select').value;
             const content = document.getElementById('issue-content-input').value.trim();
-
-            if (!site || !category || !content) {
-                showToast('모든 항목을 올바르게 입력해 주세요.', 'error');
-                return;
-            }
+            if(!site || !content) return;
 
             const now = new Date();
-            const regDateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-            const newIssue = {
-                id: 'iss_' + Date.now(),
-                site: site,
-                category: category,
-                content: content,
-                regDate: regDateStr,
-                completeDate: '',
-                duration: '',
-                actionTaken: '',
-                status: '처리중',
-                regTimestamp: now.getTime()
-            };
-
-            issues.unshift(newIssue);
+            const regDateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            
+            const newObj = { id: 'iss_'+Date.now(), site: site, category: cat, content: content, regDate: regDateStr, completeDate: '', duration: '', actionTaken: '', status: '처리중', regTimestamp: now.getTime() };
+            issues.unshift(newObj);
             saveLocalState();
 
-            // Post to GAS (Type: issue)
-            postDataToGAS(GAS_ISSUE_URL, {
-                type: 'issue',
-                action: 'add',
-                site: site,
-                category: category,
-                content: content,
-                regDate: regDateStr,
-                completeDate: '',
-                duration: '',
-                actionTaken: '',
-                status: '처리중'
-            });
-
+            postDataToGAS(GAS_ISSUE_URL, { type: 'issue', action: 'add', site, category: cat, content, regDate: regDateStr, completeDate:'', duration:'', actionTaken:'', status:'처리중' });
+            
             closeIssueModal();
             updateDashboard();
             renderIssues();
-            showToast('신규 이슈가 성공적으로 등록 및 동기화되었습니다.');
+            showToast('신규 이슈가 등록되었습니다 (처리중 상태)');
         }
 
-        // Issue Action & Detail Modal
-        function openStatusModal(issueId) {
-            const item = issues.find(i => i.id === issueId);
-            if (!item) return;
-
+        function openStatusModal(id) {
+            const item = issues.find(i => i.id === id);
+            if(!item) return;
             document.getElementById('modal-issue-id').value = item.id;
-            document.getElementById('modal-status-subtitle').innerText = `등록ID: ${item.id}`;
             document.getElementById('modal-issue-site-cat').innerText = `[${getSiteRegion(item.site)}] ${item.site} / ${item.category}`;
             document.getElementById('modal-issue-regdate').innerText = item.regDate;
             document.getElementById('modal-issue-content').innerText = item.content;
-
-            document.getElementById('modal-select-status').value = (item.status === '완료') ? '완료' : '처리중';
+            document.getElementById('modal-select-status').value = item.status === '완료' ? '완료' : '처리중';
             document.getElementById('modal-action-taken').value = item.actionTaken || '';
             document.getElementById('modal-complete-date').value = item.completeDate || '';
             document.getElementById('modal-duration').value = item.duration || '';
-
-            const btnDelete = document.getElementById('btn-delete-issue');
-            if (currentUser.role === 1) btnDelete.classList.remove('hidden');
-            else btnDelete.classList.add('hidden');
+            
+            if(currentUser.role === 1) document.getElementById('btn-delete-issue').classList.remove('hidden');
+            else document.getElementById('btn-delete-issue').classList.add('hidden');
 
             toggleActionInputsByStatus();
             document.getElementById('modal-issue-status').classList.remove('hidden');
         }
-
-        function closeStatusModal() {
-            document.getElementById('modal-issue-status').classList.add('hidden');
-        }
-
+        function closeStatusModal() { document.getElementById('modal-issue-status').classList.add('hidden'); }
         function toggleActionInputsByStatus() {
-            const status = document.getElementById('modal-select-status').value;
-            const completeDateInput = document.getElementById('modal-complete-date');
-
-            if (status === '완료' && !completeDateInput.value) {
+            if(document.getElementById('modal-select-status').value === '완료' && !document.getElementById('modal-complete-date').value) {
                 const now = new Date();
-                completeDateInput.value = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+                document.getElementById('modal-complete-date').value = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
             }
         }
-
         function saveIssueStatusAction(e) {
             e.preventDefault();
-            const id = document.getElementById('modal-issue-id').value;
-            const item = issues.find(i => i.id === id);
-            if (!item) return;
-
-            const oldRegDate = item.regDate;
-            const oldContent = item.content;
-
+            const item = issues.find(i => i.id === document.getElementById('modal-issue-id').value);
+            if(!item) return;
+            const oldR = item.regDate, oldC = item.content;
             item.status = document.getElementById('modal-select-status').value;
             item.actionTaken = document.getElementById('modal-action-taken').value.trim();
             item.completeDate = document.getElementById('modal-complete-date').value.trim();
             item.duration = document.getElementById('modal-duration').value.trim();
-
             saveLocalState();
 
-            postDataToGAS(GAS_ISSUE_URL, {
-                type: 'issue',
-                action: 'update',
-                site: item.site,
-                oldRegDate: oldRegDate,
-                oldContent: oldContent,
-                regDate: item.regDate,
-                category: item.category,
-                content: item.content,
-                completeDate: item.completeDate,
-                duration: item.duration,
-                actionTaken: item.actionTaken,
-                status: item.status
-            });
-
+            postDataToGAS(GAS_ISSUE_URL, { type: 'issue', action: 'update', site: item.site, oldRegDate: oldR, oldContent: oldC, regDate: item.regDate, category: item.category, content: item.content, completeDate: item.completeDate, duration: item.duration, actionTaken: item.actionTaken, status: item.status });
+            
             closeStatusModal();
             updateDashboard();
             renderIssues();
-            showToast('이슈 상태 및 조치 사항이 저장되었습니다.');
+            showToast('이슈 상태가 저장되었습니다.');
         }
-
         function deleteCurrentIssue() {
-            const id = document.getElementById('modal-issue-id').value;
-            const item = issues.find(i => i.id === id);
-            if (!item) return;
-
-            issues = issues.filter(i => i.id !== id);
+            const item = issues.find(i => i.id === document.getElementById('modal-issue-id').value);
+            if(!item) return;
+            issues = issues.filter(i => i.id !== item.id);
             saveLocalState();
-
-            postDataToGAS(GAS_ISSUE_URL, {
-                type: 'issue',
-                action: 'delete',
-                site: item.site,
-                oldRegDate: item.regDate,
-                oldContent: item.content
-            });
-
+            postDataToGAS(GAS_ISSUE_URL, { type: 'issue', action: 'delete', site: item.site, oldRegDate: item.regDate, oldContent: item.content });
             closeStatusModal();
             updateDashboard();
             renderIssues();
-            showToast('이슈가 안전하게 삭제되었습니다.');
+            showToast('이슈 삭제됨');
         }
 
         // =================================================================
-        // TAB 3: USER MANAGEMENT CONTROLLER
+        // USERS & SETTINGS TAB
         // =================================================================
         function renderUsers() {
-            const tbody = document.getElementById('users-table-body');
-            tbody.innerHTML = users.map(u => {
-                let roleBadge = '';
-                if (u.role === 1) roleBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-purple-100 text-purple-700 border border-purple-300">1단계 최고관리자</span>';
-                else if (u.role === 2) roleBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-700 border border-indigo-300">2단계 중간관리자</span>';
-                else if (u.role === 3) roleBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-700 border border-blue-300">3단계 지역책임자</span>';
-                else roleBadge = '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-slate-200 text-slate-700 border border-slate-300">4단계 사업장관리자</span>';
-
-                const isMasterAdmin = (u.id === 'admin');
-
+            document.getElementById('users-table-body').innerHTML = users.map(u => {
+                let rBadge = u.role === 1 ? '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-purple-100 text-purple-700">1단계 최고관리자</span>'
+                           : u.role === 2 ? '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-700">2단계 중간관리자</span>'
+                           : u.role === 3 ? '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-700">3단계 지역책임자</span>'
+                           : '<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-slate-200 text-slate-700">4단계 사업장관리자</span>';
                 return `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-200/70">
                         <td class="py-3.5 px-4 font-mono text-xs font-bold text-slate-800">${u.id}</td>
                         <td class="py-3.5 px-4 font-bold text-slate-900">${u.name}</td>
-                        <td class="py-3.5 px-4 text-slate-600 font-mono text-xs">${u.phone || '-'}</td>
-                        <td class="py-3.5 px-4">${roleBadge}</td>
-                        <td class="py-3.5 px-4 font-bold text-indigo-600">${u.region || '전체'}</td>
-                        <td class="py-3.5 px-4 font-medium text-slate-800 text-xs">${u.site || '전체'}</td>
+                        <td class="py-3.5 px-4 text-slate-600 font-mono text-xs">${u.phone||'-'}</td>
+                        <td class="py-3.5 px-4">${rBadge}</td>
+                        <td class="py-3.5 px-4 font-bold text-indigo-600">${u.region}</td>
+                        <td class="py-3.5 px-4 font-medium text-xs">${u.site}</td>
                         <td class="py-3.5 px-4 text-center">
-                            ${isMasterAdmin ? `<span class="text-[11px] text-slate-400 font-bold">마스터 계정</span>` : `
-                                <button onclick="openUserPermModal('${u.id}')"
-                                    class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow transition">
-                                    설정 변경
-                                </button>
-                            `}
+                            ${u.id === 'admin' ? '<span class="text-[11px] text-slate-400 font-bold">마스터</span>' : `<button onclick="openUserPermModal('${u.id}')" class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow">수정</button>`}
                         </td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function openUserPermModal(userId) {
-            const target = users.find(u => u.id === userId);
-            if (!target) return;
-
-            document.getElementById('perm-user-id').value = target.id;
-            document.getElementById('perm-user-label').innerText = `${target.name} (${target.id})`;
-            document.getElementById('perm-role-select').value = target.role;
-
-            const regSelect = document.getElementById('perm-region-select');
-            regSelect.innerHTML = regions.map(r => `<option value="${r}" ${target.region === r ? 'selected' : ''}>${r}</option>`).join('');
-
+        function openUserPermModal(uid) {
+            const t = users.find(u => u.id === uid);
+            if(!t) return;
+            document.getElementById('perm-user-id').value = t.id;
+            document.getElementById('perm-user-label').innerText = `${t.name} (${t.id})`;
+            document.getElementById('perm-role-select').value = t.role;
+            document.getElementById('perm-region-select').innerHTML = regions.map(r => `<option value="${r}" ${t.region===r?'selected':''}>${r}</option>`).join('');
             handleRoleSelectChange();
             document.getElementById('modal-user-perm').classList.remove('hidden');
         }
-
-        function closeUserPermModal() {
-            document.getElementById('modal-user-perm').classList.add('hidden');
-        }
-
+        function closeUserPermModal() { document.getElementById('modal-user-perm').classList.add('hidden'); }
         function handleRoleSelectChange() {
-            const role = parseInt(document.getElementById('perm-role-select').value, 10);
-            const regWrap = document.getElementById('perm-region-wrap');
-            const siteWrap = document.getElementById('perm-sites-wrap');
-
-            if (role <= 2) {
-                regWrap.classList.add('hidden');
-                siteWrap.classList.add('hidden');
+            const r = parseInt(document.getElementById('perm-role-select').value, 10);
+            if (r <= 2) {
+                document.getElementById('perm-region-wrap').classList.add('hidden');
+                document.getElementById('perm-sites-wrap').classList.add('hidden');
             } else {
-                regWrap.classList.remove('hidden');
-                siteWrap.classList.remove('hidden');
+                document.getElementById('perm-region-wrap').classList.remove('hidden');
+                document.getElementById('perm-sites-wrap').classList.remove('hidden');
                 renderPermSitesSelector();
             }
         }
-
         function renderPermSitesSelector() {
             const role = parseInt(document.getElementById('perm-role-select').value, 10);
-            const selectedRegion = document.getElementById('perm-region-select').value;
-            const container = document.getElementById('perm-sites-checkbox-list');
-            const targetUserId = document.getElementById('perm-user-id').value;
-            const targetUser = users.find(u => u.id === targetUserId);
-
-            const regionSites = getSitesByRegion(selectedRegion);
-            const userSites = targetUser ? (targetUser.site || '').split(',').map(s => s.trim()) : [];
-
-            if (regionSites.length === 0) {
-                container.innerHTML = `<div class="text-xs text-slate-400 p-2">[${selectedRegion}] 에 등록된 사업장이 없습니다.</div>`;
-                return;
-            }
-
-            if (role === 3) {
-                document.getElementById('perm-sites-label').innerText = `관할 사업장 복수 선택 (3단계 지역책임자용)`;
-                container.innerHTML = regionSites.map(s => `
-                    <label class="flex items-center space-x-2 p-1.5 hover:bg-slate-200/60 rounded cursor-pointer text-xs">
-                        <input type="checkbox" name="perm-site-cb" value="${s}" ${userSites.includes(s) ? 'checked' : ''}
-                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                        <span class="font-bold text-slate-800">${s}</span>
-                    </label>
-                `).join('');
+            const reg = document.getElementById('perm-region-select').value;
+            const rSites = getSitesByRegion(reg);
+            const t = users.find(u => u.id === document.getElementById('perm-user-id').value);
+            const uSites = t ? (t.site||'').split(',').map(s=>s.trim()) : [];
+            
+            const cont = document.getElementById('perm-sites-checkbox-list');
+            if (rSites.length === 0) cont.innerHTML = `<div class="text-xs text-slate-400 p-2">등록된 사업장 없음</div>`;
+            else if (role === 3) {
+                document.getElementById('perm-sites-label').innerText = '관할 사업장 복수 선택 (3단계)';
+                cont.innerHTML = rSites.map(s => `<label class="flex items-center space-x-2 p-1.5"><input type="checkbox" name="perm-site-cb" value="${s}" ${uSites.includes(s)?'checked':''} class="rounded text-indigo-600"><span class="text-xs font-bold">${s}</span></label>`).join('');
             } else {
-                document.getElementById('perm-sites-label').innerText = `담당 단일 사업장 지정 (4단계 사업장관리자용)`;
-                container.innerHTML = regionSites.map((s, idx) => `
-                    <label class="flex items-center space-x-2 p-1.5 hover:bg-slate-200/60 rounded cursor-pointer text-xs">
-                        <input type="radio" name="perm-site-radio" value="${s}" ${(userSites[0] === s || idx === 0) ? 'checked' : ''}
-                            class="border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                        <span class="font-bold text-slate-800">${s}</span>
-                    </label>
-                `).join('');
+                document.getElementById('perm-sites-label').innerText = '담당 단일 사업장 지정 (4단계)';
+                cont.innerHTML = rSites.map((s,i) => `<label class="flex items-center space-x-2 p-1.5"><input type="radio" name="perm-site-radio" value="${s}" ${(uSites[0]===s||i===0)?'checked':''} class="text-indigo-600"><span class="text-xs font-bold">${s}</span></label>`).join('');
             }
         }
-
         function saveUserPermission(e) {
             e.preventDefault();
-            const userId = document.getElementById('perm-user-id').value;
-            const target = users.find(u => u.id === userId);
-            if (!target) return;
-
+            const t = users.find(u => u.id === document.getElementById('perm-user-id').value);
+            if(!t) return;
             const role = parseInt(document.getElementById('perm-role-select').value, 10);
-            let regionVal = '전체';
-            let siteVal = '전체';
-
+            let rVal = '전체', sVal = '전체';
             if (role > 2) {
-                regionVal = document.getElementById('perm-region-select').value;
-                if (role === 3) {
-                    const cbs = document.querySelectorAll('input[name="perm-site-cb"]:checked');
-                    const selected = Array.from(cbs).map(cb => cb.value);
-                    siteVal = selected.length > 0 ? selected.join(', ') : '미지정';
+                rVal = document.getElementById('perm-region-select').value;
+                if(role === 3) {
+                    const sel = Array.from(document.querySelectorAll('input[name="perm-site-cb"]:checked')).map(c=>c.value);
+                    sVal = sel.length > 0 ? sel.join(', ') : '미지정';
                 } else {
-                    const radio = document.querySelector('input[name="perm-site-radio"]:checked');
-                    siteVal = radio ? radio.value : '미지정';
+                    const rad = document.querySelector('input[name="perm-site-radio"]:checked');
+                    sVal = rad ? rad.value : '미지정';
                 }
             }
-
-            target.role = role;
-            target.region = regionVal;
-            target.site = siteVal;
-
+            t.role = role; t.region = rVal; t.site = sVal;
             saveLocalState();
-
-            postDataToGAS(GAS_USER_URL, {
-                type: 'user',
-                action: 'update',
-                id: target.id,
-                name: target.name,
-                phone: target.phone,
-                pwd: target.pwd,
-                role: target.role,
-                region: regionVal,
-                site: siteVal
-            });
-
+            postDataToGAS(GAS_USER_URL, { type: 'user', action: 'update', id: t.id, name: t.name, phone: t.phone, pwd: t.pwd, role: t.role, region: t.region, site: t.site });
             closeUserPermModal();
             renderUsers();
-            showToast(`${target.name} 사용자의 권한이 성공적으로 변경되었습니다.`);
+            showToast('권한 변경 완료');
         }
 
-        // =================================================================
-        // TAB 4: SETTINGS CONTROLLER
-        // =================================================================
-        function renderSettings() {
-            renderSettingsRegions();
-            renderSettingsSites();
-            renderSettingsCategories();
-        }
-
+        // Settings
+        function renderSettings() { renderSettingsRegions(); renderSettingsSites(); renderSettingsCategories(); }
         function renderSettingsRegions() {
             document.getElementById('region-count-badge').innerText = `${regions.length}개`;
-            const listEl = document.getElementById('settings-regions-list');
-
-            listEl.innerHTML = regions.map(reg => {
-                const count = getSitesByRegion(reg).length;
-                return `
-                    <div class="flex items-center justify-between p-2.5 bg-slate-100 rounded-xl border border-slate-200">
-                        <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-map-pin text-indigo-600 text-xs"></i>
-                            <span class="font-bold text-xs text-slate-800">${reg}</span>
-                            <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-semibold">${count}개 사업장</span>
-                        </div>
-                        <button onclick="removeRegion('${reg}')" class="text-slate-400 hover:text-rose-600 transition text-xs p-1" title="지역 삭제">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
+            document.getElementById('settings-regions-list').innerHTML = regions.map(reg => `
+                <div class="flex items-center justify-between p-2.5 bg-slate-100 rounded-xl border border-slate-200">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-map-pin text-indigo-600 text-xs"></i>
+                        <span class="font-bold text-xs text-slate-800">${reg}</span>
+                        <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-semibold">${getSitesByRegion(reg).length}개</span>
                     </div>
-                `;
-            }).join('');
-
-            const targetSelect = document.getElementById('input-site-target-region');
-            targetSelect.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
-
-            const filterSelect = document.getElementById('settings-site-region-filter');
-            filterSelect.innerHTML = `<option value="ALL">전체 지역 보기</option>` + regions.map(r => `<option value="${r}">${r}</option>`).join('');
+                    <div class="flex items-center space-x-1">
+                        <button onclick="openEditRegionModal('${reg}')" class="text-slate-400 hover:text-indigo-600 transition p-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="removeRegion('${reg}')" class="text-slate-400 hover:text-rose-600 transition p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('input-site-target-region').innerHTML = regions.map(r=>`<option value="${r}">${r}</option>`).join('');
+            document.getElementById('settings-site-region-filter').innerHTML = `<option value="ALL">전체 지역 보기</option>` + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
         }
-
         function addNewRegion() {
-            const input = document.getElementById('input-new-region');
-            const name = input.value.trim();
-            if (!name) return;
-            if (regions.includes(name)) {
-                showToast('이미 등록된 지역명입니다.', 'error');
-                return;
-            }
-            regions.push(name);
-            input.value = '';
-            saveLocalState();
-            renderSettingsRegions();
-            showToast(`신규 지역 [${name}] 등록 완료`);
+            const v = document.getElementById('input-new-region').value.trim();
+            if(!v || regions.includes(v)) return;
+            regions.push(v);
+            document.getElementById('input-new-region').value = '';
+            saveLocalState(); renderSettingsRegions();
+        }
+        function removeRegion(v) {
+            if (regions.length <= 1) return showToast('최소 1개 유지', 'error');
+            regions = regions.filter(r => r !== v);
+            sites.forEach(s => { if(s.region === v) s.region = regions[0]; });
+            saveLocalState(); renderSettingsRegions(); renderSettingsSites();
         }
 
-        function removeRegion(name) {
-            if (regions.length <= 1) {
-                showToast('최소 한 개 이상의 지역은 존재해야 합니다.', 'error');
-                return;
-            }
-            regions = regions.filter(r => r !== name);
-            sites.forEach(s => {
-                if (s.region === name) s.region = regions[0];
-            });
-            saveLocalState();
-            renderSettingsRegions();
-            renderSettingsSites();
-            showToast(`지역 [${name}] 이 삭제되었습니다.`);
+        // Edit Region Modal Logic
+        function openEditRegionModal(name) {
+            document.getElementById('edit-region-old-name').value = name;
+            document.getElementById('edit-region-new-name').value = name;
+            document.getElementById('modal-edit-region').classList.remove('hidden');
+        }
+        function closeEditRegionModal() { document.getElementById('modal-edit-region').classList.add('hidden'); }
+        function saveEditRegion(e) {
+            e.preventDefault();
+            const oldN = document.getElementById('edit-region-old-name').value;
+            const newN = document.getElementById('edit-region-new-name').value.trim();
+            if(!newN || (oldN !== newN && regions.includes(newN))) return showToast('이름 중복이거나 비어있습니다.', 'error');
+            const idx = regions.indexOf(oldN);
+            if(idx > -1) regions[idx] = newN;
+            sites.forEach(s => { if(s.region === oldN) s.region = newN; });
+            users.forEach(u => { if(u.region === oldN) u.region = newN; });
+            if(selectedDashboardRegion === oldN) selectedDashboardRegion = newN;
+            saveLocalState(); closeEditRegionModal(); renderSettings(); updateDashboard();
         }
 
         function renderSettingsSites() {
-            const filter = document.getElementById('settings-site-region-filter').value;
-            const container = document.getElementById('settings-sites-grouped-grid');
-
-            let displayRegions = (filter === 'ALL') ? regions : [filter];
-
-            container.innerHTML = displayRegions.map(reg => {
-                const regSites = sites.filter(s => getSiteRegion(s) === reg);
+            const fil = document.getElementById('settings-site-region-filter').value;
+            const dr = fil === 'ALL' ? regions : [fil];
+            document.getElementById('settings-sites-grouped-grid').innerHTML = dr.map(reg => {
+                const rs = sites.filter(s => getSiteRegion(s) === reg);
                 return `
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                        <div class="flex items-center justify-between border-b pb-2 mb-2">
-                            <span class="font-extrabold text-xs text-indigo-700 flex items-center">
-                                <i class="fa-solid fa-folder-tree mr-1"></i>${reg} 소속 (${regSites.length})
-                            </span>
-                        </div>
+                        <div class="font-extrabold text-xs text-indigo-700 mb-2 border-b pb-2"><i class="fa-solid fa-folder-tree mr-1"></i>${reg} (${rs.length})</div>
                         <div class="space-y-1.5">
-                            ${regSites.length === 0 ? `<p class="text-[11px] text-slate-400">등록된 사업장 없음</p>` : regSites.map(s => `
+                            ${rs.length === 0 ? `<p class="text-[11px] text-slate-400">없음</p>` : rs.map(s => `
                                 <div class="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
                                     <span class="font-bold text-slate-800">${s.name}</span>
-                                    <button onclick="removeSite('${s.name}')" class="text-slate-400 hover:text-rose-600 transition p-1" title="사업장 삭제">
-                                        <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                    </button>
+                                    <div class="flex items-center space-x-1">
+                                        <button onclick="openEditSiteModal('${s.name}')" class="text-slate-400 hover:text-indigo-600 transition p-1"><i class="fa-solid fa-pen text-[11px]"></i></button>
+                                        <button onclick="removeSite('${s.name}')" class="text-slate-400 hover:text-rose-600 transition p-1"><i class="fa-solid fa-trash-can text-[11px]"></i></button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -1980,151 +1569,138 @@
                 `;
             }).join('');
         }
-
         function addNewSite() {
-            const targetRegion = document.getElementById('input-site-target-region').value;
-            const input = document.getElementById('input-new-site');
-            const siteName = input.value.trim();
-
-            if (!siteName) return;
-            if (sites.some(s => s.name === siteName)) {
-                showToast('이미 등록된 사업장명입니다.', 'error');
-                return;
-            }
-
-            sites.push({ name: siteName, region: targetRegion });
-            input.value = '';
-            saveLocalState();
-            renderSettingsSites();
-            renderSettingsRegions();
-            showToast(`[${targetRegion}] 에 사업장 [${siteName}] 추가 완료`);
+            const tr = document.getElementById('input-site-target-region').value;
+            const sn = document.getElementById('input-new-site').value.trim();
+            if(!sn || sites.some(s=>s.name === sn)) return;
+            sites.push({ name: sn, region: tr });
+            document.getElementById('input-new-site').value = '';
+            saveLocalState(); renderSettingsSites(); renderSettingsRegions();
+        }
+        function removeSite(sn) {
+            if(sites.length <= 1) return;
+            sites = sites.filter(s => s.name !== sn);
+            saveLocalState(); renderSettingsSites(); renderSettingsRegions();
         }
 
-        function removeSite(siteName) {
-            if (sites.length <= 1) {
-                showToast('최소 한 개 이상의 사업장은 존재해야 합니다.', 'error');
-                return;
-            }
-            sites = sites.filter(s => s.name !== siteName);
-            saveLocalState();
-            renderSettingsSites();
-            renderSettingsRegions();
-            showToast(`사업장 [${siteName}] 삭제 완료`);
+        // Edit Site Modal Logic
+        function openEditSiteModal(name) {
+            const s = sites.find(x => x.name === name);
+            if(!s) return;
+            document.getElementById('edit-site-old-name').value = s.name;
+            document.getElementById('edit-site-new-name').value = s.name;
+            document.getElementById('edit-site-target-region').innerHTML = regions.map(r => `<option value="${r}" ${r===s.region?'selected':''}>${r}</option>`).join('');
+            document.getElementById('modal-edit-site').classList.remove('hidden');
+        }
+        function closeEditSiteModal() { document.getElementById('modal-edit-site').classList.add('hidden'); }
+        function saveEditSite(e) {
+            e.preventDefault();
+            const oldN = document.getElementById('edit-site-old-name').value;
+            const newN = document.getElementById('edit-site-new-name').value.trim();
+            const newR = document.getElementById('edit-site-target-region').value;
+            if(!newN || (oldN !== newN && sites.some(s=>s.name === newN))) return showToast('사업장명 중복 또는 비어있음', 'error');
+            
+            const sObj = sites.find(s => s.name === oldN);
+            if(sObj) { sObj.name = newN; sObj.region = newR; }
+            issues.forEach(i => { if(i.site === oldN) i.site = newN; });
+            users.forEach(u => {
+                if(u.site) {
+                    const l = u.site.split(',').map(x=>x.trim());
+                    u.site = l.map(x => x === oldN ? newN : x).join(', ');
+                }
+            });
+            saveLocalState(); closeEditSiteModal(); renderSettings(); updateDashboard(); renderIssues();
+            showToast('사업장 수정/재매핑 완료');
         }
 
         function renderSettingsCategories() {
             document.getElementById('category-count-badge').innerText = `${categories.length}개`;
-            const container = document.getElementById('settings-categories-list');
-
-            container.innerHTML = categories.map(cat => `
+            document.getElementById('settings-categories-list').innerHTML = categories.map(c => `
                 <div class="inline-flex items-center space-x-2 px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 shadow-sm">
-                    <span>${cat}</span>
-                    <button onclick="removeCategory('${cat}')" class="text-slate-400 hover:text-rose-600 transition ml-1">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <span>${c}</span><button onclick="removeCategory('${c}')" class="text-slate-400 hover:text-rose-600 ml-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             `).join('');
         }
-
         function addNewCategory() {
-            const input = document.getElementById('input-new-category');
-            const cat = input.value.trim();
-            if (!cat) return;
-            if (categories.includes(cat)) {
-                showToast('이미 존재하는 카테고리입니다.', 'error');
-                return;
-            }
-            categories.push(cat);
-            input.value = '';
-            saveLocalState();
-            renderSettingsCategories();
-            showToast(`카테고리 [${cat}] 추가 완료`);
+            const v = document.getElementById('input-new-category').value.trim();
+            if(!v || categories.includes(v)) return;
+            categories.push(v);
+            document.getElementById('input-new-category').value = '';
+            saveLocalState(); renderSettingsCategories();
         }
-
-        function removeCategory(cat) {
-            if (categories.length <= 1) {
-                showToast('최소 한 개 이상의 카테고리는 유지되어야 합니다.', 'error');
-                return;
-            }
-            categories = categories.filter(c => c !== cat);
-            saveLocalState();
-            renderSettingsCategories();
-            showToast(`카테고리 [${cat}] 삭제 완료`);
+        function removeCategory(c) {
+            if(categories.length <= 1) return;
+            categories = categories.filter(x => x !== c);
+            saveLocalState(); renderSettingsCategories();
         }
 
         // =================================================================
-        // SIGN-UP CONTROLLER (Dynamic Region & Site Mapping)
+        // GAS CONFIG & SIGNUP
         // =================================================================
+        function openGasConfigModal() {
+            document.getElementById('cfg-user-url').value = GAS_USER_URL;
+            document.getElementById('cfg-issue-url').value = GAS_ISSUE_URL;
+            document.getElementById('cfg-test-result').classList.add('hidden');
+            document.getElementById('modal-gas-config').classList.remove('hidden');
+        }
+        function closeGasConfigModal() { document.getElementById('modal-gas-config').classList.add('hidden'); }
+        async function testGasUserUrl() {
+            const url = document.getElementById('cfg-user-url').value.trim();
+            const box = document.getElementById('cfg-test-result');
+            box.classList.remove('hidden'); box.className = "p-2 rounded bg-slate-100 flex"; box.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>테스트 중...`;
+            try {
+                const res = await fetch(url + '?_t=' + Date.now());
+                if(res.ok) {
+                    const d = await res.json();
+                    box.className = "p-2 rounded bg-emerald-100 text-emerald-800 flex";
+                    box.innerHTML = `<i class="fa-solid fa-check mr-2"></i>정상 연결됨 (${d.length}명)`;
+                    return;
+                } throw new Error('fail');
+            } catch(e) { box.className = "p-2 rounded bg-rose-100 text-rose-800 flex"; box.innerHTML = `연결 실패`; }
+        }
+        async function testGasIssueUrl() {
+            const url = document.getElementById('cfg-issue-url').value.trim();
+            const box = document.getElementById('cfg-test-result');
+            box.classList.remove('hidden'); box.className = "p-2 rounded bg-slate-100 flex"; box.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>테스트 중...`;
+            try {
+                const res = await fetch(url + '?_t=' + Date.now());
+                if(res.ok) {
+                    const d = await res.json();
+                    box.className = "p-2 rounded bg-emerald-100 text-emerald-800 flex";
+                    box.innerHTML = `<i class="fa-solid fa-check mr-2"></i>이슈DB 정상 연결됨 (${d.length}건)`;
+                    return;
+                } throw new Error('fail');
+            } catch(e) { box.className = "p-2 rounded bg-rose-100 text-rose-800 flex"; box.innerHTML = `연결 실패`; }
+        }
+        function saveGasConfig() {
+            const u = document.getElementById('cfg-user-url').value.trim();
+            const i = document.getElementById('cfg-issue-url').value.trim();
+            if(u) { GAS_USER_URL = u; localStorage.setItem(LS_GAS_USER_URL, u); }
+            if(i) { GAS_ISSUE_URL = i; localStorage.setItem(LS_GAS_ISSUE_URL, i); }
+            closeGasConfigModal(); syncUsersFromGAS(); syncIssuesFromGAS();
+            showToast('설정 저장 완료');
+        }
+
         function openSignupModal() {
-            const regSelect = document.getElementById('su-region');
-            regSelect.innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
-
+            document.getElementById('su-region').innerHTML = regions.map(r=>`<option value="${r}">${r}</option>`).join('');
             updateSignupSiteOptions();
             document.getElementById('modal-signup').classList.remove('hidden');
         }
-
-        function closeSignupModal() {
-            document.getElementById('modal-signup').classList.add('hidden');
-        }
-
+        function closeSignupModal() { document.getElementById('modal-signup').classList.add('hidden'); }
         function updateSignupSiteOptions() {
-            const selectedRegion = document.getElementById('su-region').value;
-            const siteSelect = document.getElementById('su-site');
-            const filteredSites = getSitesByRegion(selectedRegion);
-
-            if (filteredSites.length === 0) {
-                siteSelect.innerHTML = `<option value="">등록된 사업장 없음</option>`;
-            } else {
-                siteSelect.innerHTML = filteredSites.map(s => `<option value="${s}">${s}</option>`).join('');
-            }
+            const r = document.getElementById('su-region').value;
+            const sites = getSitesByRegion(r);
+            document.getElementById('su-site').innerHTML = sites.length ? sites.map(s=>`<option value="${s}">${s}</option>`).join('') : '<option value="">없음</option>';
         }
-
         function handleSignupSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('su-id').value.trim();
-            const name = document.getElementById('su-name').value.trim();
-            const phone = document.getElementById('su-phone').value.trim();
+            if(users.some(u=>u.id===id)) return showToast('중복된 ID', 'error');
             const pwd = document.getElementById('su-pwd').value.trim();
-            const region = document.getElementById('su-region').value;
-            const site = document.getElementById('su-site').value;
-
-            if (users.some(u => u.id === id)) {
-                showToast('이미 사용 중인 아이디입니다.', 'error');
-                return;
-            }
-
-            if (!site) {
-                showToast('담당 사업장을 올바르게 선택해 주세요.', 'error');
-                return;
-            }
-
-            const newUser = {
-                id: id,
-                name: name,
-                phone: phone,
-                pwd: pwd,
-                role: 4,
-                region: region,
-                site: site
-            };
-
-            users.push(newUser);
-            saveLocalState();
-
-            postDataToGAS(GAS_USER_URL, {
-                type: 'user',
-                action: 'add',
-                id: id,
-                name: name,
-                phone: phone,
-                pwd: pwd,
-                role: 4,
-                region: region,
-                site: site
-            });
-
-            closeSignupModal();
-            showToast('회원가입이 완료되었습니다! (초기 권한: 4단계 사업장 관리자)');
+            const nUser = { id, name: document.getElementById('su-name').value, phone: document.getElementById('su-phone').value, pwd, role: 4, region: document.getElementById('su-region').value, site: document.getElementById('su-site').value };
+            users.push(nUser); saveLocalState();
+            postDataToGAS(GAS_USER_URL, { type: 'user', action: 'add', ...nUser });
+            closeSignupModal(); showToast('가입 완료');
         }
     </script>
 </body>
